@@ -28,27 +28,5 @@ export const STATUS_COLORS = [
     { class: 'bg-purple-500', textClass: 'text-white', name: '紫' } 
 ];
 
-export const globalAppId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'homework-checker-pro';
-
-export const getBaseRepoUrl = () => {
-    if (window.location.hostname.endsWith('github.io')) {
-        const pathSegments = window.location.pathname.split('/').filter(Boolean);
-        const repoName = pathSegments[0] || 'ian_class_management';
-        return `${window.location.origin}/${repoName}/`;
-    }
-    const path = window.location.pathname;
-    const dir = path.substring(0, path.lastIndexOf('/') + 1);
-    return `${window.location.origin}${dir}`;
-};
-
-export const PARENT_DASHBOARD_URL = `${getBaseRepoUrl()}parent.html`;
-export const STUDENT_DASHBOARD_URL = `${getBaseRepoUrl()}student.html`;
-
-export const firebaseConfig = {
-    apiKey: "AIzaSyDuBAZ5hEcrhpYt-XjhiXfi-wuow0Cq83A",
-    authDomain: "cheker-barcode.firebaseapp.com",
-    projectId: "cheker-barcode",
-    storageBucket: "cheker-barcode.firebasestorage.app",
-    messagingSenderId: "1093592859159",
-    appId: "1:1093592859159:web:40c0741defbb074e4ad252"
-};
+// 引入並統一匯出三合一共用核心設定
+export * from './shared/config.js';

@@ -142,43 +142,50 @@
                     </div>
                 </button>
 
-                <!-- 右側：功能按鈕列 (水平排列，支援平滑滑動，不壓縮左側標題) -->
-                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 overflow-x-auto no-scrollbar py-1">
+                <!-- 右側：功能按鈕列 (黃金比例精簡收納，乾淨清爽) -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                     <!-- 家長端直達按鈕 -->
-                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
+                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-100 border border-indigo-200/80 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
                         <i class="fa-solid fa-house-chimney-user text-indigo-600"></i>
                         <span class="hidden sm:inline">家長端</span>
                     </a>
 
                     <!-- 學生端直達按鈕 -->
-                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
+                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-300/80 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
                         <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
                         <span class="hidden sm:inline">學生端</span>
                     </a>
 
-                    <!-- 給老師的話 按鈕 -->
-                    <button id="portal-nav-letter-btn" class="text-xs sm:text-sm font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="閱讀作者給老師的話">
-                        <i class="fa-solid fa-envelope-open-text text-amber-700"></i>
-                        <span class="hidden xl:inline">給老師的話</span>
-                    </button>
+                    <!-- 說明與日誌下拉選單 (收納：給老師的話、意見回饋、更新日誌、教學影片) -->
+                    <div class="relative inline-block text-left" id="portal-nav-more-dropdown-container">
+                        <button type="button" id="portal-nav-more-menu-btn" class="text-xs sm:text-sm font-bold text-stone-700 bg-white/90 hover:bg-stone-100 border border-stone-200/90 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統說明、教學影片與更新紀錄" aria-expanded="false">
+                            <i class="fa-solid fa-circle-info text-amber-600"></i>
+                            <span class="hidden md:inline">說明與日誌</span>
+                            <i id="portal-nav-more-chevron" class="fa-solid fa-chevron-down text-[10px] text-stone-400 transition-transform duration-200"></i>
+                        </button>
 
-                    <!-- 提供意見 / 聯絡作者按鈕 -->
-                    <button id="portal-nav-feedback-btn" class="text-xs sm:text-sm font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-xs cursor-pointer whitespace-nowrap shrink-0" title="聯絡作者：ianw.solar@gmail.com">
-                        <i class="fa-solid fa-comment-dots text-amber-700"></i>
-                        <span class="hidden lg:inline">意見回饋</span>
-                    </button>
-
-                    <!-- 系統更新日誌按鈕 -->
-                    <button id="portal-nav-changelog-btn" class="text-xs sm:text-sm font-bold text-stone-800 bg-[#f7f2ea] hover:bg-[#eee7dc] border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統版本演進與更新紀錄">
-                        <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
-                        <span class="hidden md:inline">更新日誌</span>
-                    </button>
-
-                    <!-- 完整教學影片按鈕 -->
-                    <button id="portal-nav-tutorial-btn" class="text-xs sm:text-sm font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap shrink-0" title="觀看完整使用教學影片與步驟導覽">
-                        <i class="fa-solid fa-circle-play text-indigo-600 text-xs sm:text-sm"></i>
-                        <span class="hidden sm:inline">教學影片</span>
-                    </button>
+                        <!-- 浮動卡片選單 -->
+                        <div id="portal-nav-more-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-stone-200/90 py-2 z-50 transform origin-top-right transition-all duration-150">
+                            <button type="button" id="portal-nav-letter-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-amber-50 hover:text-amber-950 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-envelope-open-text text-amber-600 text-sm w-4 text-center"></i>
+                                <span>給老師的話</span>
+                            </button>
+                            <button type="button" id="portal-nav-changelog-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-stone-100 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-clock-rotate-left text-amber-600 text-sm w-4 text-center"></i>
+                                <span>系統更新日誌</span>
+                                <span class="ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">v4.3</span>
+                            </button>
+                            <button type="button" id="portal-nav-tutorial-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-indigo-50 hover:text-indigo-900 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-circle-play text-indigo-600 text-sm w-4 text-center"></i>
+                                <span>完整教學影片</span>
+                            </button>
+                            <div class="border-t border-stone-100 my-1"></div>
+                            <button type="button" id="portal-nav-feedback-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-amber-50 hover:text-amber-950 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-comment-dots text-amber-600 text-sm w-4 text-center"></i>
+                                <span>提供意見回饋</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- 未登入狀態 -->
                     <div id="portal-nav-guest-actions" class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
@@ -194,20 +201,36 @@
                         </button>
                     </div>
 
-                    <!-- 已登入狀態 -->
-                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
-                        <button id="portal-nav-qr-scan-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap" title="使用手機相機掃碼或認證碼授權其他裝置登入">
-                            <i class="fa-solid fa-bolt text-amber-500"></i>
-                            <span class="hidden sm:inline">快速授權</span>
-                        </button>
-                        <span id="portal-nav-user-name" class="text-xs sm:text-sm font-bold text-stone-700 bg-white px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-200 shadow-sm max-w-[90px] sm:max-w-[180px] truncate whitespace-nowrap"></span>
-                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                    <!-- 已登入狀態 (Profile 下拉 + 進入系統主行動按鈕) -->
+                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-2 shrink-0 whitespace-nowrap">
+                        <!-- 主行動按鈕：進入系統 -->
+                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer transform hover:-translate-y-0.5">
                             <span>進入系統</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
-                        <button id="portal-nav-logout-btn" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-2 sm:px-3 py-1.5 rounded-full hover:bg-rose-50 transition-colors whitespace-nowrap">
-                            登出
-                        </button>
+
+                        <!-- 使用者個人選單下拉 (收納：快速授權、使用者名稱、登出) -->
+                        <div class="relative inline-block text-left" id="portal-nav-profile-dropdown-container">
+                            <button type="button" id="portal-nav-profile-btn" class="flex items-center gap-2 bg-white/95 hover:bg-stone-50 border border-stone-200/90 py-1.5 px-3 rounded-full shadow-2xs transition-all cursor-pointer whitespace-nowrap" title="帳號管理與授權">
+                                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <span id="portal-nav-user-name" class="text-xs sm:text-sm font-bold text-stone-800 max-w-[90px] sm:max-w-[120px] truncate">--</span>
+                                <i id="portal-nav-profile-chevron" class="fa-solid fa-chevron-down text-[10px] text-stone-400 transition-transform duration-200"></i>
+                            </button>
+
+                            <div id="portal-nav-profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-stone-200/90 py-2 z-50 transform origin-top-right transition-all duration-150">
+                                <button type="button" id="portal-nav-qr-scan-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-bolt text-amber-500 text-sm w-4 text-center"></i>
+                                    <span>快速登入授權</span>
+                                </button>
+                                <div class="border-t border-stone-100 my-1"></div>
+                                <button type="button" id="portal-nav-logout-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-rose-500 text-sm w-4 text-center"></i>
+                                    <span>登出帳號</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,7 +291,7 @@
                         <!-- 系統更新紀錄按鈕 (首頁頂部已有，此處依規範隱藏) -->
                         <button id="portal-hero-changelog-btn" class="hidden px-5 py-3.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300/90 font-bold text-sm shadow-xs hover:shadow transition-all items-center gap-2 cursor-pointer" title="查看系統版本演進與歷次更新紀錄">
                             <i class="fa-solid fa-clock-rotate-left text-amber-700"></i>
-                            <span>更新紀錄 <span class="bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">v4.2.2</span></span>
+                            <span>更新紀錄 <span class="bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">v4.4.0</span></span>
                         </button>
                         <!-- 提供意見 / 聯絡作者 (首頁頂部已有，此處依規範隱藏) -->
                         <button id="portal-hero-feedback-btn" class="hidden px-4 py-3.5 rounded-full bg-stone-100/90 hover:bg-stone-200 text-stone-700 font-bold text-sm shadow-2xs hover:shadow transition-all items-center gap-1.5 cursor-pointer" title="寫信給作者 ianw.solar@gmail.com">
@@ -384,7 +407,7 @@
                                 </span>
                                 <div>
                                     <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
-                                    <span class="text-xs text-stone-400 font-bold">最新版本 v4.2.2 • 2026/10/20</span>
+                                    <span class="text-xs text-stone-400 font-bold">最新版本 v4.4.0 • 2026/10/20</span>
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200">最新版本</span>
@@ -393,20 +416,20 @@
                         <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
                             <div class="font-bold text-emerald-950 flex items-center gap-1.5">
                                 <i class="fa-solid fa-bullhorn text-emerald-600"></i>
-                                <span>v4.2.2 個人經典版核心特色：</span>
+                                <span>v4.4.0 三合一整合強化與全端成績系統復原：</span>
                             </div>
                             <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-table-columns text-indigo-600 mt-0.5"></i> <span><b>經典滿版與頂部操作列</b>：移除三條橫線抽屜，頂部直覺展示作業種類、聯絡簿、學生詳情、條碼設定、管理班級、快速授權、設定與新增作業。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-icons text-amber-600 mt-0.5"></i> <span><b>全站圖標規範嚴格達標</b>：全系統介面全面採用 FontAwesome 向量圖標，徹底排除 Emoji，風格純淨沉穩一致。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-barcode text-emerald-600 mt-0.5"></i> <span><b>極速多元作業點收</b>：座號色彩矩陣、條碼槍連續掃描、鏡頭條碼掃描、鍵盤座號秒速輸入，自動跳過缺號。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-share-nodes text-teal-600 mt-0.5"></i> <span><b>親師聯絡簿與直達查核</b>：一鍵複製 LINE 未交名單通報，專屬直達連結連線 <code>homework-checker-pro</code> 雲端資料庫免安裝秒查。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-chart-line text-teal-600 mt-0.5"></i> <span><b>全端成績系統全面復原</b>：教師端頂部列加回成績系統（支援21科課綱分類、分數區段分析與統計匯出）；家長端新增成績分頁與 PIN 碼保護；學生端加回小考填寫與走勢。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-folder-tree text-indigo-600 mt-0.5"></i> <span><b>模組化資料夾架構拆分</b>：家長端 (`js/parent/app.js`) 與學生端 (`js/student/app.js`) 獨立抽離，HTML 程式碼大幅精簡 60% 以上。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-cloud text-blue-600 mt-0.5"></i> <span><b>三端核心共用模組 (Shared Config)</b>：統一透過 <code>js/shared/config.js</code> 管理 Firebase 連線與跨端網址，告別零散重複常數。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-table-columns text-emerald-600 mt-0.5"></i> <span><b>寬螢幕導覽列排版強化</b>：導覽列支援超寬滿版，標題副標不折行，低頻工具收納於下拉選單，介面更乾淨現代。</span></li>
                             </ul>
                         </div>
 
                         <div class="flex items-center justify-between pt-1">
                             <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-950 font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
                                 <i class="fa-solid fa-clock-rotate-left text-emerald-700"></i>
-                                <span>查看完整版本演進日誌 (v1.0 ~ v4.2.2)</span>
+                                <span>查看完整版本演進日誌 (v1.0 ~ v4.4.0)</span>
                             </button>
                         </div>
                     </div>
@@ -1411,8 +1434,8 @@
                              <span>學生詳情</span>
                          </button>
                          
-                                                  <!-- 3.5 成績系統 (已依規範隱藏，保留按鈕結構與事件以利隨時復原) -->
-                         <button id="exam-scores-system-btn" class="glass-card hidden border border-teal-200/80 bg-teal-50/50 text-teal-700 hover:text-teal-800 font-black py-2.5 sm:py-3 px-4 sm:px-5 text-sm sm:text-base rounded-2xl shadow-xs hover:bg-teal-100/60 hover:border-teal-300 transition-all transform hover:-translate-y-0.5 whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer" title="進入全螢幕成績系統（統一發布考試、全班成績、多元格式匯出）">
+                                                  <!-- 3.5 成績系統 -->
+                         <button id="exam-scores-system-btn" class="glass-card border border-teal-200/80 bg-teal-50/50 text-teal-700 hover:text-teal-800 font-black py-2.5 sm:py-3 px-4 sm:px-5 text-sm sm:text-base rounded-2xl shadow-xs hover:bg-teal-100/60 hover:border-teal-300 transition-all transform hover:-translate-y-0.5 whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer" title="進入全螢幕成績系統（統一發布考試、全班成績、多元格式匯出）">
                              <i class="fa-solid fa-chart-line text-teal-600"></i>
                              <span>成績系統</span>
                          </button>
@@ -1462,7 +1485,7 @@
                         <span class="text-slate-400">-</span>
                         <input type="date" id="filter-date-end" class="text-sm rounded-xl border-slate-200 shadow-sm bg-white font-semibold text-slate-600 py-2 px-3 cursor-pointer">
                     </div>
-                    <button id="hw-list-scores-btn" type="button" class="hidden bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-xl shadow-xs hover:shadow transition-all items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="進入全螢幕成績系統">
+                    <button id="hw-list-scores-btn" type="button" class="flex bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-xl shadow-xs hover:shadow transition-all items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="進入全螢幕成績系統">
                         <i class="fa-solid fa-chart-line"></i>
                         <span>成績系統</span>
                     </button>
@@ -2876,6 +2899,35 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
+                    <!-- v4.4.0 三合一整合強化與全端成績系統復原 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-teal-50/90 via-emerald-50/60 to-indigo-50/40 border-2 border-teal-500 shadow-md relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-teal-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v4.4.0 三合一整合與成績系統</span>
+                                <span class="text-xs font-bold text-teal-950">全端成績系統全面復原、模組化資料夾架構拆分、三端共用設定管理</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-slate-400">2026-10-20</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-slate-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-teal-600 shrink-0 mt-0.5"></i>
+                                <span><b>全端成績系統全面復原</b>：教師端頂部列加回成績系統（支援21科課綱分類、分數區段分析與統計匯出）；家長端新增成績分頁與 PIN 碼保護；學生端加回小考填寫與走勢。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-teal-600 shrink-0 mt-0.5"></i>
+                                <span><b>模組化資料夾架構拆分</b>：家長端 (`js/parent/app.js`) 與學生端 (`js/student/app.js`) 獨立抽離至專屬資料夾，HTML 檔案大幅精簡 60% 以上，邏輯清晰易維護。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-teal-600 shrink-0 mt-0.5"></i>
+                                <span><b>三端核心共用模組 (Shared Config)</b>：統一透過 <code>js/shared/config.js</code> 管理 Firebase 連線憑證與跨端動態網址，確保路徑自適應。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-teal-600 shrink-0 mt-0.5"></i>
+                                <span><b>寬螢幕導覽列排版強化</b>：導覽列支援超寬滿版，標題副標不折行，低頻工具收納於下拉選單，介面更乾淨現代。</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     <!-- v4.2.2 個人經典版體驗優化與圖標規範達標 -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/60 to-indigo-50/40 border-2 border-emerald-500 shadow-md relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">

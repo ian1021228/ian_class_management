@@ -1,12 +1,17 @@
-const CACHE_NAME = 'hw-checker-v4.2.2-classic';
+const CACHE_NAME = 'ian-class-mgmt-v4.4.0';
 const urlsToCache = [
   './index.html',
   './parent.html',
+  './student.html',
   './manifest.json',
   './css/style.css',
+  './js/shared/config.js',
+  './js/parent/app.js',
+  './js/student/app.js',
   './js/app.js',
   './js/constants.js',
   './js/events.js',
+  './js/examScores.js',
   './js/firebase.js',
   './js/icons.js',
   './js/navigation.js',
@@ -71,7 +76,7 @@ self.addEventListener('fetch', event => {
         const cached = await caches.match(event.request);
         if (cached) return cached;
         if (event.request.mode === 'navigate') {
-          return (await caches.match('./index.html')) || (await caches.match('./parent.html'));
+          return (await caches.match('./index.html')) || (await caches.match('./parent.html')) || (await caches.match('./student.html'));
         }
         return new Response('離線模式，此資源未快取', { status: 503, statusText: 'Offline' });
       })

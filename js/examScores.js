@@ -9,10 +9,9 @@ import { fbDb, doc, getDoc, setDoc, collection, query, where, onSnapshot, syncCl
 import { saveData } from './storage.js';
 
 // ==========================================
-// 【模組功能開關】成績系統是否啟用
-// 若日後需復原成績系統，只需將此開關改為 true，並移除 index.html 中 #exam-scores-system-btn 的 hidden class 即可 100% 完整還原！
+// 【模組功能開關】成績系統是否啟用 (已全面啟用)
 // ==========================================
-export const ENABLE_EXAM_SCORES_SYSTEM = false;
+export const ENABLE_EXAM_SCORES_SYSTEM = true;
 
 // ==========================================
 // 1. 課綱六大領域與 21 門學科配置
@@ -1360,6 +1359,10 @@ export function setupExamScoresEvents() {
   if (!ENABLE_EXAM_SCORES_SYSTEM) {
     document.getElementById('exam-scores-system-btn')?.classList.add('hidden');
     document.getElementById('hw-list-scores-btn')?.classList.add('hidden');
+  } else {
+    document.getElementById('exam-scores-system-btn')?.classList.remove('hidden');
+    document.getElementById('hw-list-scores-btn')?.classList.remove('hidden');
+    document.getElementById('hw-list-scores-btn')?.classList.add('flex');
   }
 
   // 開啟全螢幕成績系統

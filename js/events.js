@@ -131,6 +131,62 @@ export function setupButtonEvents() {
     bindClick('portal-nav-logo-btn', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     bindClick('portal-footer-logo-btn', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
+    // 頂部導覽列下拉選單 (說明與日誌下拉 & Profile 個人選單下拉)
+    const moreMenuBtn = document.getElementById('portal-nav-more-menu-btn');
+    const moreDropdown = document.getElementById('portal-nav-more-dropdown');
+    const moreChevron = document.getElementById('portal-nav-more-chevron');
+
+    const profileMenuBtn = document.getElementById('portal-nav-profile-btn');
+    const profileDropdown = document.getElementById('portal-nav-profile-dropdown');
+    const profileChevron = document.getElementById('portal-nav-profile-chevron');
+
+    function closeAllNavDropdowns() {
+        if (moreDropdown && !moreDropdown.classList.contains('hidden')) {
+            moreDropdown.classList.add('hidden');
+            if (moreChevron) moreChevron.classList.remove('rotate-180');
+        }
+        if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+            profileDropdown.classList.add('hidden');
+            if (profileChevron) profileChevron.classList.remove('rotate-180');
+        }
+    }
+
+    if (moreMenuBtn && moreDropdown) {
+        moreMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const willOpen = moreDropdown.classList.contains('hidden');
+            closeAllNavDropdowns();
+            if (willOpen) {
+                moreDropdown.classList.remove('hidden');
+                if (moreChevron) moreChevron.classList.add('rotate-180');
+            }
+        });
+        moreDropdown.addEventListener('click', () => {
+            closeAllNavDropdowns();
+        });
+    }
+
+    if (profileMenuBtn && profileDropdown) {
+        profileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const willOpen = profileDropdown.classList.contains('hidden');
+            closeAllNavDropdowns();
+            if (willOpen) {
+                profileDropdown.classList.remove('hidden');
+                if (profileChevron) profileChevron.classList.add('rotate-180');
+            }
+        });
+        profileDropdown.addEventListener('click', () => {
+            closeAllNavDropdowns();
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#portal-nav-more-dropdown-container') && !e.target.closest('#portal-nav-profile-dropdown-container')) {
+            closeAllNavDropdowns();
+        }
+    });
+
     // 導覽列按鈕
     bindClick('portal-nav-qr-login-btn', () => window.startDeviceQrLoginSession?.());
     bindClick('portal-nav-login-btn', () => openPortalAuthModal('signin'));
