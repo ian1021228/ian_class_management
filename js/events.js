@@ -1765,21 +1765,39 @@ export function setupButtonEvents() {
         }
     });
 
-    // 頂部導覽列點收方式切換按鈕
+    // 頂部導覽列點收方式切換按鈕（一鍵快速切換）
     bindClick('top-check-mode-btn', () => {
-        openModal(document.getElementById('welcome-modal'));
-        showWelcomeStep2();
+        const curMode = state.currentCheckMode || localStorage.getItem('checkMode') || 'manual';
+        const nextMode = curMode === 'manual' ? 'scan' : 'manual';
+        applyCheckMode(nextMode);
+        if (nextMode === 'manual') {
+            showToast("已切換為「手動點收」模式（已隱藏條碼設定）", "success");
+        } else {
+            showToast("已切換為「條碼掃描」模式（已顯示條碼設定）", "success");
+        }
+    });
+
+    // 手機端更多功能抽屜內的點收模式按鈕（一鍵切換）
+    bindClick('mobile-sheet-check-mode-btn', () => {
+        const curMode = state.currentCheckMode || localStorage.getItem('checkMode') || 'manual';
+        const nextMode = curMode === 'manual' ? 'scan' : 'manual';
+        applyCheckMode(nextMode);
+        if (nextMode === 'manual') {
+            showToast("已切換為「手動點收」模式（已隱藏條碼設定）", "success");
+        } else {
+            showToast("已切換為「條碼掃描」模式（已顯示條碼設定）", "success");
+        }
     });
 
     // 作業詳細座號頁 (detail-page) 上的模式切換按鈕
     bindClick('mode-manual-btn', () => {
         applyCheckMode('manual');
-        showToast("已切換為「手動點擊模式」", "success");
+        showToast("已切換為「手動點收」模式（已隱藏條碼設定）", "success");
     });
 
     bindClick('mode-scan-btn', () => {
         applyCheckMode('scan');
-        showToast("已切換為「條碼掃描模式」", "success");
+        showToast("已切換為「條碼掃描」模式（已顯示條碼設定）", "success");
     });
 
     window.addEventListener('welcome-step-2-opened', () => {
@@ -1790,12 +1808,12 @@ export function setupButtonEvents() {
     // 系統設定 Modal 內的點收模式切換按鈕
     bindClick('setting-mode-manual-btn', () => {
         applyCheckMode('manual');
-        showToast("已切換為「手動點收」模式", "success");
+        showToast("已切換為「手動點收」模式（已隱藏條碼設定）", "success");
     });
 
     bindClick('setting-mode-scan-btn', () => {
         applyCheckMode('scan');
-        showToast("已切換為「條碼掃描」模式", "success");
+        showToast("已切換為「條碼掃描」模式（已顯示條碼設定）", "success");
     });
 
     // 管理員檢視模式 UI 狀態更新

@@ -18,15 +18,40 @@ import {
 import { checkInitialMaxSeatSetup } from './examScores.js';
 
 export function applyCheckMode(mode) {
+    if (!mode || (mode !== 'manual' && mode !== 'scan')) {
+        mode = 'manual';
+    }
     state.currentCheckMode = mode;
     localStorage.setItem('checkMode', mode);
     
     const barcodeBtn = document.getElementById('set-barcodes-btn');
+    const mobileBarcodeBtn = document.getElementById('mobile-sheet-set-barcodes-btn');
     const scanContainer = document.getElementById('scan-mode-container');
     const checkModeSection = document.getElementById('check-mode-section');
     
-    if (barcodeBtn) {
-        barcodeBtn.classList.remove('hidden');
+    // 依點收模式動態隱藏/顯示條碼設定按鈕
+    if (mode === 'manual') {
+        if (barcodeBtn) {
+            barcodeBtn.classList.add('hidden');
+            barcodeBtn.classList.remove('flex');
+            barcodeBtn.style.display = 'none';
+        }
+        if (mobileBarcodeBtn) {
+            mobileBarcodeBtn.classList.add('hidden');
+            mobileBarcodeBtn.classList.remove('flex');
+            mobileBarcodeBtn.style.display = 'none';
+        }
+    } else {
+        if (barcodeBtn) {
+            barcodeBtn.classList.remove('hidden');
+            barcodeBtn.classList.add('flex');
+            barcodeBtn.style.display = '';
+        }
+        if (mobileBarcodeBtn) {
+            mobileBarcodeBtn.classList.remove('hidden');
+            mobileBarcodeBtn.classList.add('flex');
+            mobileBarcodeBtn.style.display = '';
+        }
     }
     
     if (checkModeSection) {
@@ -53,11 +78,11 @@ export function applyCheckMode(mode) {
     const modeScanBtn = document.getElementById('mode-scan-btn');
     if (modeManualBtn && modeScanBtn) {
         if (mode === 'manual') {
-            modeManualBtn.className = "flex-1 py-2 px-4 rounded-xl font-black text-sm bg-white shadow-sm border border-indigo-200/80 text-indigo-600 ring-2 ring-indigo-500/20 transition-all cursor-pointer";
-            modeScanBtn.className = "flex-1 py-2 px-4 rounded-xl font-bold text-sm text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent transition-all cursor-pointer";
+            modeManualBtn.className = "flex-1 py-2 px-4 rounded-xl font-black text-sm bg-white shadow-sm border border-indigo-200/80 text-indigo-600 ring-2 ring-indigo-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5";
+            modeScanBtn.className = "flex-1 py-2 px-4 rounded-xl font-bold text-sm text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent transition-all cursor-pointer flex items-center justify-center gap-1.5";
         } else {
-            modeScanBtn.className = "flex-1 py-2 px-4 rounded-xl font-black text-sm bg-white shadow-sm border border-indigo-200/80 text-indigo-600 ring-2 ring-indigo-500/20 transition-all cursor-pointer";
-            modeManualBtn.className = "flex-1 py-2 px-4 rounded-xl font-bold text-sm text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent transition-all cursor-pointer";
+            modeScanBtn.className = "flex-1 py-2 px-4 rounded-xl font-black text-sm bg-white shadow-sm border border-indigo-200/80 text-indigo-600 ring-2 ring-indigo-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5";
+            modeManualBtn.className = "flex-1 py-2 px-4 rounded-xl font-bold text-sm text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent transition-all cursor-pointer flex items-center justify-center gap-1.5";
         }
     }
     
@@ -66,19 +91,30 @@ export function applyCheckMode(mode) {
     const scanBtn = document.getElementById('setting-mode-scan-btn');
     if (manualBtn && scanBtn) {
         if (mode === 'manual') {
-            manualBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-sm transition-all ring-2 ring-indigo-500/20";
-            scanBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm glass-card border border-white/60 text-slate-500 hover:bg-slate-50 transition-all";
+            manualBtn.className = "flex-1 py-2.5 px-3 rounded-xl font-black text-sm bg-indigo-50 border border-indigo-300 text-indigo-700 shadow-sm transition-all ring-2 ring-indigo-500/20 cursor-pointer flex items-center justify-center gap-1.5";
+            scanBtn.className = "flex-1 py-2.5 px-3 rounded-xl font-bold text-sm glass-card border border-white/60 text-slate-600 hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center gap-1.5";
         } else {
-            scanBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-sm transition-all ring-2 ring-indigo-500/20";
-            manualBtn.className = "flex-1 py-2 px-3 rounded-xl font-bold text-sm glass-card border border-white/60 text-slate-500 hover:bg-slate-50 transition-all";
+            scanBtn.className = "flex-1 py-2.5 px-3 rounded-xl font-black text-sm bg-indigo-50 border border-indigo-300 text-indigo-700 shadow-sm transition-all ring-2 ring-indigo-500/20 cursor-pointer flex items-center justify-center gap-1.5";
+            manualBtn.className = "flex-1 py-2.5 px-3 rounded-xl font-bold text-sm glass-card border border-white/60 text-slate-600 hover:bg-slate-50 transition-all cursor-pointer flex items-center justify-center gap-1.5";
         }
     }
 
     // 更新頂部導覽列標籤
     const topLabel = document.getElementById('top-check-mode-label');
     if (topLabel) {
-        const icon = mode === 'manual' ? '<i class="fa-duotone fa-light fa-hand-back-point-up"></i>' : '<i class="fa-sharp-duotone fa-regular fa-scanner-gun"></i>';
-        topLabel.innerHTML = `<span class="text-base">${icon}</span><span>點收方式</span>`;
+        const icon = mode === 'manual' ? '<i class="fa-solid fa-hand-pointer text-indigo-600"></i>' : '<i class="fa-solid fa-barcode text-indigo-600"></i>';
+        const text = mode === 'manual' ? '手動點收' : '條碼點收';
+        topLabel.innerHTML = `${icon}<span>${text}</span>`;
+    }
+
+    // 更新手機端更多功能抽屜內的點收模式標籤
+    const mobileIcon = document.getElementById('mobile-sheet-check-mode-icon');
+    const mobileStatus = document.getElementById('mobile-sheet-check-mode-status');
+    if (mobileIcon) {
+        mobileIcon.className = mode === 'manual' ? 'fa-solid fa-hand-pointer' : 'fa-solid fa-barcode';
+    }
+    if (mobileStatus) {
+        mobileStatus.textContent = mode === 'manual' ? '手動點收' : '條碼點收';
     }
 }
 
@@ -188,6 +224,7 @@ export function showMainPage(fromHistory = false) {
     restoreScroll('main-page');
     updateMobileNavVisibility('main');
     checkInitialMaxSeatSetup();
+    applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
 }
 
 export function showDetailPage(homeworkId, fromHistory = false) {
@@ -206,6 +243,7 @@ export function showDetailPage(homeworkId, fromHistory = false) {
     restoreScroll('detail-page');
     updateMobileNavVisibility('detail');
     requestAnimationFrame(() => { renderStudentGrid(homeworkId); });
+    applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
 }
 
 export function showStudentDetailsPage(fromHistory = false) {
@@ -303,15 +341,18 @@ export function closePortalAuthModal() {
 export function proceedIntoSystem() {
     sessionStorage.setItem('has_passed_portal_in_session', 'true');
     closePortalAuthModal();
-    showMainPage();
-    const portalEl = document.getElementById('portal-page');
-    if (portalEl) portalEl.classList.add('hidden');
     
     // 預設手動點收，不彈窗打擾
     if (!localStorage.getItem('checkMode')) {
         localStorage.setItem('checkMode', 'manual');
         state.currentCheckMode = 'manual';
     }
+    applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
+
+    showMainPage();
+    const portalEl = document.getElementById('portal-page');
+    if (portalEl) portalEl.classList.add('hidden');
+    
     const welcomeModal = document.getElementById('welcome-modal');
     if (welcomeModal) {
         closeModal(welcomeModal);

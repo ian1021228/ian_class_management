@@ -1356,13 +1356,16 @@ function triggerDownload(blob, filename) {
 // 8. 綁定成績系統相關 DOM 事件
 // ==========================================
 export function setupExamScoresEvents() {
+  const hwListScoresBtn = document.getElementById('hw-list-scores-btn');
+  if (hwListScoresBtn) {
+    hwListScoresBtn.classList.add('hidden');
+    hwListScoresBtn.classList.remove('flex');
+    hwListScoresBtn.style.display = 'none';
+  }
   if (!ENABLE_EXAM_SCORES_SYSTEM) {
     document.getElementById('exam-scores-system-btn')?.classList.add('hidden');
-    document.getElementById('hw-list-scores-btn')?.classList.add('hidden');
   } else {
     document.getElementById('exam-scores-system-btn')?.classList.remove('hidden');
-    document.getElementById('hw-list-scores-btn')?.classList.remove('hidden');
-    document.getElementById('hw-list-scores-btn')?.classList.add('flex');
   }
 
   // 開啟全螢幕成績系統
