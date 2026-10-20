@@ -132,80 +132,80 @@
 
         <!-- 頂部導覽列 (Sticky Navigation Bar) -->
         <header class="sticky top-0 z-40 bg-[#f6f1e8]/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
-            <div class="max-w-7xl mx-auto px-4 sm:px-10 h-16 sm:h-20 flex items-center justify-between gap-2">
-                <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端) -->
-                <button id="portal-nav-logo-btn" class="flex items-center gap-2 sm:gap-3.5 cursor-pointer group select-none text-left min-w-0" title="返回首頁頂端">
-                    <img src="icon.svg" class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="班級經營系統 3.0">
-                    <div class="min-w-0">
-                        <span class="text-sm sm:text-2xl font-black text-stone-900 tracking-tight block truncate max-w-[140px] xs:max-w-[190px] sm:max-w-none">班級經營系統</span>
-                        <span class="text-[9px] sm:text-xs font-extrabold text-amber-700 tracking-wide block -mt-0.5 truncate">國一生獨立開發 • v3.5</span>
+            <div class="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 sm:h-20 flex items-center justify-between gap-3 xl:gap-6">
+                <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端，維持寬度不被壓縮) -->
+                <button id="portal-nav-logo-btn" class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none text-left shrink-0" title="返回首頁頂端">
+                    <img src="icon.svg" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="班級經營系統">
+                    <div class="shrink-0 flex flex-col justify-center">
+                        <span class="text-base sm:text-xl lg:text-2xl font-black text-stone-900 tracking-tight block whitespace-nowrap">班級經營系統</span>
+                        <span class="text-[10px] sm:text-xs font-extrabold text-amber-700 tracking-wide block -mt-0.5 whitespace-nowrap">國一生獨立開發 • 經典三合一版</span>
                     </div>
                 </button>
 
-                <!-- 右側：提供意見 + 登入 / 註冊 / 進入系統按鈕列 -->
-                <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                <!-- 右側：功能按鈕列 (水平排列，支援平滑滑動，不壓縮左側標題) -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 overflow-x-auto no-scrollbar py-1">
                     <!-- 家長端直達按鈕 -->
-                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer" title="前往家長端即時查核看板">
+                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
                         <i class="fa-solid fa-house-chimney-user text-indigo-600"></i>
                         <span class="hidden sm:inline">家長端</span>
                     </a>
 
                     <!-- 學生端直達按鈕 -->
-                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer" title="前往學生端數位聯絡簿">
+                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
                         <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
                         <span class="hidden sm:inline">學生端</span>
                     </a>
 
                     <!-- 給老師的話 按鈕 -->
-                    <button id="portal-nav-letter-btn" class="text-xs sm:text-sm font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer" title="閱讀作者給老師的話">
+                    <button id="portal-nav-letter-btn" class="text-xs sm:text-sm font-bold text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="閱讀作者給老師的話">
                         <i class="fa-solid fa-envelope-open-text text-amber-700"></i>
                         <span class="hidden xl:inline">給老師的話</span>
                     </button>
 
                     <!-- 提供意見 / 聯絡作者按鈕 -->
-                    <button id="portal-nav-feedback-btn" class="text-xs sm:text-sm font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-xs cursor-pointer" title="聯絡作者：ianw.solar@gmail.com">
+                    <button id="portal-nav-feedback-btn" class="text-xs sm:text-sm font-bold text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-xs cursor-pointer whitespace-nowrap shrink-0" title="聯絡作者：ianw.solar@gmail.com">
                         <i class="fa-solid fa-comment-dots text-amber-700"></i>
                         <span class="hidden lg:inline">意見回饋</span>
                     </button>
 
                     <!-- 系統更新日誌按鈕 -->
-                    <button id="portal-nav-changelog-btn" class="text-xs sm:text-sm font-bold text-stone-800 bg-[#f7f2ea] hover:bg-[#eee7dc] border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer" title="查看系統版本演進與更新紀錄">
+                    <button id="portal-nav-changelog-btn" class="text-xs sm:text-sm font-bold text-stone-800 bg-[#f7f2ea] hover:bg-[#eee7dc] border border-amber-300/80 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統版本演進與更新紀錄">
                         <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
                         <span class="hidden md:inline">更新日誌</span>
                     </button>
 
                     <!-- 完整教學影片按鈕 -->
-                    <button id="portal-nav-tutorial-btn" class="text-xs sm:text-sm font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs" title="觀看完整使用教學影片與步驟導覽">
+                    <button id="portal-nav-tutorial-btn" class="text-xs sm:text-sm font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap shrink-0" title="觀看完整使用教學影片與步驟導覽">
                         <i class="fa-solid fa-circle-play text-indigo-600 text-xs sm:text-sm"></i>
                         <span class="hidden sm:inline">教學影片</span>
                     </button>
 
                     <!-- 未登入狀態 -->
-                    <div id="portal-nav-guest-actions" class="flex items-center gap-1.5 sm:gap-2.5">
-                        <button id="portal-nav-qr-login-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs" title="快速登入（掃碼或認證碼）">
+                    <div id="portal-nav-guest-actions" class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
+                        <button id="portal-nav-qr-login-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap" title="快速登入（掃碼或認證碼）">
                             <i class="fa-solid fa-bolt text-amber-500 text-xs sm:text-sm"></i>
                             <span class="inline">快速登入</span>
                         </button>
-                        <button id="portal-nav-login-btn" class="text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-stone-200/60 transition-colors">
+                        <button id="portal-nav-login-btn" class="text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-stone-200/60 transition-colors whitespace-nowrap">
                             登入
                         </button>
-                        <button id="portal-nav-signup-btn" class="text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-sm hover:shadow transition-all">
+                        <button id="portal-nav-signup-btn" class="text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-sm hover:shadow transition-all whitespace-nowrap">
                             免費註冊
                         </button>
                     </div>
 
                     <!-- 已登入狀態 -->
-                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-1.5 sm:gap-3">
-                        <button id="portal-nav-qr-scan-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer" title="使用手機相機掃碼或認證碼授權其他裝置登入">
+                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
+                        <button id="portal-nav-qr-scan-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 sm:px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap" title="使用手機相機掃碼或認證碼授權其他裝置登入">
                             <i class="fa-solid fa-bolt text-amber-500"></i>
                             <span class="hidden sm:inline">快速授權</span>
                         </button>
-                        <span id="portal-nav-user-name" class="text-xs sm:text-sm font-bold text-stone-700 bg-white px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-200 shadow-sm max-w-[90px] sm:max-w-[180px] truncate"></span>
-                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+                        <span id="portal-nav-user-name" class="text-xs sm:text-sm font-bold text-stone-700 bg-white px-2.5 sm:px-3.5 py-1.5 rounded-full border border-stone-200 shadow-sm max-w-[90px] sm:max-w-[180px] truncate whitespace-nowrap"></span>
+                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all flex items-center gap-1.5 whitespace-nowrap">
                             <span>進入系統</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
-                        <button id="portal-nav-logout-btn" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-2 sm:px-3 py-1.5 rounded-full hover:bg-rose-50 transition-colors">
+                        <button id="portal-nav-logout-btn" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-2 sm:px-3 py-1.5 rounded-full hover:bg-rose-50 transition-colors whitespace-nowrap">
                             登出
                         </button>
                     </div>
