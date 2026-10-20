@@ -1,0 +1,3744 @@
+/**
+ * 班級經營系統 3.0 - DOM 事件監聽與交互管理
+ */
+
+import { state } from './state.js';
+
+import {
+    DEFAULT_TYPES,
+    STATUS_COLORS,
+    globalAppId,
+    PARENT_DASHBOARD_URL,
+    STUDENT_DASHBOARD_URL
+} from './constants.js';
+
+import {
+    generateId,
+    formatDate,
+    safeClone,
+    safeStringify,
+    generateRandomAccessCode,
+    sanitizeAppData,
+    fixDates,
+    hashPassword,
+    showToast,
+    showAlertModal,
+    showConfirmModal,
+    showNamePromptModal,
+    safeCopyToClipboard,
+    openModal,
+    closeModal,
+    bindClick,
+    bindSubmit,
+    bindChange
+} from './utils.js';
+
+import {
+    fbAuth,
+    fbDb,
+    signInWithPopup,
+    GoogleAuthProvider,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    updateProfile,
+    signOut,
+    sendPasswordResetEmail,
+    sendEmailVerification,
+    reload,
+    applyActionCode,
+    doc,
+    setDoc,
+    getDocs,
+    collection,
+    isGoogleAdmin,
+    loadAllUsersForAdmin,
+    loadDataFromCloud,
+    syncUserProfile,
+    deleteCloudParentClass,
+    syncDataToCloud,
+    startRealtimeCloudSync,
+    stopRealtimeCloudSync,
+    deleteMyAccount,
+    syncClassStudentPinsToCloud
+} from './firebase.js';
+
+import {
+    saveData,
+    saveFileHandle,
+    getFileHandle,
+    clearFileHandle,
+    syncFromFileHandle,
+    executeCopyClassData,
+    flushPendingSave,
+    getUserStorageKey,
+    loadLocalDataForUser
+} from './storage.js';
+
+import {
+    getHomeworkType,
+    updateSingleStudentUI,
+    updateSummaryUI,
+    updateTypeSelects,
+    renderClassSelector,
+    renderClassList,
+    renderHomeworkList,
+    renderStudentGrid,
+    renderStudentDetailsPage,
+    renderHomeworkTypesPage,
+    renderContactBookItems,
+    renderCalendar,
+    updateDataManagementUI,
+    updatePortalUI,
+    isStudentCompleted,
+    renderAllDoneList,
+    } from './render.js';
+
+import {
+    applyCheckMode,
+    pushPageState,
+    showPortalPage,
+    showMainPage,
+    showDetailPage,
+    showStudentDetailsPage,
+    showContactBookPage,
+    showHomeworkTypesPage,
+    promptSystemUsageAndNavigate,
+    openPortalAuthModal,
+    closePortalAuthModal,
+    proceedIntoSystem,
+    openCopyClassModal,
+    showWelcomeStep2
+, fullRender } from './navigation.js';
+
+import {
+    setupExamScoresEvents,
+    updateClassMaxSeat,
+    checkInitialMaxSeatSetup
+} from './examScores.js';
+
+export function setupButtonEvents() {
+    setupExamScoresEvents();
+
+    // 訪客體驗懸浮回首頁
+    bindClick('guest-home-btn', () => {
+        showPortalPage(false);
+    });
+
+    // 系統內部點擊 Logo（平滑回到頁面頂部）
+    bindClick('main-logo-btn', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // 首頁導覽列與頁尾 Logo
+    bindClick('portal-nav-logo-btn', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    bindClick('portal-footer-logo-btn', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // 導覽列按鈕
+    bindClick('portal-nav-qr-login-btn', () => window.startDeviceQrLoginSession?.());
+    bindClick('portal-nav-login-btn', () => openPortalAuthModal('signin'));
+    bindClick('portal-nav-signup-btn', () => openPortalAuthModal('signup'));
+    bindClick('portal-nav-enter-btn', () => {
+        sessionStorage.removeItem('app_is_guest_mode');
+        proceedIntoSystem();
+    });
+
+    // 系統更新日誌 (Changelog)
+    const openChangelog = () => {
+        const modal = document.getElementById('changelog-modal');
+        if (modal) openModal(modal);
+    };
+    bindClick('portal-nav-changelog-btn', openChangelog);
+    bindClick('portal-hero-changelog-btn', openChangelog);
+    bindClick('portal-card-changelog-btn', openChangelog);
+
+    // 完整教學影片 (Tutorial Video)
+    const openTutorialVideo = () => {
+        const modal = document.getElementById('tutorial-video-modal');
+        if (modal) {
+            openModal(modal);
+            const video = document.getElementById('tutorial-video-player');
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            }
+        }
+    };
+    bindClick('portal-nav-tutorial-btn', openTutorialVideo);
+    bindClick('portal-hero-tutorial-btn', openTutorialVideo);
+    bindClick('portal-card-tutorial-btn', openTutorialVideo);
+    bindClick('close-tutorial-video-btn', () => {
+        const modal = document.getElementById('tutorial-video-modal');
+        if (modal) closeModal(modal);
+        const video = document.getElementById('tutorial-video-player');
+        if (video) video.pause();
+    });
+
+    // 首頁 Hero / 行動按鈕
+    bindClick('portal-hero-start-btn', () => {
+        promptSystemUsageAndNavigate();
+    });
+    bindClick('portal-hero-guest-btn', () => {
+        sessionStorage.setItem('app_is_guest_mode', 'true');
+        state.currentUser = null;
+        localStorage.removeItem('app_user_session');
+        state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+        state.currentClassId = null;
+        localStorage.removeItem('homeworkAppData');
+        localStorage.removeItem('currentClassId');
+        showToast("已進入免帳號快速體驗模式（本地暫存，不寫入雲端）", "info");
+        proceedIntoSystem();
+    });
+    bindClick('portal-cta-start-btn', () => {
+        promptSystemUsageAndNavigate();
+    });
+
+    // 詢問是否使用過系統之互動按鈕
+    bindClick('usage-inquiry-yes-btn', () => {
+        const modal = document.getElementById('usage-inquiry-modal');
+        if (modal) closeModal(modal);
+        openPortalAuthModal('signin');
+    });
+    bindClick('usage-inquiry-no-btn', () => {
+        const modal = document.getElementById('usage-inquiry-modal');
+        if (modal) closeModal(modal);
+        openPortalAuthModal('signup');
+    });
+    bindClick('usage-inquiry-close-btn', () => {
+        const modal = document.getElementById('usage-inquiry-modal');
+        if (modal) closeModal(modal);
+    });
+    const inquiryModal = document.getElementById('usage-inquiry-modal');
+    if (inquiryModal) {
+        inquiryModal.addEventListener('click', (e) => {
+            if (e.target === inquiryModal) {
+                closeModal(inquiryModal);
+            }
+        });
+    }
+
+    bindClick('floating-guest-home-btn', () => {
+        showPortalPage(false);
+    });
+
+    // ==========================================
+    // 系統頂部主要導覽按鈕（作業種類、聯絡簿、學生詳情、管理班級、設定、新增作業、條碼）
+    // ==========================================
+
+    // 1. 作業種類按鈕
+    bindClick('show-types-modal-btn', () => {
+        showHomeworkTypesPage();
+    });
+
+    // 2. 聯絡簿按鈕
+    bindClick('contact-book-btn', () => {
+        if (!state.currentClassId || state.appData.classes.length === 0) {
+            showAlertModal("提示", "請先建立或選擇班級，方可使用聯絡簿功能！");
+            renderClassList();
+            openModal(document.getElementById('manage-classes-modal'));
+            return;
+        }
+        showContactBookPage();
+    });
+
+    // 3. 學生詳情按鈕
+    bindClick('student-details-btn', () => {
+        if (!state.currentClassId || state.appData.classes.length === 0) {
+            showAlertModal("提示", "請先建立或選擇班級，方可查閱學生詳情！");
+            renderClassList();
+            openModal(document.getElementById('manage-classes-modal'));
+            return;
+        }
+        showStudentDetailsPage();
+    });
+
+    // 4. 管理班級按鈕
+    bindClick('manage-classes-btn', () => {
+        renderClassList();
+        openModal(document.getElementById('manage-classes-modal'));
+    });
+
+    // 倒退還原備份資料處理器
+    const handleRestoreBackup = async (dataStr) => {
+        try {
+            const restored = sanitizeAppData(JSON.parse(dataStr));
+            fixDates(restored);
+            state.appData = restored;
+            state.currentClassId = state.appData.classes?.[0]?.id || null;
+            await saveData();
+            fullRender();
+            showToast("已成功倒退還原備份資料！", "success");
+        } catch(e) {
+            showAlertModal("還原失敗", "備份資料損壞或格式不符：" + (e.message || e));
+        }
+    };
+
+    // 5. 系統設定按鈕
+    bindClick('settings-btn', () => {
+        updateDataManagementUI(handleRestoreBackup);
+        openModal(document.getElementById('settings-modal'));
+    });
+
+    // 6. 新增作業按鈕
+    bindClick('show-add-modal-btn', () => {
+        if (!state.currentClassId || state.appData.classes.length === 0) {
+            showAlertModal("提示", "請先在「管理班級」建立班級後，再新增作業！");
+            renderClassList();
+            openModal(document.getElementById('manage-classes-modal'));
+            return;
+        }
+        const modal = document.getElementById('add-homework-modal');
+        if (!modal) return;
+        const titleEl = document.getElementById('homework-modal-title');
+        if (titleEl) titleEl.textContent = '新增作業';
+        document.getElementById('student-count')?.setAttribute('required', 'required');
+        modal.querySelector('form')?.reset();
+        const hwNameInput = document.getElementById('homework-name');
+        if (hwNameInput) hwNameInput.value = '';
+        const editHwIdInput = document.getElementById('edit-homework-id');
+        if (editHwIdInput) editHwIdInput.value = '';
+        const scContainer = document.getElementById('student-count-container');
+        if (scContainer) scContainer.style.display = 'grid';
+        const htContainer = document.getElementById('homework-type-container');
+        if (htContainer) htContainer.style.display = 'block';
+        const msHint = document.getElementById('missing-seats-hint');
+        if (msHint) msHint.style.display = 'block';
+        updateTypeSelects();
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const studentCountInput = document.getElementById('student-count');
+        const missingSeatsInput = document.getElementById('homework-missing-seats');
+        if (currentClass && currentClass.lastMaxSeat) {
+            if (studentCountInput) studentCountInput.value = currentClass.lastMaxSeat;
+            if (missingSeatsInput) missingSeatsInput.value = currentClass.lastMissingSeats || '';
+        } else {
+            const classHws = state.appData.homeworks.filter(h => h.classId === state.currentClassId);
+            if (classHws.length > 0) {
+                let maxSeat = 0;
+                (classHws[classHws.length - 1].students || []).forEach(s => maxSeat = Math.max(maxSeat, s.seat));
+                if (studentCountInput) studentCountInput.value = maxSeat || 30;
+            } else {
+                if (studentCountInput) studentCountInput.value = 30;
+            }
+        }
+        openModal(modal);
+    });
+
+    // 7. 條碼設定按鈕
+    function renderBarcodeModalInputs() {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const maxSeatInput = document.getElementById('barcode-max-seat');
+        const container = document.getElementById('barcode-inputs-container');
+        if (!container) return;
+        const maxSeat = parseInt(maxSeatInput?.value || currentClass?.lastMaxSeat || 30, 10);
+        if (maxSeatInput) maxSeatInput.value = maxSeat;
+        
+        container.innerHTML = '';
+        const barcodes = currentClass?.barcodes || {};
+        for (let i = 1; i <= maxSeat; i++) {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 p-1.5 rounded-lg bg-white border border-slate-100 shadow-xs';
+            row.innerHTML = `
+                <span class="w-12 text-center text-xs font-bold text-slate-500 font-mono">${i} 號</span>
+                <input type="text" data-seat="${i}" value="${barcodes[i] || ''}" placeholder="請輸入或刷取條碼" class="barcode-seat-input flex-grow text-xs p-2 rounded-md border border-slate-200 font-mono focus:ring-1 focus:ring-indigo-500">
+            `;
+            container.appendChild(row);
+        }
+    }
+
+    bindClick('set-barcodes-btn', () => {
+        if (!state.currentClassId || state.appData.classes.length === 0) {
+            showAlertModal("提示", "請先建立或選擇班級，方可進行學生條碼設定！");
+            renderClassList();
+            openModal(document.getElementById('manage-classes-modal'));
+            return;
+        }
+        renderBarcodeModalInputs();
+        openModal(document.getElementById('barcodes-modal'));
+    });
+
+    bindClick('update-barcode-seats-btn', () => {
+        renderBarcodeModalInputs();
+        showToast("已更新座號輸入清單", "info");
+    });
+
+    bindClick('auto-gen-barcodes-btn', () => {
+        const inputs = document.querySelectorAll('#barcode-inputs-container input');
+        if (inputs.length < 2) return;
+        const val1 = parseInt(inputs[0]?.value, 10);
+        const val2 = parseInt(inputs[1]?.value, 10);
+        if (isNaN(val1) || isNaN(val2)) {
+            showAlertModal("無法推算", "請至少在 1 號與 2 號輸入連續純數字條碼，系統方能自動等差推算。");
+            return;
+        }
+        const diff = val2 - val1;
+        inputs.forEach((input, idx) => {
+            input.value = val1 + (diff * idx);
+        });
+        showToast("條碼已自動推算完成！請記得點選「儲存配置」", "success");
+    });
+
+    bindClick('save-barcodes-btn', async () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (!currentClass) return;
+        const barcodes = {};
+        const inputs = document.querySelectorAll('#barcode-inputs-container input');
+        inputs.forEach(input => {
+            const seat = input.dataset.seat;
+            const val = input.value.trim();
+            if (seat && val) barcodes[seat] = val;
+        });
+        currentClass.barcodes = barcodes;
+        const maxSeatInput = document.getElementById('barcode-max-seat');
+        if (maxSeatInput) currentClass.lastMaxSeat = parseInt(maxSeatInput.value, 10) || 30;
+        await saveData();
+        closeModal(document.getElementById('barcodes-modal'));
+        showToast("班級條碼配置已成功儲存！", "success");
+    });
+
+    // 8. 各子分頁返回按鈕
+    bindClick('back-to-main-btn', () => {
+        const detailPage = document.getElementById('detail-page');
+        if (detailPage && detailPage.dataset.from === 'student-details-page') {
+            detailPage.dataset.from = '';
+            showStudentDetailsPage();
+        } else {
+            showMainPage();
+        }
+    });
+    bindClick('back-from-student-details-btn', () => {
+        state.lastActiveStudentSeat = null;
+        showMainPage();
+    });
+    bindClick('back-from-types-btn', () => showMainPage());
+    bindClick('back-from-contact-book-btn', () => showMainPage());
+
+    // 檢視全勤學生名單按鈕（學生詳情統計頁）
+    bindClick('show-overall-all-done-btn', () => {
+        if (!state.currentClassId || state.appData.classes.length === 0) {
+            showAlertModal("提示", "請先建立或選擇班級！");
+            return;
+        }
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const filteredHomeworks = state.appData.homeworks.filter(hw => hw.classId === state.currentClassId);
+        
+        if (filteredHomeworks.length === 0) {
+            showAlertModal("提示", "目前此班級尚無登錄任何作業，無法統計全勤名單。");
+            return;
+        }
+
+        const maxSeat = currentClass?.maxSeat || (state.appData.settings?.maxSeat || 35);
+        const missingSeats = new Set(currentClass?.missingSeats || []);
+
+        // 計算全勤學生：在目前班級的所有作業中，每一項都已完成且非缺號
+        const allDoneSeats = [];
+        for (let seat = 1; seat <= maxSeat; seat++) {
+            if (missingSeats.has(seat)) continue;
+            
+            const allCompleted = filteredHomeworks.every(hw => {
+                const student = (hw.students || []).find(s => s.seat === seat);
+                if (!student) return false;
+                const typeId = hw.typeId || 'default';
+                return isStudentCompleted(student, typeId);
+            });
+
+            if (allCompleted) {
+                allDoneSeats.push(seat);
+            }
+        }
+
+        renderAllDoneList(allDoneSeats, 'overall-all-done-list');
+        const descEl = document.getElementById('overall-all-done-desc');
+        if (descEl) {
+            descEl.textContent = `此處列出在當前班級的所有作業中，狀態皆為「已完成/已繳交」的學生（共 ${allDoneSeats.length} 位全勤）。`;
+        }
+        const modal = document.getElementById('overall-all-done-modal');
+        if (modal) openModal(modal);
+    });
+
+    // 彈窗關閉
+    bindClick('portal-modal-close-btn', () => closePortalAuthModal());
+    const authModalEl = document.getElementById('portal-auth-modal');
+    if (authModalEl) {
+        authModalEl.addEventListener('click', (e) => {
+            if (e.target === authModalEl) closePortalAuthModal();
+        });
+    }
+
+    // 聯絡作者與意見反饋
+    const openAuthorFeedbackModal = () => {
+        const modal = document.getElementById('author-feedback-modal');
+        if (modal) modal.classList.remove('hidden');
+    };
+    const closeAuthorFeedbackModal = () => {
+        const modal = document.getElementById('author-feedback-modal');
+        if (modal) modal.classList.add('hidden');
+    };
+    const copyAuthorEmail = async () => {
+        const email = 'ianw.solar@gmail.com';
+        await safeCopyToClipboard(email, "已複製作者信箱：ianw.solar@gmail.com");
+        const copyBtnText = document.getElementById('author-copy-btn-text');
+        if (copyBtnText) {
+            copyBtnText.textContent = "已複製！";
+            setTimeout(() => { copyBtnText.textContent = "複製信箱"; }, 2000);
+        }
+    };
+
+    bindClick('portal-ribbon-feedback-btn', openAuthorFeedbackModal);
+    bindClick('portal-nav-feedback-btn', openAuthorFeedbackModal);
+    bindClick('portal-hero-feedback-btn', openAuthorFeedbackModal);
+    bindClick('portal-footer-feedback-btn', openAuthorFeedbackModal);
+    bindClick('portal-footer-copy-email-btn', copyAuthorEmail);
+    bindClick('author-feedback-close-btn', closeAuthorFeedbackModal);
+    bindClick('author-feedback-copy-btn', copyAuthorEmail);
+
+    const feedbackModalEl = document.getElementById('author-feedback-modal');
+    if (feedbackModalEl) {
+        feedbackModalEl.addEventListener('click', (e) => {
+            if (e.target === feedbackModalEl) closeAuthorFeedbackModal();
+        });
+    }
+
+    // 第一次進入首頁彈出的專屬「給老師的話」視窗
+    const openLetterToTeacherModal = () => {
+        const modal = document.getElementById('letter-to-teacher-modal');
+        if (modal) openModal(modal);
+    };
+    const closeLetterToTeacherModal = () => {
+        const modal = document.getElementById('letter-to-teacher-modal');
+        if (modal) closeModal(modal);
+        try {
+            localStorage.setItem('has_seen_letter_to_teacher', 'true');
+        } catch (e) {
+            console.error('Error setting localStorage:', e);
+        }
+    };
+
+    bindClick('portal-nav-letter-btn', openLetterToTeacherModal);
+    bindClick('portal-footer-letter-btn', openLetterToTeacherModal);
+    bindClick('close-letter-modal-btn', closeLetterToTeacherModal);
+    bindClick('btn-know-letter', closeLetterToTeacherModal);
+
+    const letterModalEl = document.getElementById('letter-to-teacher-modal');
+    if (letterModalEl) {
+        letterModalEl.addEventListener('click', (e) => {
+            if (e.target === letterModalEl) closeLetterToTeacherModal();
+        });
+    }
+
+    // 初次拜訪首頁自動彈出「給老師的話」
+    try {
+        if (!localStorage.getItem('has_seen_letter_to_teacher')) {
+            setTimeout(() => {
+                const portal = document.getElementById('portal-page');
+                if (portal && !portal.classList.contains('hidden')) {
+                    openLetterToTeacherModal();
+                }
+            }, 600);
+        }
+    } catch (e) {
+        console.error('Error checking has_seen_letter_to_teacher:', e);
+    }
+
+    // 功能介面截圖大圖放大預覽 Lightbox
+    const lightboxModal = document.getElementById('feature-lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-modal-img');
+    const lightboxTitle = document.getElementById('lightbox-modal-title');
+    const closeLightbox = () => {
+        if (lightboxModal) lightboxModal.classList.add('hidden');
+    };
+    bindClick('feature-lightbox-close-btn', closeLightbox);
+    if (lightboxModal) {
+        lightboxModal.addEventListener('click', (e) => {
+            if (e.target === lightboxModal) closeLightbox();
+        });
+    }
+
+    document.querySelectorAll('.feature-screenshot-wrapper').forEach(wrapper => {
+        wrapper.addEventListener('click', () => {
+            const title = wrapper.getAttribute('data-title') || '功能介面預覽';
+            const src = wrapper.getAttribute('data-src');
+            const fallback = wrapper.getAttribute('data-fallback') || src;
+            if (lightboxTitle) lightboxTitle.textContent = title;
+            if (lightboxImg) {
+                lightboxImg.src = src;
+                lightboxImg.onerror = () => {
+                    lightboxImg.onerror = null;
+                    lightboxImg.src = fallback;
+                };
+            }
+            if (lightboxModal) lightboxModal.classList.remove('hidden');
+        });
+    });
+
+    // 登入 / 註冊 / 忘記密碼視圖切換
+    bindClick('portal-to-signup-btn', () => {
+        document.getElementById('portal-view-signin')?.classList.add('hidden');
+        document.getElementById('portal-view-forgot')?.classList.add('hidden');
+        document.getElementById('portal-view-signup')?.classList.remove('hidden');
+    });
+
+    bindClick('portal-signup-to-signin-btn', () => {
+        document.getElementById('portal-view-signup')?.classList.add('hidden');
+        document.getElementById('portal-view-forgot')?.classList.add('hidden');
+        document.getElementById('portal-view-signin')?.classList.remove('hidden');
+    });
+
+    bindClick('portal-to-forgot-btn', () => {
+        document.getElementById('portal-view-signin')?.classList.add('hidden');
+        document.getElementById('portal-view-signup')?.classList.add('hidden');
+        document.getElementById('portal-view-forgot')?.classList.remove('hidden');
+    });
+
+    bindClick('portal-forgot-to-signin-btn', () => {
+        document.getElementById('portal-view-forgot')?.classList.add('hidden');
+        document.getElementById('portal-view-signup')?.classList.add('hidden');
+        document.getElementById('portal-view-signin')?.classList.remove('hidden');
+    });
+
+    bindClick('portal-enter-app-btn', () => {
+        proceedIntoSystem();
+    });
+
+    bindClick('portal-switch-account-btn', async () => {
+        // 切換帳號前，先安全保存上一帳號資料並完整解除上一帳號狀態，徹底防止跨帳號資料覆蓋
+        await performFullLogout();
+        document.getElementById('portal-view-loggedin')?.classList.add('hidden');
+        document.getElementById('portal-view-signin')?.classList.remove('hidden');
+    });
+
+    // 登出邏輯
+    const performFullLogout = async () => {
+        // 先完整保存當前帳號的最新修改至該用戶專屬之本地快取與雲端
+        await flushPendingSave();
+        stopRealtimeCloudSync();
+
+        // 磁碟直接寫入控制權重置，嚴禁前一個帳號的磁碟檔案綁定外洩給下一位使用者
+        state.fileHandle = null;
+
+        // 先完全退出可能存在的管理員檢視模式
+        state.adminViewModeUserId = null;
+        state.adminViewModeUserEmail = null;
+        state.adminOriginalAppData = null;
+        state.adminOriginalClassId = null;
+        sessionStorage.removeItem('admin_backup_appData');
+        sessionStorage.removeItem('admin_backup_classId');
+        try { updateAdminInspectionUI(); } catch(e) {}
+
+        localStorage.removeItem('app_user_session');
+        localStorage.removeItem('localAdminSession');
+        localStorage.removeItem('adminPassword');
+        localStorage.removeItem('storageSelected');
+        localStorage.removeItem('visitor_id');
+        localStorage.removeItem('visitor_name');
+        sessionStorage.clear();
+        sessionStorage.setItem('is_explicit_logout', 'true');
+        state.isDevMode = false;
+
+        if (fbAuth && state.currentUser) {
+            try {
+                await signOut(fbAuth);
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
+        }
+        state.currentUser = null;
+        state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+        state.currentClassId = null;
+        // 清除全域暫存快取，但保留各帳號專屬之 homeworkAppData_${userKey}
+        localStorage.removeItem('homeworkAppData');
+        localStorage.removeItem('currentClassId');
+
+        closeModal(document.getElementById('settings-modal'));
+        closeModal(document.getElementById('admin-modal'));
+        closeModal(document.getElementById('portal-auth-modal'));
+        closeModal(document.getElementById('email-verify-modal'));
+        closeModal(document.getElementById('account-picker-modal'));
+        document.getElementById('admin-modal-btn')?.classList.add('hidden');
+        document.getElementById('admin-btn')?.classList.add('hidden');
+        updateDataManagementUI(handleRestoreBackup);
+        updatePortalUI();
+        showPortalPage(true);
+        showToast("已成功登出並返回網站首頁", "info");
+    };
+    bindClick('portal-logout-btn', performFullLogout);
+    bindClick('portal-nav-logout-btn', performFullLogout);
+    bindClick('close-account-picker-btn', () => {
+        closeModal(document.getElementById('account-picker-modal'));
+    });
+
+    // 信箱驗證等待機制狀態與輔助函式
+    let verifyPollingTimer = null;
+    let currentPendingVerification = null;
+
+    const stopVerificationPolling = () => {
+        if (verifyPollingTimer) {
+            clearInterval(verifyPollingTimer);
+            verifyPollingTimer = null;
+        }
+    };
+
+    const completeVerificationAndLogin = async (targetInfo) => {
+        stopVerificationPolling();
+        closeModal(document.getElementById('email-verify-modal'));
+        closeModal(document.getElementById('portal-auth-modal'));
+        closeModal(document.getElementById('account-picker-modal'));
+
+        const targetEmail = targetInfo.email || targetInfo.authEmail || '';
+        const isAdminUser = targetEmail.toLowerCase() === 'ianw.solar@gmail.com';
+        const userObj = {
+            uid: targetInfo.uid,
+            email: targetEmail,
+            authEmail: targetInfo.authEmail || targetEmail,
+            displayName: targetInfo.displayName || targetInfo.name || targetInfo.username || targetInfo.accountName || '一般帳號',
+            emailVerified: true,
+            isGoogleAuth: false,
+            isAdmin: isAdminUser,
+            isGuest: false
+        };
+
+        state.currentUser = userObj;
+        sessionStorage.setItem('auth_provider', 'password');
+        sessionStorage.removeItem('is_explicit_logout');
+        sessionStorage.removeItem('app_is_guest_mode');
+        localStorage.removeItem('visitor_id');
+        localStorage.removeItem('visitor_name');
+        localStorage.setItem('app_user_session', JSON.stringify(userObj));
+        localStorage.setItem('storageSelected', 'true');
+        updateDataManagementUI();
+        try { updatePortalUI(); } catch(e) {}
+        if (isAdminUser) {
+            document.getElementById('admin-modal-btn')?.classList.remove('hidden');
+            document.getElementById('admin-btn')?.classList.remove('hidden');
+        } else {
+            document.getElementById('admin-modal-btn')?.classList.add('hidden');
+            document.getElementById('admin-btn')?.classList.add('hidden');
+        }
+
+        // 優先載入該帳號之本地資料；若目前記憶體有未綁定班級作業資料則予以綁定保留 (杜絕登入後資料消失)
+        const userKey = getUserStorageKey(userObj);
+        const userLocal = loadLocalDataForUser(userObj);
+        if (userLocal && Array.isArray(userLocal.classes) && userLocal.classes.length > 0) {
+            state.appData = userLocal;
+            state.currentClassId = localStorage.getItem('currentClassId_' + userKey) || state.appData.classes[0]?.id || null;
+        } else if (state.appData && Array.isArray(state.appData.classes) && state.appData.classes.length > 0) {
+            localStorage.setItem('homeworkAppData_' + userKey, safeStringify(state.appData));
+            if (state.currentClassId) localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+        } else {
+            state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+            state.currentClassId = null;
+        }
+        localStorage.setItem('homeworkAppData', safeStringify(state.appData));
+        if (state.currentClassId) localStorage.setItem('currentClassId', state.currentClassId);
+
+        // 更新本地與雲端的 boundAccounts 記錄為 emailVerified: true (適用所有使用者信箱)
+        try {
+            let localBounds = JSON.parse(localStorage.getItem('bound_accounts_all') || localStorage.getItem('bound_accounts_ianw') || '[]');
+            const idx = localBounds.findIndex(b => b.id === userObj.uid || b.uid === userObj.uid);
+            if (idx >= 0) {
+                localBounds[idx].emailVerified = true;
+                localStorage.setItem('bound_accounts_all', JSON.stringify(localBounds));
+                if (isAdminUser) {
+                    localStorage.setItem('bound_accounts_ianw', JSON.stringify(localBounds));
+                }
+            }
+            if (fbDb) {
+                await setDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', userObj.uid), {
+                    emailVerified: true
+                }, { merge: true });
+            }
+        } catch(e) { console.warn("Update boundAccount verified status err:", e); }
+
+        showToast("信箱驗證成功！歡迎進入系統", "success");
+        showAlertModal(
+            "信箱驗證成功！",
+            `恭喜您！您的電子信箱已通過驗證，帳號【${userObj.displayName}】已正式啟用！\n\n日後登入時，您只需輸入使用者名稱【${userObj.displayName}】與密碼即可快速進入系統。`
+        );
+
+        showToast("正在同步雲端資料...", "info");
+        await syncUserProfile();
+        await loadDataFromCloud(true);
+        await syncDataToCloud();
+        proceedIntoSystem();
+    };
+
+    const openEmailVerificationModal = (targetEmail, userToWatch, extraData = {}) => {
+        stopVerificationPolling();
+        currentPendingVerification = {
+            user: userToWatch,
+            targetEmail: targetEmail,
+            ...extraData
+        };
+
+        const modal = document.getElementById('email-verify-modal');
+        const displayEl = document.getElementById('verify-email-display');
+        if (displayEl) displayEl.textContent = targetEmail;
+
+        const statusTitle = document.getElementById('verify-status-title');
+        if (statusTitle) statusTitle.textContent = "正在自動偵測驗證狀態...";
+        const manualContainer = document.getElementById('manual-verify-container');
+        if (manualContainer) manualContainer.classList.add('hidden');
+        const manualInput = document.getElementById('manual-verify-input');
+        if (manualInput) manualInput.value = '';
+
+        openModal(modal);
+
+        // 每 3 秒背景自動輪詢偵測使用者的 emailVerified 狀態
+        verifyPollingTimer = setInterval(async () => {
+            try {
+                if (!fbAuth?.currentUser) return;
+                await reload(fbAuth.currentUser);
+                if (fbAuth.currentUser.emailVerified) {
+                    await completeVerificationAndLogin({
+                        uid: fbAuth.currentUser.uid,
+                        email: currentPendingVerification?.displayEmail || currentPendingVerification?.targetEmail || fbAuth.currentUser.email,
+                        authEmail: fbAuth.currentUser.email,
+                        displayName: currentPendingVerification?.name || fbAuth.currentUser.displayName || '一般帳號',
+                        isIanw: currentPendingVerification?.isIanw
+                    });
+                }
+            } catch (e) {
+                console.warn("Verify polling check err:", e);
+            }
+        }, 3000);
+    };
+
+    // 帳號挑選 Modal 輔助函式 (針對同信箱多組帳號)
+    const openAccountPickerModal = (candidates, onSelect) => {
+        const modal = document.getElementById('account-picker-modal');
+        const list = document.getElementById('account-picker-list');
+        if (!modal || !list) return;
+        list.innerHTML = '';
+        candidates.forEach((cand, idx) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'w-full p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/40 transition-all flex items-center justify-between group text-left cursor-pointer shadow-xs';
+            const dateStr = cand.createdAt ? new Date(cand.createdAt).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : `帳號 ${idx + 1}`;
+            const displayEmailStr = cand.email || '已綁定帳號';
+            item.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100/80 text-indigo-700 font-black flex items-center justify-center text-sm shadow-xs"><i class="fa-solid fa-user"></i></div>
+                    <div>
+                        <div class="font-black text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">${cand.username || cand.displayName || cand.accountName || '一般帳號'}</div>
+                        <div class="text-[11px] text-slate-400 font-medium mt-0.5">${displayEmailStr} · 建立於 ${dateStr}</div>
+                    </div>
+                </div>
+                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all">登入</span>
+            `;
+            item.onclick = () => {
+                closeModal(modal);
+                onSelect(cand);
+            };
+            list.appendChild(item);
+        });
+        openModal(modal);
+    };
+
+    // 密碼顯示/隱藏切換
+    const setupPasswordToggle = (btnId, inputId) => {
+        const btn = document.getElementById(btnId);
+        const input = document.getElementById(inputId);
+        if (btn && input) {
+            btn.addEventListener('click', () => {
+                const isPwd = input.type === 'password';
+                input.type = isPwd ? 'text' : 'password';
+                btn.innerHTML = isPwd 
+                    ? `<svg class="w-4 h-4 fill-current inline-block" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7c2.76 0 5 2.24 5 5c0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75c-1.73-4.39-6-7.5-11-7.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28l.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5c1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22L21 20.73L3.27 3L2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65c0 1.66 1.34 3 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53c-2.76 0-5-2.24-5-5c0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15l.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`
+                    : `<svg class="w-4 h-4 fill-current inline-block" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5s5 2.24 5 5s-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3s3-1.34 3-3s-1.34-3-3-3z"/></svg>`;
+            });
+        }
+    };
+    setupPasswordToggle('toggle-signin-password', 'portal-signin-password');
+    setupPasswordToggle('toggle-signup-password', 'portal-signup-password');
+
+    // 登入表單 (支援所有使用者以「使用者名稱」或「電子信箱」搭配密碼登入)
+    bindSubmit('portal-signin-form', async (e) => {
+        e.preventDefault();
+        const accountInput = document.getElementById('portal-signin-email')?.value.trim();
+        const password = document.getElementById('portal-signin-password')?.value;
+        if (!accountInput || !password) return;
+        if (!fbAuth) { showAlertModal("無法登入", "尚未設定 Firebase 參數。"); return; }
+        const submitBtn = document.getElementById('portal-signin-btn');
+        const origText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '正在驗證登入...';
+        }
+
+        try {
+            // 1. 取得所有綁定帳號記錄 (從本地與 Firestore boundAccounts 雙向同步)
+            let boundList = [];
+            try { boundList = JSON.parse(localStorage.getItem('bound_accounts_all') || localStorage.getItem('bound_accounts_ianw') || '[]'); } catch(e) {}
+            if (fbDb) {
+                try {
+                    const boundSnap = await getDocs(collection(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts'));
+                    const cloudDocIds = new Set();
+                    boundSnap.forEach(d => {
+                        cloudDocIds.add(d.id);
+                        const dData = d.data();
+                        const existingIdx = boundList.findIndex(b => (b.id && b.id === dData.id) || (b.uid && b.uid === dData.uid));
+                        if (existingIdx >= 0) {
+                            boundList[existingIdx] = { ...boundList[existingIdx], ...dData };
+                        } else {
+                            boundList.push(dData);
+                        }
+                    });
+
+                    // 雙向補傳：若本地有記錄但雲端尚無，自動上傳至雲端 boundAccounts
+                    for (const b of boundList) {
+                        const docId = b.id || b.uid;
+                        if (docId && !cloudDocIds.has(docId)) {
+                            try {
+                                await setDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', docId), b, { merge: true });
+                                cloudDocIds.add(docId);
+                                console.log("Auto-synced local bound account to cloud:", b.username || b.email);
+                            } catch(syncErr) {
+                                console.warn("Auto-sync local bound account err:", syncErr);
+                            }
+                        }
+                    }
+
+                    localStorage.setItem('bound_accounts_all', JSON.stringify(boundList));
+                } catch(e) {
+                    console.warn("Fetch boundAccounts error:", e);
+                }
+            }
+
+            const inputLower = accountInput.toLowerCase();
+
+            // 2. 比對候選帳號：優先以使用者名稱 (username / accountName / displayName) 精確比對
+            let matchingCandidates = boundList.filter(b => 
+                (b.username && b.username.toLowerCase() === inputLower) ||
+                (b.accountName && b.accountName.toLowerCase() === inputLower) ||
+                (b.displayName && b.displayName.toLowerCase() === inputLower)
+            );
+
+            // 若使用者輸入的是電子信箱，也支援以 email / authEmail 比對
+            if (matchingCandidates.length === 0 && (accountInput.includes('@') || inputLower === 'ianw.solar@gmail.com')) {
+                matchingCandidates = boundList.filter(b => 
+                    (b.email && b.email.toLowerCase() === inputLower) ||
+                    (b.authEmail && b.authEmail.toLowerCase() === inputLower)
+                );
+            }
+
+            // 3. 執行指定帳號登入程序
+            const executeLoginForCandidate = async (cand) => {
+                if (cand.isGoogleAuth) {
+                    showAlertModal("請使用 Google 快速登入", `帳號「${cand.displayName || cand.username || cand.email}」為 Google 授權帳號，請直接點選彈窗下方的「Google 帳號快速登入」按鈕進行登入。`);
+                    return;
+                }
+                let cred = null;
+                const targetEmail = cand.authEmail || cand.email;
+                try {
+                    cred = await signInWithEmailAndPassword(fbAuth, targetEmail, password);
+                } catch (signInErr) {
+                    if (cand.email && cand.email !== targetEmail) {
+                        try { cred = await signInWithEmailAndPassword(fbAuth, cand.email, password); } catch(e) {}
+                    }
+                    if (!cred) {
+                        const inputHash = await hashPassword(password);
+                        const isPasswordMatch = (cand.passwordHash && cand.passwordHash === inputHash) ||
+                                                (cand.password && (cand.password === inputHash || cand.password === password));
+                        if (!isPasswordMatch && (cand.password || cand.passwordHash)) {
+                            showAlertModal("登入失敗", "密碼錯誤，請確認後重試。若忘記密碼請點選下方「忘記密碼？」");
+                            return;
+                        }
+                        if (!isPasswordMatch) {
+                            if (signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/wrong-password' || signInErr.code === 'auth/user-not-found') {
+                                if ((cand.email || '').toLowerCase() === 'ianw.solar@gmail.com' || (cand.email || '').toLowerCase().includes('@gmail.com')) {
+                                    showAlertModal("登入提示", "帳號或密碼不相符。\n\n提示：若此帳號平時是使用 Google 授權登入，請直接點選下方「使用 Google 帳號快速登入」按鈕！");
+                                } else {
+                                    showAlertModal("登入失敗", "密碼錯誤或憑證無效，請確認後重試。若忘記密碼請點選下方「忘記密碼？」");
+                                }
+                                return;
+                            }
+                            throw signInErr;
+                        }
+                    }
+                }
+
+                const isUserAdmin = ((cand.email || (cred ? cred.user.email : '')).toLowerCase() === 'ianw.solar@gmail.com') || !!cand.isAdmin || cand.role === 'admin';
+                const userObj = {
+                    uid: cred ? cred.user.uid : (cand.uid || cand.id),
+                    email: cand.email || (cred ? cred.user.email : ''),
+                    authEmail: targetEmail,
+                    displayName: cand.displayName || cand.username || cand.accountName || '一般使用者',
+                    emailVerified: true,
+                    isGoogleAuth: false,
+                    isAdmin: isUserAdmin,
+                    isGuest: false
+                };
+                state.currentUser = userObj;
+                sessionStorage.setItem('auth_provider', 'password');
+                sessionStorage.removeItem('is_explicit_logout');
+                sessionStorage.removeItem('app_is_guest_mode');
+                localStorage.removeItem('visitor_id');
+                localStorage.removeItem('visitor_name');
+                localStorage.setItem('app_user_session', JSON.stringify(userObj));
+                localStorage.setItem('storageSelected', 'true');
+                updateDataManagementUI();
+                try { updatePortalUI(); } catch(e) {}
+                if (isUserAdmin) {
+                    document.getElementById('admin-modal-btn')?.classList.remove('hidden');
+                    document.getElementById('admin-btn')?.classList.remove('hidden');
+                } else {
+                    document.getElementById('admin-modal-btn')?.classList.add('hidden');
+                    document.getElementById('admin-btn')?.classList.add('hidden');
+                }
+                showToast(`登入成功！歡迎 ${userObj.displayName}`, "success");
+
+                // 優先載入該帳號之本地資料；若本地有未綁定班級作業資料則予以綁定保留 (杜絕登入後資料消失)
+                const userKey = getUserStorageKey(userObj);
+                const userLocal = loadLocalDataForUser(userObj);
+                if (userLocal && Array.isArray(userLocal.classes) && userLocal.classes.length > 0) {
+                    state.appData = userLocal;
+                    state.currentClassId = localStorage.getItem('currentClassId_' + userKey) || state.appData.classes[0]?.id || null;
+                } else if (state.appData && Array.isArray(state.appData.classes) && state.appData.classes.length > 0) {
+                    localStorage.setItem('homeworkAppData_' + userKey, safeStringify(state.appData));
+                    if (state.currentClassId) localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+                } else {
+                    state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+                    state.currentClassId = null;
+                }
+                localStorage.setItem('homeworkAppData', safeStringify(state.appData));
+                if (state.currentClassId) localStorage.setItem('currentClassId', state.currentClassId);
+
+                showToast("正在同步雲端資料...", "info");
+                await loadDataFromCloud(true);
+                proceedIntoSystem();
+            };
+
+            if (matchingCandidates.length === 1) {
+                await executeLoginForCandidate(matchingCandidates[0]);
+                return;
+            } else if (matchingCandidates.length > 1) {
+                const inputHash = await hashPassword(password);
+                const pwdMatches = matchingCandidates.filter(b => 
+                    (b.passwordHash && b.passwordHash === inputHash) ||
+                    (b.password && (b.password === inputHash || b.password === password))
+                );
+                if (pwdMatches.length === 1) {
+                    await executeLoginForCandidate(pwdMatches[0]);
+                    return;
+                }
+                openAccountPickerModal(pwdMatches.length > 0 ? pwdMatches : matchingCandidates, async (chosen) => {
+                    await executeLoginForCandidate(chosen);
+                });
+                return;
+            } else {
+                // 4. 若在 boundAccounts 未找到符合項
+                if (accountInput.includes('@')) {
+                    // 若輸入的是 ianw.solar@gmail.com 或 Google 帳號，優先捕獲處理
+                    let cred = null;
+                    try {
+                        cred = await signInWithEmailAndPassword(fbAuth, accountInput, password);
+                    } catch(directErr) {
+                        if (accountInput.toLowerCase() === 'ianw.solar@gmail.com' || accountInput.toLowerCase().includes('@gmail.com')) {
+                            console.warn("Direct sign in notice for Google email:", directErr?.code);
+                            showAlertModal("請使用 Google 快速登入", `帳號 (${accountInput}) 平常是以 Google 授權方式登入。\n\n請直接點選下方的「使用 Google 帳號快速登入」按鈕！`);
+                            return;
+                        }
+                        throw directErr;
+                    }
+                    sessionStorage.setItem('auth_provider', 'password');
+                    sessionStorage.removeItem('is_explicit_logout');
+                    sessionStorage.removeItem('app_is_guest_mode');
+                    localStorage.removeItem('visitor_id');
+                    localStorage.removeItem('visitor_name');
+                    const isUserAdmin = cred.user.email.toLowerCase() === 'ianw.solar@gmail.com';
+                    const userObj = {
+                        uid: cred.user.uid,
+                        email: cred.user.email,
+                        displayName: cred.user.displayName || cred.user.email.split('@')[0],
+                        emailVerified: true,
+                        isGoogleAuth: false,
+                        isAdmin: isUserAdmin,
+                        isGuest: false
+                    };
+                    state.currentUser = userObj;
+                    localStorage.setItem('app_user_session', JSON.stringify(userObj));
+                    localStorage.setItem('storageSelected', 'true');
+                    if (isUserAdmin) {
+                        document.getElementById('admin-modal-btn')?.classList.remove('hidden');
+                        document.getElementById('admin-btn')?.classList.remove('hidden');
+                    } else {
+                        document.getElementById('admin-modal-btn')?.classList.add('hidden');
+                        document.getElementById('admin-btn')?.classList.add('hidden');
+                    }
+
+                    // 優先載入該帳號之本地資料；若本地有未綁定班級作業資料則予以綁定保留 (杜絕登入後資料消失)
+                    const userKey = getUserStorageKey(userObj);
+                    const userLocal = loadLocalDataForUser(userObj);
+                    if (userLocal && Array.isArray(userLocal.classes) && userLocal.classes.length > 0) {
+                        state.appData = userLocal;
+                        state.currentClassId = localStorage.getItem('currentClassId_' + userKey) || state.appData.classes[0]?.id || null;
+                    } else if (state.appData && Array.isArray(state.appData.classes) && state.appData.classes.length > 0) {
+                        localStorage.setItem('homeworkAppData_' + userKey, safeStringify(state.appData));
+                        if (state.currentClassId) localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+                    } else {
+                        state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+                        state.currentClassId = null;
+                    }
+                    localStorage.setItem('homeworkAppData', safeStringify(state.appData));
+                    if (state.currentClassId) localStorage.setItem('currentClassId', state.currentClassId);
+
+                    showToast(`登入成功！歡迎 ${userObj.displayName}`, "success");
+                    showToast("正在同步雲端資料...", "info");
+                    await loadDataFromCloud(true);
+                    proceedIntoSystem();
+                    return;
+                }
+
+                showAlertModal("登入失敗", "查無此使用者名稱或密碼錯誤，請確認後重試。若忘記密碼請點選下方「忘記密碼？」");
+                return;
+            }
+        } catch (err) {
+            console.warn("Sign in notice:", err?.code || err?.message);
+            let msg = err?.message || "登入失敗";
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                if (accountInput.toLowerCase().includes('@gmail.com') || accountInput.toLowerCase() === 'ianw.solar@gmail.com') {
+                    msg = "帳號或密碼不符。\n\n提示：若您的帳號是透過 Google 快速授權建立的，請直接點選下方的「使用 Google 帳號快速登入」按鈕！";
+                } else {
+                    msg = "使用者名稱或密碼錯誤，請確認後重試。若忘記密碼請點選下方「忘記密碼？」";
+                }
+            } else if (err.code === 'auth/too-many-requests') {
+                msg = "登入失敗次數過多，此帳號已被暫時保護，請稍後再試或透過郵件重設密碼。";
+            } else if (err.code === 'auth/invalid-email') {
+                msg = "電子信箱格式不正確，請輸入合法的 Email 地址。";
+            }
+            showAlertModal("登入失敗", msg);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+            }
+        }
+    });
+
+    // 註冊表單 (支援所有信箱申請多組帳號，必填使用者名稱)
+    bindSubmit('portal-signup-form', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('portal-signup-name')?.value.trim();
+        const email = document.getElementById('portal-signup-email')?.value.trim();
+        const password = document.getElementById('portal-signup-password')?.value;
+        const confirmPassword = document.getElementById('portal-signup-confirm')?.value;
+
+        if (!name) {
+            showAlertModal("請輸入使用者名稱", "註冊時「使用者名稱」為必填項目，日後登入時只需輸入此使用者名稱與密碼。");
+            return;
+        }
+        if (!email || !password) return;
+        if (password !== confirmPassword) {
+            showAlertModal("密碼不一致", "兩次輸入的密碼不相同，請重新確認後再送出。");
+            return;
+        }
+        if (password.length < 6) {
+            showAlertModal("密碼長度不足", "為保障帳號安全，密碼長度需至少 6 個字元。");
+            return;
+        }
+
+        if (!fbAuth) { showAlertModal("無法註冊", "尚未設定 Firebase 參數。"); return; }
+        const submitBtn = document.getElementById('portal-signup-btn');
+        const origText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '正在建立帳號並發送驗證郵件...';
+        }
+
+        const isIanw = email.toLowerCase() === 'ianw.solar@gmail.com';
+
+        try {
+            // 檢查使用者名稱是否已被其他人註冊 (雙向同步 boundAccounts)
+            let boundList = [];
+            try { boundList = JSON.parse(localStorage.getItem('bound_accounts_all') || localStorage.getItem('bound_accounts_ianw') || '[]'); } catch(e) {}
+            if (fbDb) {
+                try {
+                    const boundSnap = await getDocs(collection(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts'));
+                    const cloudDocIds = new Set();
+                    boundSnap.forEach(d => {
+                        cloudDocIds.add(d.id);
+                        const dData = d.data();
+                        if (!boundList.some(b => (b.id && b.id === dData.id) || (b.uid && b.uid === dData.uid))) {
+                            boundList.push(dData);
+                        }
+                    });
+
+                    // 雙向補傳：若本地有記錄但雲端尚無，自動上傳至雲端 boundAccounts
+                    for (const b of boundList) {
+                        const docId = b.id || b.uid;
+                        if (docId && !cloudDocIds.has(docId)) {
+                            try {
+                                await setDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', docId), b, { merge: true });
+                                cloudDocIds.add(docId);
+                                console.log("Auto-synced local bound account to cloud:", b.username || b.email);
+                            } catch(syncErr) {
+                                console.warn("Auto-sync local bound account err:", syncErr);
+                            }
+                        }
+                    }
+
+                    localStorage.setItem('bound_accounts_all', JSON.stringify(boundList));
+                } catch(e) {
+                    console.warn("Fetch bound accounts error:", e);
+                }
+            }
+
+            const nameLower = name.toLowerCase();
+            const existingUser = boundList.find(b => 
+                (b.username && b.username.toLowerCase() === nameLower) ||
+                (b.accountName && b.accountName.toLowerCase() === nameLower) ||
+                (b.displayName && b.displayName.toLowerCase() === nameLower)
+            );
+            if (existingUser) {
+                showAlertModal(
+                    "此帳號已存在", 
+                    `使用者名稱「${name}」已經註冊過囉！\n\n系統已自動為您切換至【登入】分頁，請直接輸入密碼登入即可使用。\n\n若您要建立全新的不同帳號，請換一個專屬使用者名稱。`
+                );
+                document.getElementById('portal-view-signup')?.classList.add('hidden');
+                document.getElementById('portal-view-signin')?.classList.remove('hidden');
+                const signinEmail = document.getElementById('portal-signin-email');
+                if (signinEmail) signinEmail.value = name;
+                document.getElementById('portal-signin-password')?.focus();
+                return;
+            }
+
+            let cred = null;
+            let finalAuthEmail = email;
+
+            // 支援所有信箱皆可重複申請多組獨立帳號 (透過 sub-addressing 建立獨立 Firebase Auth 實體)
+            try {
+                cred = await createUserWithEmailAndPassword(fbAuth, email, password);
+                finalAuthEmail = email;
+            } catch (firstCreateErr) {
+                if (firstCreateErr.code === 'auth/email-already-in-use') {
+                    // 同一個信箱申辦第二組以上帳號：為該信箱建立次位址別名實體
+                    const atIdx = email.indexOf('@');
+                    const localPart = email.substring(0, atIdx).replace(/\+.*$/, '');
+                    const domainPart = email.substring(atIdx);
+                    const randomId = Date.now().toString(36) + '_' + Math.floor(Math.random() * 900 + 100);
+                    const subEmail = `${localPart}+acc${randomId}${domainPart}`;
+                    try {
+                        cred = await createUserWithEmailAndPassword(fbAuth, subEmail, password);
+                        finalAuthEmail = subEmail;
+                    } catch(subErr) {
+                        throw subErr;
+                    }
+                } else if (firstCreateErr.code === 'auth/weak-password') {
+                    showAlertModal("密碼強度不足", "為保障帳號安全，密碼長度需至少 6 個字元。");
+                    return;
+                } else if (firstCreateErr.code === 'auth/invalid-email') {
+                    showAlertModal("電子信箱格式錯誤", "請輸入合法的 Email 地址。");
+                    return;
+                } else {
+                    throw firstCreateErr;
+                }
+            }
+
+            // 更新使用者 DisplayName
+            if (cred?.user) {
+                try { await updateProfile(cred.user, { displayName: name }); } catch(e) {}
+                try { await sendEmailVerification(cred.user); } catch(e) {
+                    console.warn("sendEmailVerification err:", e);
+                }
+            }
+
+            // 將使用者帳號與雜湊密碼安全記錄至 boundAccounts (杜絕明文密碼存儲)
+            const pwdHash = await hashPassword(password);
+            const boundDoc = {
+                id: cred.user.uid,
+                uid: cred.user.uid,
+                email: email, // 使用者真實收信信箱
+                authEmail: finalAuthEmail, // Firebase Auth 實體信箱
+                username: name,
+                displayName: name,
+                accountName: name,
+                passwordHash: pwdHash,
+                emailVerified: false,
+                createdAt: new Date().toISOString()
+            };
+
+            if (fbDb) {
+                try {
+                    await setDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', cred.user.uid), boundDoc);
+                } catch(e) { console.warn("Firestore save boundAccount err:", e); }
+            }
+
+            let localBounds = [];
+            try { localBounds = JSON.parse(localStorage.getItem('bound_accounts_all') || localStorage.getItem('bound_accounts_ianw') || '[]'); } catch(e) {}
+            localBounds = localBounds.filter(b => b.id !== cred.user.uid && b.uid !== cred.user.uid);
+            localBounds.push(boundDoc);
+            localStorage.setItem('bound_accounts_all', JSON.stringify(localBounds));
+            if (isIanw) {
+                localStorage.setItem('bound_accounts_ianw', JSON.stringify(localBounds));
+            }
+
+            // 清除訪客體驗模式旗標與暫存，將目前現有班級資料安全綁定至新帳號
+            sessionStorage.removeItem('app_is_guest_mode');
+            localStorage.removeItem('visitor_id');
+            localStorage.removeItem('visitor_name');
+            const newUserKey = getUserStorageKey({ uid: cred.user.uid, email: email, authEmail: finalAuthEmail });
+            if (!state.appData || !Array.isArray(state.appData.classes) || state.appData.classes.length === 0) {
+                state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+                state.currentClassId = null;
+            }
+            const serialized = safeStringify(state.appData);
+            localStorage.setItem('homeworkAppData_' + newUserKey, serialized);
+            localStorage.setItem('homeworkAppData', serialized);
+            localStorage.setItem('homeworkAppData_last', serialized);
+            if (state.currentClassId) {
+                localStorage.setItem('currentClassId_' + newUserKey, state.currentClassId);
+                localStorage.setItem('currentClassId', state.currentClassId);
+            }
+
+            // 關閉註冊表單 Modal
+            closeModal(document.getElementById('portal-auth-modal'));
+
+            // 啟動信箱驗證等待機制：註冊後需等待驗證完成才能進入系統
+            showToast("驗證郵件已寄出！請至信箱開啟郵件並點選驗證連結", "info");
+            openEmailVerificationModal(email, cred.user, {
+                displayEmail: email,
+                authEmail: finalAuthEmail,
+                name: name,
+                username: name,
+                isIanw: isIanw
+            });
+        } catch (err) {
+            console.error("Sign up error:", err);
+            let msg = err.message;
+            if (err.code === 'auth/weak-password') {
+                msg = "密碼強度不足，請至少輸入 6 個字元。";
+            } else if (err.code === 'auth/invalid-email') {
+                msg = "電子信箱格式錯誤，請確認後重試。";
+            }
+            showAlertModal("註冊失敗", msg);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+            }
+        }
+    });
+
+    // 信箱驗證 Modal 各按鈕事件處理
+    // 1. 我已點擊信件連結 (立即手動觸發狀態檢查)
+    bindClick('confirm-email-verified-btn', async () => {
+        const btn = document.getElementById('confirm-email-verified-btn');
+        const origText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在檢查信箱驗證狀態...';
+        }
+        try {
+            if (!fbAuth?.currentUser) {
+                showAlertModal("請先登入或註冊", "尚未偵測到待驗證的帳號，請返回登入頁面。");
+                return;
+            }
+            await reload(fbAuth.currentUser);
+            if (fbAuth.currentUser.emailVerified) {
+                await completeVerificationAndLogin({
+                    uid: fbAuth.currentUser.uid,
+                    email: currentPendingVerification?.displayEmail || currentPendingVerification?.targetEmail || fbAuth.currentUser.email,
+                    authEmail: fbAuth.currentUser.email,
+                    displayName: currentPendingVerification?.name || fbAuth.currentUser.displayName || '一般帳號',
+                    isIanw: currentPendingVerification?.isIanw
+                });
+            } else {
+                showAlertModal(
+                    "尚未完成信箱驗證",
+                    `系統目前尚未收到 ${currentPendingVerification?.targetEmail || '您的信箱'} 的驗證確認。\n\n` +
+                    "【請依下列步驟啟用帳號】：\n" +
+                    "1. 前往您的電子信箱。\n" +
+                    "2. 特別注意：請務必查看【垃圾郵件匣 (Spam)】或【促銷內容】！\n" +
+                    "3. 點選郵件中的「驗證連結」。\n" +
+                    "4. 點選後，返回此視窗再次按下本按鈕即可順利進入系統！\n\n" +
+                    "若仍未收到信件，可點選下方「重新發送驗證信」。"
+                );
+            }
+        } catch (err) {
+            console.error("Check verify status err:", err);
+            showAlertModal("檢查失敗", "檢查驗證狀態時發生錯誤：" + err.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            }
+        }
+    });
+
+    // 2. 重新發送驗證信 (含 60 秒冷卻防灌水)
+    let resendCooldownTimer = null;
+    bindClick('resend-verify-email-btn', async () => {
+        const btn = document.getElementById('resend-verify-email-btn');
+        if (!fbAuth?.currentUser) {
+            showAlertModal("無法發送", "目前無待驗證的使用者，請重新登入或註冊。");
+            return;
+        }
+        try {
+            await sendEmailVerification(fbAuth.currentUser);
+            showToast("驗證郵件已重新發送！請檢查信箱及垃圾郵件匣", "success");
+
+            let remaining = 60;
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.innerHTML = `<i class="fa-solid fa-clock"></i> 重新發送 (${remaining}s)`;
+            }
+            if (resendCooldownTimer) clearInterval(resendCooldownTimer);
+            resendCooldownTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(resendCooldownTimer);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 重新發送驗證信';
+                    }
+                } else if (btn) {
+                    btn.innerHTML = `<i class="fa-solid fa-clock"></i> 重新發送 (${remaining}s)`;
+                }
+            }, 1000);
+        } catch (err) {
+            console.error("Resend verify err:", err);
+            showAlertModal("發送失敗", "重新發送驗證信時發生錯誤：" + err.message);
+        }
+    });
+
+    // 3. 取消驗證並返回登入頁面
+    bindClick('cancel-verify-code-btn', async () => {
+        stopVerificationPolling();
+        try {
+            if (fbAuth?.currentUser && !fbAuth.currentUser.emailVerified) {
+                await signOut(fbAuth);
+            }
+        } catch(e) {}
+        closeModal(document.getElementById('email-verify-modal'));
+        document.getElementById('portal-view-signup')?.classList.add('hidden');
+        document.getElementById('portal-view-signin')?.classList.remove('hidden');
+    });
+
+    // 4. 手動貼上連結/代碼展開切換
+    bindClick('toggle-manual-verify-btn', () => {
+        const container = document.getElementById('manual-verify-container');
+        if (container) container.classList.toggle('hidden');
+    });
+
+    // 5. 手動驗證代碼/連結提交
+    bindClick('manual-verify-submit-btn', async () => {
+        const input = document.getElementById('manual-verify-input');
+        let codeOrUrl = input?.value.trim();
+        if (!codeOrUrl) return;
+        let oobCode = codeOrUrl;
+        if (codeOrUrl.includes('oobCode=')) {
+            try {
+                const urlObj = new URL(codeOrUrl);
+                oobCode = urlObj.searchParams.get('oobCode') || oobCode;
+            } catch(e) {
+                const match = codeOrUrl.match(/oobCode=([^&]+)/);
+                if (match) oobCode = match[1];
+            }
+        }
+        const btn = document.getElementById('manual-verify-submit-btn');
+        const origText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '正在驗證代碼...';
+        }
+        try {
+            await applyActionCode(fbAuth, oobCode);
+            if (fbAuth?.currentUser) await reload(fbAuth.currentUser);
+            await completeVerificationAndLogin({
+                uid: fbAuth?.currentUser?.uid || currentPendingVerification?.user?.uid,
+                email: currentPendingVerification?.displayEmail || currentPendingVerification?.targetEmail || fbAuth?.currentUser?.email,
+                authEmail: fbAuth?.currentUser?.email,
+                displayName: currentPendingVerification?.name || fbAuth?.currentUser?.displayName || '一般帳號',
+                isIanw: currentPendingVerification?.isIanw
+            });
+        } catch (err) {
+            console.error("Apply action code error:", err);
+            showAlertModal("驗證失敗", "驗證代碼可能已過期或不正確，請點選郵件中的原始連結或點選「重新發送驗證信」。");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            }
+        }
+    });
+
+    // 忘記密碼表單 (支援輸入使用者名稱或電子信箱)
+    bindSubmit('portal-forgot-form', async (e) => {
+        e.preventDefault();
+        const inputVal = document.getElementById('portal-forgot-email')?.value.trim();
+        if (!inputVal) return;
+        if (!fbAuth) { showAlertModal("無法發送", "尚未設定 Firebase 參數。"); return; }
+        const submitBtn = document.getElementById('portal-forgot-submit-btn');
+        const origText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '正在發送繁體中文重設信件...';
+        }
+        try {
+            let targetEmail = inputVal;
+            let targetAuthEmail = inputVal;
+
+            // 若輸入的不是信箱格式，先從 boundAccounts 比對使用者名稱查出信箱
+            let boundList = [];
+            try { boundList = JSON.parse(localStorage.getItem('bound_accounts_all') || localStorage.getItem('bound_accounts_ianw') || '[]'); } catch(e) {}
+            if (fbDb && !inputVal.includes('@')) {
+                try {
+                    const boundSnap = await getDocs(collection(fbDb, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts'));
+                    boundSnap.forEach(d => {
+                        const dData = d.data();
+                        if (!boundList.some(b => (b.id && b.id === dData.id) || (b.uid && b.uid === dData.uid))) {
+                            boundList.push(dData);
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            const inputLower = inputVal.toLowerCase();
+            const matched = boundList.find(b => 
+                (b.username && b.username.toLowerCase() === inputLower) ||
+                (b.accountName && b.accountName.toLowerCase() === inputLower) ||
+                (b.displayName && b.displayName.toLowerCase() === inputLower)
+            );
+
+            if (matched) {
+                targetEmail = matched.email;
+                targetAuthEmail = matched.authEmail || matched.email;
+            }
+
+            await sendPasswordResetEmail(fbAuth, targetAuthEmail);
+            showAlertModal(
+                "重設密碼郵件已發送！", 
+                `系統已向下列信箱寄出繁體中文密碼重設信件：\n\n${targetEmail}\n\n==============================\n【最重要提醒 — 請至垃圾郵件匣查收】：\n信件極高機率會被 Gmail 或收件伺服器自動歸類到【垃圾郵件匣 (Spam)】或【促銷內容】！\n\n若 1~3 分鐘內未在收件匣看見信件，請務必前往【垃圾郵件匣】搜尋寄件者，點選信中專屬安全連結即可重設密碼！\n==============================`
+            );
+            document.getElementById('portal-view-forgot')?.classList.add('hidden');
+            document.getElementById('portal-view-signin')?.classList.remove('hidden');
+        } catch (err) {
+            console.error("Forgot password error:", err);
+            let msg = err.message;
+            if (err.code === 'auth/user-not-found') {
+                msg = "查無此使用者名稱或 Email 註冊的帳號，請確認是否輸入正確。";
+            } else if (err.code === 'auth/invalid-email') {
+                msg = "輸入格式不正確，請輸入合法的使用者名稱或電子信箱。";
+            }
+            showAlertModal("發送失敗", msg);
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+            }
+        }
+    });
+
+    // Google 登入
+    const handleGoogleLogin = () => {
+        if (!fbAuth) { showAlertModal("無法登入", "尚未設定 Firebase 參數。"); return; }
+        showToast("正在開啟 Google 登入視窗...", "info");
+        signInWithPopup(fbAuth, new GoogleAuthProvider()).then(async (cred) => {
+            sessionStorage.setItem('auth_provider', 'google');
+            sessionStorage.removeItem('is_explicit_logout');
+            // 清除訪客體驗模式旗標與暫存，防止快速體驗帳號殘留到登入後帳戶
+            sessionStorage.removeItem('app_is_guest_mode');
+            localStorage.removeItem('visitor_id');
+            localStorage.removeItem('visitor_name');
+
+            const userObj = {
+                uid: cred.user.uid,
+                email: cred.user.email,
+                displayName: cred.user.displayName,
+                isGoogleAuth: true
+            };
+            state.currentUser = userObj;
+            localStorage.setItem('app_user_session', JSON.stringify(userObj));
+            localStorage.setItem('storageSelected', 'true');
+            updateDataManagementUI();
+            try { updatePortalUI(); } catch(e) {}
+
+            const isAdmin = isGoogleAdmin(userObj);
+            if (isAdmin) {
+                document.getElementById('admin-modal-btn')?.classList.remove('hidden');
+                document.getElementById('admin-btn')?.classList.remove('hidden');
+                showToast("歡迎最高管理員 (Google 帳號授權登入)", "success");
+            } else {
+                document.getElementById('admin-modal-btn')?.classList.add('hidden');
+                document.getElementById('admin-btn')?.classList.add('hidden');
+                showToast("Google 帳號登入成功！", "success");
+            }
+
+            // 優先載入該帳號之本地資料；若本地有未綁定班級作業資料則予以綁定保留 (杜絕登入後資料消失)
+            const userKey = getUserStorageKey(userObj);
+            const userLocal = loadLocalDataForUser(userObj);
+            if (userLocal && Array.isArray(userLocal.classes) && userLocal.classes.length > 0) {
+                state.appData = userLocal;
+                state.currentClassId = localStorage.getItem('currentClassId_' + userKey) || state.appData.classes[0]?.id || null;
+            } else if (state.appData && Array.isArray(state.appData.classes) && state.appData.classes.length > 0) {
+                localStorage.setItem('homeworkAppData_' + userKey, safeStringify(state.appData));
+                if (state.currentClassId) localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+            } else {
+                state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+                state.currentClassId = null;
+            }
+            localStorage.setItem('homeworkAppData', safeStringify(state.appData));
+            if (state.currentClassId) localStorage.setItem('currentClassId', state.currentClassId);
+
+            showToast("登入成功！正在檢查雲端資料...", "info");
+            await loadDataFromCloud(true);
+            proceedIntoSystem();
+        }).catch((error) => {
+            console.warn("Google login popup error:", error?.code || error);
+            if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                if (error.code === 'auth/invalid-credential') {
+                    showAlertModal("Google 登入憑證無效", "Google 登入授權憑證無效或已過期，請重新嘗試登入。");
+                } else {
+                    showAlertModal("Google 登入失敗", "錯誤細節：" + (error.message || error.code));
+                }
+            }
+        });
+    };
+
+    bindClick('portal-google-btn', handleGoogleLogin);
+    bindClick('google-login-btn', handleGoogleLogin);
+    bindClick('welcome-google-btn', handleGoogleLogin);
+
+    // 歡迎精靈 Step 1 儲存方式選項
+    bindClick('welcome-skip-btn', () => {
+        localStorage.setItem('storageSelected', 'true');
+        showWelcomeStep2();
+    });
+
+    bindClick('welcome-link-btn', async () => {
+        if (!window.showSaveFilePicker) {
+            showConfirmModal("硬碟直寫限制", "您的瀏覽器環境不支援直接存取本機硬碟。\n\n是否以「瀏覽器暫存」模式繼續？", () => {
+                localStorage.setItem('storageSelected', 'true');
+                showWelcomeStep2();
+            });
+            return;
+        }
+        try {
+            const handle = await window.showSaveFilePicker({ suggestedName: '作業點收資料.json', types: [{ description: 'JSON 檔案', accept: { 'application/json': ['.json'] } }] });
+            showNamePromptModal(async (name) => {
+                if (name) {
+                    localStorage.setItem('visitor_name', name.trim());
+                    state.fileHandle = handle;
+                    await saveFileHandle(handle);
+                    const hasData = await syncFromFileHandle();
+                    if (hasData) state.isLocalEmptyOnBoot = false;
+                    await saveData();
+                    localStorage.setItem('storageSelected', 'true');
+                    showToast("已成功綁定本機硬碟檔案", "success");
+                    showWelcomeStep2();
+                }
+            });
+        } catch (e) {
+            if (e.name !== 'AbortError') showAlertModal("無法連結檔案", e.message);
+        }
+    });
+
+    // 歡迎精靈 Step 2 點收習慣選擇
+    let currentWelcomeHabit = localStorage.getItem('checkMode') || 'manual';
+    const updateWelcomeStep2UI = (selectedMode) => {
+        currentWelcomeHabit = selectedMode;
+        const manualBtn = document.getElementById('welcome-sel-manual');
+        const scanBtn = document.getElementById('welcome-sel-scan');
+        const finishBtn = document.getElementById('welcome-finish-btn');
+
+        if (manualBtn && scanBtn) {
+            if (selectedMode === 'manual') {
+                manualBtn.className = "w-full p-4 border-2 border-indigo-600 bg-indigo-50/80 rounded-2xl shadow-sm ring-2 ring-indigo-500/20 transition-all text-left flex items-start gap-3.5 group cursor-pointer";
+                scanBtn.className = "w-full p-4 border-2 border-slate-200 bg-white hover:border-indigo-300 rounded-2xl transition-all text-left flex items-start gap-3.5 group cursor-pointer";
+            } else {
+                scanBtn.className = "w-full p-4 border-2 border-indigo-600 bg-indigo-50/80 rounded-2xl shadow-sm ring-2 ring-indigo-500/20 transition-all text-left flex items-start gap-3.5 group cursor-pointer";
+                manualBtn.className = "w-full p-4 border-2 border-slate-200 bg-white hover:border-indigo-300 rounded-2xl transition-all text-left flex items-start gap-3.5 group cursor-pointer";
+            }
+        }
+        if (finishBtn) {
+            finishBtn.disabled = false;
+            finishBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed', 'opacity-50', 'cursor-not-allowed');
+            finishBtn.classList.add('cursor-pointer');
+        }
+    };
+
+    const finishCheckModeSelection = (modeToApply) => {
+        const mode = modeToApply || currentWelcomeHabit || 'manual';
+        applyCheckMode(mode);
+        localStorage.setItem('hasSeenWelcome_final', 'true');
+        closeModal(document.getElementById('welcome-modal'));
+        showMainPage();
+        if (state.appData.classes.length === 0) {
+            openModal(document.getElementById('manage-classes-modal'));
+        }
+        showToast(mode === 'manual' ? "已選擇「手動點收」模式，開始使用！" : "已選擇「條碼掃描」模式，開始使用！", "success");
+    };
+
+    bindClick('welcome-sel-manual', () => {
+        updateWelcomeStep2UI('manual');
+    });
+
+    const manualSelEl = document.getElementById('welcome-sel-manual');
+    if (manualSelEl) {
+        manualSelEl.addEventListener('dblclick', () => {
+            finishCheckModeSelection('manual');
+        });
+    }
+
+    bindClick('welcome-sel-scan', () => {
+        updateWelcomeStep2UI('scan');
+    });
+
+    const scanSelEl = document.getElementById('welcome-sel-scan');
+    if (scanSelEl) {
+        scanSelEl.addEventListener('dblclick', () => {
+            finishCheckModeSelection('scan');
+        });
+    }
+
+    bindClick('welcome-finish-btn', () => {
+        finishCheckModeSelection();
+    });
+
+    bindClick('welcome-modal-close-btn', () => {
+        closeModal(document.getElementById('welcome-modal'));
+        const modal = document.getElementById('welcome-modal');
+        if (modal) modal.classList.add('hidden');
+        if (document.getElementById('main-page')?.classList.contains('hidden') && 
+            document.getElementById('detail-page')?.classList.contains('hidden') &&
+            document.getElementById('student-details-page')?.classList.contains('hidden') &&
+            document.getElementById('types-page')?.classList.contains('hidden') &&
+            document.getElementById('contact-book-page')?.classList.contains('hidden')) {
+            showMainPage();
+            if (state.appData.classes.length === 0) {
+                openModal(document.getElementById('manage-classes-modal'));
+            }
+        }
+    });
+
+    // 頂部導覽列點收方式切換按鈕
+    bindClick('top-check-mode-btn', () => {
+        openModal(document.getElementById('welcome-modal'));
+        showWelcomeStep2();
+    });
+
+    // 作業詳細座號頁 (detail-page) 上的模式切換按鈕
+    bindClick('mode-manual-btn', () => {
+        applyCheckMode('manual');
+        showToast("已切換為「手動點擊模式」", "success");
+    });
+
+    bindClick('mode-scan-btn', () => {
+        applyCheckMode('scan');
+        showToast("已切換為「條碼掃描模式」", "success");
+    });
+
+    window.addEventListener('welcome-step-2-opened', () => {
+        currentWelcomeHabit = localStorage.getItem('checkMode') || state.currentCheckMode || 'manual';
+        updateWelcomeStep2UI(currentWelcomeHabit);
+    });
+
+    // 系統設定 Modal 內的點收模式切換按鈕
+    bindClick('setting-mode-manual-btn', () => {
+        applyCheckMode('manual');
+        showToast("已切換為「手動點收」模式", "success");
+    });
+
+    bindClick('setting-mode-scan-btn', () => {
+        applyCheckMode('scan');
+        showToast("已切換為「條碼掃描」模式", "success");
+    });
+
+    // 管理員檢視模式 UI 狀態更新
+    function updateAdminInspectionUI() {
+        const topBanner = document.getElementById('admin-viewing-banner');
+        const modalBanner = document.getElementById('admin-modal-active-inspection-banner');
+        const targetNameEl = document.getElementById('admin-viewing-target-name');
+        const modalEmailEl = document.getElementById('admin-modal-inspecting-email');
+
+        if (state.adminViewModeUserId) {
+            const displayName = state.adminViewModeUserEmail || state.adminViewModeUserId;
+            if (topBanner) {
+                topBanner.classList.remove('hidden');
+                topBanner.classList.add('flex');
+            }
+            if (targetNameEl) targetNameEl.textContent = displayName;
+            if (modalBanner) {
+                modalBanner.classList.remove('hidden');
+                modalBanner.classList.add('flex');
+            }
+            if (modalEmailEl) modalEmailEl.textContent = displayName;
+        } else {
+            if (topBanner) {
+                topBanner.classList.add('hidden');
+                topBanner.classList.remove('flex');
+            }
+            if (modalBanner) {
+                modalBanner.classList.add('hidden');
+                modalBanner.classList.remove('flex');
+            }
+        }
+    }
+
+    // 管理員進入檢視模式
+    async function enterAdminViewMode(targetId, targetEmail) {
+        stopRealtimeCloudSync();
+        if (!state.adminViewModeUserId) {
+            // 完整備份管理員本機自己的資料 (RAM + SessionStorage 防刷新遺失)
+            state.adminOriginalAppData = safeClone(state.appData);
+            state.adminOriginalClassId = state.currentClassId;
+            try {
+                sessionStorage.setItem('admin_backup_appData', safeStringify(state.appData));
+                sessionStorage.setItem('admin_backup_classId', state.currentClassId || '');
+            } catch(e) {}
+        }
+        state.adminViewModeUserId = targetId;
+        state.adminViewModeUserEmail = targetEmail;
+        updateAdminInspectionUI();
+        showToast(`已切換為「${targetEmail}」之唯讀檢視模式`, "info");
+        await loadDataFromCloud(true);
+        fullRender();
+    }
+
+    // 管理員退出檢視模式，回到管理員自己的資料
+    async function exitAdminViewMode() {
+        if (!state.adminViewModeUserId && !sessionStorage.getItem('admin_backup_appData')) return;
+        showToast("正在退出檢視模式並還原您的資料...", "info");
+        state.adminViewModeUserId = null;
+        state.adminViewModeUserEmail = null;
+        updateAdminInspectionUI();
+
+        let restored = false;
+        try {
+            if (state.adminOriginalAppData) {
+                state.appData = safeClone(state.adminOriginalAppData);
+                state.currentClassId = state.adminOriginalClassId || state.appData.classes?.[0]?.id || null;
+                restored = true;
+            } else {
+                const saved = sessionStorage.getItem('admin_backup_appData');
+                if (saved) {
+                    state.appData = sanitizeAppData(JSON.parse(saved));
+                    fixDates(state.appData);
+                    state.currentClassId = sessionStorage.getItem('admin_backup_classId') || state.appData.classes?.[0]?.id || null;
+                    restored = true;
+                }
+            }
+        } catch(e) {
+            console.warn("Restore admin local data error:", e);
+        }
+
+        sessionStorage.removeItem('admin_backup_appData');
+        sessionStorage.removeItem('admin_backup_classId');
+        state.adminOriginalAppData = null;
+        state.adminOriginalClassId = null;
+
+        if (restored) {
+            localStorage.setItem('homeworkAppData', safeStringify(state.appData));
+            if (state.currentClassId) localStorage.setItem('currentClassId', state.currentClassId);
+        }
+
+        // 重新同步回管理員自身的雲端資料
+        await loadDataFromCloud(true);
+        fullRender();
+        closeModal(document.getElementById('admin-modal'));
+        showToast("已成功退出檢視模式，恢復管理員帳號與作業資料！", "success");
+    }
+
+    // 系統管理中心 (Admin) Modal 開啟
+    const handleOpenAdminModal = () => {
+        closeModal(document.getElementById('settings-modal'));
+        openModal(document.getElementById('admin-modal'));
+        updateAdminInspectionUI();
+        loadAllUsersForAdmin((targetId, targetEmail) => {
+            closeModal(document.getElementById('admin-modal'));
+            enterAdminViewMode(targetId, targetEmail);
+        });
+    };
+    bindClick('admin-modal-btn', handleOpenAdminModal);
+    bindClick('admin-btn', handleOpenAdminModal);
+    bindClick('admin-exit-view-btn', exitAdminViewMode);
+    bindClick('admin-modal-exit-view-btn', exitAdminViewMode);
+
+    // 本地硬碟連結
+    bindClick('portal-link-file-btn', async () => {
+        if (!window.showSaveFilePicker) {
+            showConfirmModal("硬碟直寫限制", "您的瀏覽器環境不支援直接存取本機硬碟（推薦使用 Chrome 或 Edge 桌面版）。\n\n是否以「瀏覽器暫存」模式進入系統？", () => {
+                localStorage.setItem('storageSelected', 'true');
+                proceedIntoSystem();
+            });
+            return;
+        }
+        try {
+            const handle = await window.showSaveFilePicker({ suggestedName: '作業點收資料.json', types: [{ description: 'JSON 檔案', accept: { 'application/json': ['.json'] } }] });
+            showNamePromptModal(async (name) => {
+                if (name) {
+                    localStorage.setItem('visitor_name', name.trim());
+                    state.fileHandle = handle;
+                    await saveFileHandle(handle);
+                    const hasData = await syncFromFileHandle();
+                    if (hasData) state.isLocalEmptyOnBoot = false;
+                    await saveData();
+                    localStorage.setItem('storageSelected', 'true');
+                    showToast("已成功綁定本機硬碟檔案", "success");
+                    syncUserProfile();
+                    proceedIntoSystem();
+                }
+            });
+        } catch (e) {
+            if (e.name !== 'AbortError') showAlertModal("無法連結檔案", e.message);
+        }
+    });
+
+    bindClick('portal-browser-only-btn', () => {
+        showNamePromptModal((name) => {
+            if (name) {
+                sessionStorage.setItem('app_is_guest_mode', 'true');
+                state.currentUser = null;
+                localStorage.removeItem('app_user_session');
+                state.appData = { classes: [], homeworks: [], homeworkTypes: safeClone(DEFAULT_TYPES) };
+                state.currentClassId = null;
+                localStorage.removeItem('homeworkAppData');
+                localStorage.removeItem('currentClassId');
+                localStorage.setItem('visitor_name', name.trim());
+                localStorage.setItem('storageSelected', 'true');
+                showToast("已選擇瀏覽器暫存模式 (免帳號體驗，不寫入雲端)", "info");
+                proceedIntoSystem();
+            }
+        });
+    });
+
+    bindClick('google-logout-btn', performFullLogout);
+    bindClick('delete-my-account-btn', deleteMyAccount);
+    bindClick('settings-exit-system-btn', performFullLogout);
+    bindClick('cloud-load-btn', async () => { await loadDataFromCloud(false); });
+    bindClick('link-file-btn', async () => { 
+        try { 
+            if (!window.showSaveFilePicker) throw new Error("瀏覽器不支援硬碟直寫"); 
+            const handle = await window.showSaveFilePicker({ suggestedName: '作業點收資料.json', types: [{ description: 'JSON 檔案', accept: { 'application/json': ['.json'] } }] }); 
+            state.fileHandle = handle; 
+            await saveFileHandle(handle); 
+            await syncFromFileHandle(); 
+            await saveData(); 
+            document.getElementById('sync-banner').classList.add('hidden'); 
+            document.body.classList.remove('has-banner'); 
+            updateDataManagementUI(); 
+            fullRender(); 
+            showToast("已安全連結硬碟！", "success"); 
+        } catch (e) { 
+            if (e.name !== 'AbortError') showAlertModal("無法連結檔案", e.message); 
+        } 
+    });
+    bindClick('unlink-file-btn', async () => { 
+        showConfirmModal('解除安全連結', '確定解除連結嗎？資料將僅儲存於瀏覽器暫存。', async () => { 
+            await clearFileHandle(); 
+            state.fileHandle = null; 
+            updateDataManagementUI(); 
+            showToast("已解除連結", "info"); 
+        }); 
+    });
+
+    // 班級同步複製
+    bindClick('open-copy-class-modal-btn', openCopyClassModal);
+
+    bindSubmit('copy-class-form', async (e) => {
+        e.preventDefault();
+        if (!state.currentClassId) {
+            showToast("請先選擇目標班級！", "error");
+            return;
+        }
+        const targetClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (!targetClass) {
+            showToast("找不到目標班級！", "error");
+            return;
+        }
+
+        const sourceClassId = document.getElementById('copy-source-class')?.value;
+        if (!sourceClassId) {
+            showToast("請選擇來源班級！", "error");
+            return;
+        }
+        const sourceClass = state.appData.classes.find(c => c.id === sourceClassId);
+        if (!sourceClass) {
+            showToast("找不到來源班級！", "error");
+            return;
+        }
+
+        const syncHw = document.getElementById('copy-opt-hw')?.checked || false;
+        const syncTypes = document.getElementById('copy-opt-types')?.checked || false;
+        const syncBarcodes = document.getElementById('copy-opt-barcodes')?.checked || false;
+        const syncContact = document.getElementById('copy-opt-contact')?.checked || false;
+
+        if (!syncHw && !syncTypes && !syncBarcodes && !syncContact) {
+            showToast("請至少勾選一項要同步的內容！", "error");
+            return;
+        }
+
+        const mode = document.querySelector('input[name="copy-mode"]:checked')?.value || 'merge';
+        const modeLabel = mode === 'overwrite' ? '【覆蓋現有資料】' : '【保留目前資料並新增】';
+        
+        const items = [];
+        if (syncHw) items.push('作業清單');
+        if (syncTypes) items.push('作業種類');
+        if (syncBarcodes) items.push('條碼設定');
+        if (syncContact) items.push('聯絡簿');
+
+        const confirmMsg = `確定要將「${sourceClass.name}」的【${items.join('、')}】同步至「${targetClass.name}」嗎？\n\n處理模式：${modeLabel}${mode === 'overwrite' ? '\n警告：目標班級勾選項目的現有資料將被清除並完全覆蓋！' : '\n提示：相同作業或重複內容將自動略過。'}`;
+
+        showConfirmModal('確認班級資料同步', confirmMsg, async () => {
+            await executeCopyClassData(sourceClass, targetClass, { syncHw, syncTypes, syncBarcodes, syncContact }, mode);
+        });
+    });
+
+    // 匯出 / 匯入
+    bindClick('export-data-btn', () => {
+        const exportHw = document.getElementById('export-hw-chk').checked, exportTypes = document.getElementById('export-types-chk').checked, exportContact = document.getElementById('export-contact-chk').checked;
+        let exportData = JSON.parse(safeStringify(appData));
+        if (!exportHw) exportData.homeworks = []; 
+        if (!exportTypes) exportData.homeworkTypes = DEFAULT_TYPES; 
+        if (!exportContact) exportData.classes.forEach(c => c.contactBook = {}); 
+        else { 
+            const thirtyDaysAgo = new Date(); 
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
+            const limitDateStr = formatDate(thirtyDaysAgo, 'YYYY-MM-DD'); 
+            exportData.classes.forEach(c => { 
+                if (c.contactBook) { 
+                    const filteredBook = {}; 
+                    for (const [date, items] of Object.entries(c.contactBook)) { 
+                        if (date >= limitDateStr) filteredBook[date] = items; 
+                    } 
+                    c.contactBook = filteredBook; 
+                } 
+            }); 
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(safeStringify(exportData)); 
+        const downloadAnchorNode = document.createElement('a'); 
+        downloadAnchorNode.setAttribute("href", dataStr); 
+        downloadAnchorNode.setAttribute("download", `作業點收備份_${formatDate(new Date(), 'YYYY-MM-DD')}.json`); 
+        document.body.appendChild(downloadAnchorNode); 
+        downloadAnchorNode.click(); 
+        downloadAnchorNode.remove(); 
+        closeModal(document.getElementById('settings-modal')); 
+        showToast("下載 JSON 備份檔成功！", "success");
+    });
+
+    bindClick('trigger-import-btn', () => document.getElementById('import-file-input').click());
+    bindChange('import-file-input', (e) => {
+        const file = e.target.files[0]; 
+        if (!file) return; 
+        const reader = new FileReader();
+        reader.onload = async (e) => { 
+            try { 
+                const data = sanitizeAppData(JSON.parse(e.target.result)); 
+                if(!data.classes || !data.homeworks || !data.homeworkTypes) throw new Error("無效備份格式"); 
+                showConfirmModal('覆蓋資料', '確定將 JSON 完整覆蓋目前資料嗎？', async () => { 
+                    closeModal(document.getElementById('settings-modal')); 
+                    state.appData = data; 
+                    fixDates(appData); 
+                    localStorage.setItem('homeworkAppData', safeStringify(appData)); 
+                    try { await saveData(); } catch(saveErr) {} 
+                    showToast("資料匯入成功！", "success"); 
+                    setTimeout(() => window.location.reload(), 500); 
+                }); 
+            } catch(err) { 
+                showAlertModal("匯入失敗", err.message); 
+            } 
+        }; 
+        reader.readAsText(file); 
+        e.target.value = ''; 
+    });
+
+    // 新增作業表單
+    bindSubmit('add-homework-form', async (e) => {
+        e.preventDefault(); 
+        const editId = document.getElementById('edit-homework-id').value, name = document.getElementById('homework-name').value.trim(), typeId = document.getElementById('homework-type-select').value; 
+        closeModal(document.getElementById('add-homework-modal'));
+        if (editId) { 
+            const hw = state.appData.homeworks.find(h => h.id === editId); 
+            if (hw && name) { 
+                hw.name = name; 
+                await saveData(); 
+                showToast("修改名稱成功！"); 
+                renderHomeworkList(); 
+            } 
+        } else { 
+            const studentCount = parseInt(document.getElementById('student-count').value), missingInput = document.getElementById('homework-missing-seats').value; 
+            let missingSeats = []; 
+            const parts = missingInput.replace(/，/g, ',').split(/[\s,]+/);
+            for (let part of parts) { 
+                part = part.trim(); 
+                if (!part) continue; 
+                if (part.includes('-')) { 
+                    const [startStr, endStr] = part.split('-'); 
+                    const start = parseInt(startStr), end = parseInt(endStr); 
+                    if (!isNaN(start) && !isNaN(end) && start <= end) { 
+                        for (let i = start; i <= end; i++) missingSeats.push(i); 
+                    } 
+                } else { 
+                    const num = parseInt(part); 
+                    if (!isNaN(num)) missingSeats.push(num); 
+                } 
+            }
+            if (name && studentCount > 0 && state.currentClassId) { 
+                const typeConfig = getHomeworkType(typeId); 
+                const initialStatus = typeConfig.statuses[0].key; 
+                const students = []; 
+                for (let i = 1; i <= studentCount; i++) { 
+                    if (!missingSeats.includes(i)) students.push({ seat: i, status: initialStatus }); 
+                } 
+                const currentClass = state.appData.classes.find(c => c.id === state.currentClassId); 
+                if (currentClass) { 
+                    currentClass.lastMaxSeat = studentCount; 
+                    currentClass.lastMissingSeats = missingInput; 
+                } 
+                state.appData.homeworks.push({ id: generateId(), classId: state.currentClassId, name, studentCount: students.length, typeId, createdAt: new Date(), students: students }); 
+                await saveData(); 
+                showToast("新增項目成功！", "success"); 
+                renderHomeworkList(); 
+            }
+        }
+    });
+
+    // 複製未交名單按鈕 (Detail Page)
+    bindClick('copy-defaulters-detail-btn', () => {
+        const detailBtn = document.getElementById('copy-defaulters-detail-btn');
+        const targetId = state.currentHomeworkId || (detailBtn ? detailBtn.dataset.id : null);
+        if (targetId) {
+            copyHomeworkDefaulters(targetId);
+        } else {
+            showToast("請先選擇作業", "warning");
+        }
+    });
+
+    // 檢視完成名單按鈕 (Detail Page)
+    bindClick('show-all-done-btn', () => {
+        const hw = state.appData.homeworks.find(h => h.id === state.currentHomeworkId);
+        if (!hw) {
+            showAlertModal("提示", "找不到目前作業資訊！");
+            return;
+        }
+        const currentClass = state.appData.classes.find(c => c.id === hw.classId);
+        const maxSeat = currentClass?.maxSeat || (state.appData.settings?.maxSeat || 35);
+        const missingSeats = new Set(currentClass?.missingSeats || []);
+        const typeId = hw.typeId || 'default';
+
+        const doneSeats = [];
+        for (let seat = 1; seat <= maxSeat; seat++) {
+            if (missingSeats.has(seat)) continue;
+            const student = (hw.students || []).find(s => s.seat === seat);
+            if (student && isStudentCompleted(student, typeId)) {
+                doneSeats.push(seat);
+            }
+        }
+
+        renderAllDoneList(doneSeats, 'all-done-list');
+        const modal = document.getElementById('all-done-modal');
+        if (modal) openModal(modal);
+    });
+
+    // 批次狀態切換
+    bindClick('batch-status-btn', async () => { 
+        if (!state.currentHomeworkId) return; 
+        const targetStatus = document.getElementById('batch-status-select').value, 
+              statusText = document.querySelector('#batch-status-select option:checked').textContent, 
+              hw = state.appData.homeworks.find(h => h.id === state.currentHomeworkId); 
+        if (!hw) return; 
+        showConfirmModal('套用變更', `確定全部套用為「${statusText}」嗎？`, async () => { 
+            (hw.students || []).forEach(s => s.status = targetStatus); 
+            renderStudentGrid(state.currentHomeworkId); 
+            await saveData(); 
+            showToast("已套用全班變更！", "success"); 
+        }); 
+    });
+
+    // 作業種類管理
+    bindClick('add-new-type-btn', async () => { 
+        state.appData.homeworkTypes.push({ 
+            id: `custom-${Date.now()}`, 
+            name: '新作業種類', 
+            statuses: [ 
+                { key: 's1', text: '未繳交', color: 'bg-slate-200', textColor: 'text-slate-500', isCompleted: false }, 
+                { key: 's2', text: '已完成', color: 'bg-emerald-500', textColor: 'text-white', isCompleted: true } 
+            ] 
+        }); 
+        await saveData(); 
+        showToast("已新增自訂種類！"); 
+        renderHomeworkTypesPage(); 
+    });
+
+    const typesList = document.getElementById('types-list');
+    if (typesList) {
+        typesList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-type-btn')) { 
+                const idx = parseInt(e.target.dataset.typeIndex); 
+                if (state.appData.homeworkTypes[idx].id === 'default') return; 
+                showConfirmModal('刪除種類', `確定刪除「${state.appData.homeworkTypes[idx].name}」嗎？`, async () => { 
+                    state.appData.homeworkTypes.splice(idx, 1); 
+                    await saveData(); 
+                    renderHomeworkTypesPage(); 
+                    showToast("已刪除", "info"); 
+                }); 
+                return; 
+            }
+            if (e.target.classList.contains('add-status-btn')) { 
+                const idx = parseInt(e.target.dataset.typeIndex); 
+                if (state.appData.homeworkTypes[idx].statuses.length >= 4) { 
+                    showToast("最多 4 個狀態", "error"); 
+                    return; 
+                } 
+                state.appData.homeworkTypes[idx].statuses.push({ key: `s${Date.now()}`, text: '新狀態', color: 'bg-slate-200', textColor: 'text-slate-500', isCompleted: false }); 
+                await saveData(); 
+                renderHomeworkTypesPage(); 
+                showToast("已新增狀態"); 
+                return; 
+            }
+            if (e.target.classList.contains('delete-status-btn')) { 
+                const typeIdx = parseInt(e.target.dataset.typeIndex), statusIdx = parseInt(e.target.dataset.statusIndex); 
+                if (state.appData.homeworkTypes[typeIdx].statuses.length <= 2) { 
+                    showToast("最少需 2 個狀態", "error"); 
+                    return; 
+                } 
+                state.appData.homeworkTypes[typeIdx].statuses.splice(statusIdx, 1); 
+                await saveData(); 
+                renderHomeworkTypesPage(); 
+                showToast("已移除狀態"); 
+                return; 
+            }
+            if (e.target.classList.contains('color-dot')) { 
+                const typeIdx = parseInt(e.target.dataset.typeIndex), statusIdx = parseInt(e.target.dataset.statusIndex); 
+                const currentClass = state.appData.homeworkTypes[typeIdx].statuses[statusIdx].color; 
+                let colorIndex = STATUS_COLORS.findIndex(c => c.class === currentClass); 
+                if(colorIndex === -1) colorIndex = 0; 
+                const nextColor = STATUS_COLORS[(colorIndex + 1) % STATUS_COLORS.length]; 
+                state.appData.homeworkTypes[typeIdx].statuses[statusIdx].color = nextColor.class; 
+                state.appData.homeworkTypes[typeIdx].statuses[statusIdx].textColor = nextColor.textClass; 
+                await saveData(); 
+                renderHomeworkTypesPage(); 
+                return; 
+            }
+        });
+        typesList.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('type-name-input')) { 
+                state.appData.homeworkTypes[parseInt(e.target.dataset.typeIndex)].name = e.target.value.trim(); 
+                await saveData(); 
+            }
+            if (e.target.classList.contains('status-name-input')) { 
+                state.appData.homeworkTypes[parseInt(e.target.dataset.typeIndex)].statuses[parseInt(e.target.dataset.statusIndex)].text = e.target.value.trim(); 
+                await saveData(); 
+            }
+            if (e.target.classList.contains('is-completed-check')) { 
+                state.appData.homeworkTypes[parseInt(e.target.dataset.typeIndex)].statuses[parseInt(e.target.dataset.statusIndex)].isCompleted = e.target.checked; 
+                await saveData(); 
+            }
+        });
+    }
+
+    // 搜尋與篩選
+    bindChange('sort-homework', renderHomeworkList); 
+    bindChange('sort-student-detail', renderStudentDetailsPage);
+    const searchInput = document.getElementById('search-homework');
+    if (searchInput) { 
+        let searchTimeout = null;
+        searchInput.addEventListener('input', () => {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(renderHomeworkList, 100);
+        }); 
+    }
+    bindChange('filter-type', renderHomeworkList);
+    bindChange('filter-date-start', renderHomeworkList);
+    bindChange('filter-date-end', renderHomeworkList);
+
+    // 班級管理與權限碼
+    bindClick('gen-code-btn', () => {
+        const input = document.getElementById('class-access-code');
+        if (input) input.value = generateRandomAccessCode();
+    });
+
+    bindSubmit('add-class-form', async (e) => {
+        e.preventDefault();
+        const nameInput = document.getElementById('class-name');
+        const codeInput = document.getElementById('class-access-code');
+        const className = nameInput ? nameInput.value.trim() : '';
+        const enteredCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
+        let accessCode = enteredCode;
+        if (!accessCode) {
+            accessCode = generateRandomAccessCode();
+        }
+        if(className) {
+            if (enteredCode && state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === enteredCode)) {
+                showToast(`班級代碼「${enteredCode}」已被其他班級使用，請更換其他代碼！`, "error");
+                if (codeInput) { codeInput.focus(); codeInput.select(); }
+                return;
+            }
+            if (!enteredCode && state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === accessCode)) {
+                accessCode = generateRandomAccessCode();
+            }
+            state.appData.classes.push({ 
+                id: generateId(), 
+                name: className, 
+                accessCode: accessCode,
+                lastMaxSeat: 30,
+                contactBook: {}, 
+                studentBarcodes: {} 
+            }); 
+            await saveData(); 
+            await syncDataToCloud();
+            if (nameInput) nameInput.value = ''; 
+            if (codeInput) codeInput.value = '';
+            renderClassSelector(); 
+            renderClassList(); 
+            if(state.appData.classes.length === 1 || !state.currentClassId || !state.appData.classes.some(c=>c.id===state.currentClassId)) { 
+                state.currentClassId = state.appData.classes[0].id; 
+                localStorage.setItem('currentClassId', state.currentClassId); 
+                const userKey = getUserStorageKey(state.currentUser);
+                localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+                renderHomeworkList(); 
+            } 
+            showToast(`新增班級「${className}」(權限碼：${accessCode})！`, "success"); 
+        }
+    });
+
+    // 一鍵複製未交催繳純文字
+    async function copyHomeworkDefaulters(homeworkId) {
+        if (!homeworkId && state.currentHomeworkId) {
+            homeworkId = state.currentHomeworkId;
+        }
+        if (!homeworkId) {
+            showToast("未指定作業項目", "warning");
+            return;
+        }
+        const hw = (state.appData.homeworks || []).find(h => String(h.id) === String(homeworkId));
+        if (!hw) {
+            showToast("找不到該項作業資料", "warning");
+            return;
+        }
+        const cls = (state.appData.classes || []).find(c => String(c.id) === String(hw.classId));
+        const clsName = cls ? cls.name : '本班';
+        const missingStudents = (hw.students || []).filter(s => !isStudentCompleted(s, hw.typeId || 'default'));
+        if (missingStudents.length === 0) {
+            showToast(`「${hw.name}」全班皆已繳齊，無缺交名單！`, "success");
+            return;
+        }
+        const missingSeatNums = missingStudents.map(s => `${s.seat}號`).join('、');
+        const text = `【${clsName} ${hw.name} 未交名單】\n共 ${missingStudents.length} 人尚未繳交：${missingSeatNums}\n請同學於放學前儘速補交！`;
+        await safeCopyToClipboard(text, `已複製「${hw.name}」未交名單（共 ${missingStudents.length} 人）`);
+    }
+
+    // 作業清單項目點擊
+    const hwListEl = document.getElementById('homework-list');
+    if (hwListEl) {
+        hwListEl.addEventListener('click', (e) => {
+            const copyDefBtn = e.target.closest('.copy-defaulters-btn');
+            if (copyDefBtn) {
+                e.stopPropagation();
+                copyHomeworkDefaulters(copyDefBtn.dataset.id);
+                return;
+            }
+            const deleteBtn = e.target.closest('.delete-hw-btn'), editBtn = e.target.closest('.edit-hw-btn');
+            if (deleteBtn) { 
+                e.stopPropagation(); 
+                const homeworkId = deleteBtn.dataset.id; 
+                const hw = state.appData.homeworks.find(h => h.id === homeworkId); 
+                showConfirmModal('刪除作業', `確定移除「${hw.name}」嗎？`, async () => { 
+                    state.appData.homeworks = state.appData.homeworks.filter(h => h.id !== homeworkId); 
+                    await saveData(); 
+                    showToast("已刪除", "info"); 
+                    renderHomeworkList(); 
+                }); 
+                return; 
+            }
+            if (editBtn) { 
+                e.stopPropagation(); 
+                const homeworkId = editBtn.dataset.id; 
+                const hw = state.appData.homeworks.find(h => h.id === homeworkId); 
+                const modal = document.getElementById('add-homework-modal'); 
+                document.getElementById('homework-modal-title').textContent = '更改作業名稱'; 
+                modal.querySelector('form').reset(); 
+                document.getElementById('homework-name').value = hw ? hw.name : ''; 
+                document.getElementById('edit-homework-id').value = homeworkId; 
+                document.getElementById('student-count-container').style.display = 'none'; 
+                document.getElementById('student-count').removeAttribute('required'); 
+                document.getElementById('homework-type-container').style.display = 'none'; 
+                document.getElementById('missing-seats-hint').style.display = 'none'; 
+                openModal(modal); 
+                return; 
+            }
+            const hwItem = e.target.closest('[data-id]'); 
+            if (hwItem) { 
+                document.getElementById('detail-page').dataset.from = 'main-page'; 
+                showDetailPage(hwItem.dataset.id); 
+            }
+        });
+    }
+
+    // 班級清單操作
+    const classListEl = document.getElementById('class-list');
+    if (classListEl) {
+        classListEl.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('.delete-class-btn');
+            if (deleteBtn) {
+                e.stopPropagation();
+                const classId = deleteBtn.dataset.id;
+                const className = deleteBtn.dataset.name;
+                const targetClass = state.appData.classes.find(c => c.id === classId);
+                const oldCode = targetClass ? targetClass.accessCode : '';
+                showConfirmModal('移除班級', `確定移除「${className}」嗎？將會擦除所有記錄！`, async () => {
+                    if (oldCode) await deleteCloudParentClass(oldCode);
+                    state.appData.classes = state.appData.classes.filter(c => c.id !== classId);
+                    state.appData.homeworks = state.appData.homeworks.filter(h => h.classId !== classId);
+                    if(state.currentClassId === classId) {
+                        state.currentClassId = state.appData.classes.length > 0 ? state.appData.classes[0].id : null;
+                        const userKey = getUserStorageKey(state.currentUser);
+                        if(state.currentClassId) {
+                            localStorage.setItem('currentClassId', state.currentClassId);
+                            localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+                        } else {
+                            localStorage.removeItem('currentClassId');
+                            localStorage.removeItem('currentClassId_' + userKey);
+                        }
+                    }
+                    await saveData();
+                    await syncDataToCloud();
+                    renderClassSelector();
+                    renderClassList();
+                    renderHomeworkList();
+                    showToast("已移除班級", "info");
+                });
+                return;
+            }
+
+            const regenBtn = e.target.closest('.regen-class-code-btn');
+            if (regenBtn) {
+                e.stopPropagation();
+                const classId = regenBtn.dataset.classId;
+                const input = classListEl.querySelector(`.class-code-input[data-class-id="${classId}"]`);
+                if (input) {
+                    input.value = generateRandomAccessCode();
+                    input.focus();
+                }
+                return;
+            }
+
+            const saveBtn = e.target.closest('.save-class-code-btn');
+            if (saveBtn) {
+                e.stopPropagation();
+                const classId = saveBtn.dataset.classId;
+                const input = classListEl.querySelector(`.class-code-input[data-class-id="${classId}"]`);
+                if (input) {
+                    const newCode = input.value.trim().toUpperCase();
+                    const cls = state.appData.classes.find(c => c.id === classId);
+                    if (cls) {
+                        const oldCode = cls.accessCode;
+                        if (newCode && state.appData.classes.some(c => c.id !== classId && c.accessCode && c.accessCode.toUpperCase() === newCode)) {
+                            showToast(`班級代碼「${newCode}」已被其他班級使用，請輸入其他代碼！`, "error");
+                            if (input) { input.focus(); input.select(); }
+                            return;
+                        }
+                        if (oldCode && oldCode !== newCode) {
+                            await deleteCloudParentClass(oldCode);
+                        }
+                        cls.accessCode = newCode;
+                        await saveData();
+                        await syncDataToCloud();
+                        renderClassList();
+                        showToast(newCode ? `已設定「${cls.name}」權限碼：${newCode}` : `已清除「${cls.name}」權限碼`, "success");
+                    }
+                }
+                return;
+            }
+
+            const saveMaxSeatBtn = e.target.closest('.save-class-max-seat-btn');
+            if (saveMaxSeatBtn) {
+                e.stopPropagation();
+                const classId = saveMaxSeatBtn.dataset.classId;
+                const input = classListEl.querySelector(`.class-max-seat-input[data-class-id="${classId}"]`);
+                const skippedInput = classListEl.querySelector(`.class-skipped-seats-input[data-class-id="${classId}"]`);
+                if (input) {
+                    const val = parseInt(input.value, 10);
+                    if (!val || val < 1 || val > 100) {
+                        showToast("請輸入 1 至 100 之間的有效座號！", "warning");
+                        return;
+                    }
+                    const skippedVal = skippedInput ? skippedInput.value.trim() : "";
+                    await updateClassMaxSeat(classId, val, skippedVal);
+                    renderClassList();
+                    showToast(`已成功更新最後座號為 ${val} 號與缺號設定，並同步套用至全班作業！`, "success");
+                }
+                return;
+            }
+
+            const saveSkippedSeatsBtn = e.target.closest('.save-class-skipped-seats-btn');
+            if (saveSkippedSeatsBtn) {
+                e.stopPropagation();
+                const classId = saveSkippedSeatsBtn.dataset.classId;
+                const skippedInput = classListEl.querySelector(`.class-skipped-seats-input[data-class-id="${classId}"]`);
+                const maxSeatInput = classListEl.querySelector(`.class-max-seat-input[data-class-id="${classId}"]`);
+                if (skippedInput) {
+                    const maxVal = maxSeatInput ? (parseInt(maxSeatInput.value, 10) || 35) : 35;
+                    const skippedVal = skippedInput.value.trim();
+                    await updateClassMaxSeat(classId, maxVal, skippedVal);
+                    renderClassList();
+                    showToast(`已成功更新缺號設定，並同步套用至全班作業！`, "success");
+                }
+                return;
+            }
+
+            const copyCodeBtn = e.target.closest('.copy-class-code-btn');
+            if (copyCodeBtn) {
+                e.stopPropagation();
+                const code = copyCodeBtn.dataset.code;
+                const name = copyCodeBtn.dataset.name;
+                await safeCopyToClipboard(code, `已複製「${name}」班級權限碼：${code}`);
+                return;
+            }
+
+            // 複製該班級專屬家長端連結（包含代碼參數）
+            const copyParentBtn = e.target.closest('.copy-parent-link-btn');
+            if (copyParentBtn) {
+                e.stopPropagation();
+                const code = copyParentBtn.dataset.code;
+                const name = copyParentBtn.dataset.name;
+                const parentUrl = `${PARENT_DASHBOARD_URL}?code=${encodeURIComponent(code)}`;
+                await safeCopyToClipboard(parentUrl, `已複製「${name}」專屬家長端連結（包含代碼）！`);
+                return;
+            }
+
+            // 複製該班級專屬學生端連結（包含代碼參數）
+            const copyStudentBtn = e.target.closest('.copy-student-link-btn');
+            if (copyStudentBtn) {
+                e.stopPropagation();
+                const code = copyStudentBtn.dataset.code;
+                const name = copyStudentBtn.dataset.name;
+                const studentUrl = `${STUDENT_DASHBOARD_URL}?code=${encodeURIComponent(code)}`;
+                await safeCopyToClipboard(studentUrl, `已複製「${name}」專屬學生端聯絡簿連結（包含代碼）！`);
+                return;
+            }
+
+            // 開啟學生成績 6 位數 PIN 碼管理彈窗
+            const managePinsBtn = e.target.closest('.manage-student-pins-btn');
+            if (managePinsBtn) {
+                e.stopPropagation();
+                const classId = managePinsBtn.dataset.classId;
+                openStudentPinsModal(classId);
+                return;
+            }
+
+            // 班級改名按鈕或點擊班級名稱觸發 inline 編輯
+            const renameBtn = e.target.closest('.rename-class-btn');
+            const nameLabel = e.target.closest('.class-name-text');
+            if (renameBtn || nameLabel) {
+                e.stopPropagation();
+                const triggerEl = renameBtn || nameLabel;
+                const classId = triggerEl.dataset.classId;
+                const cls = state.appData.classes.find(c => c.id === classId);
+                if (!cls) return;
+
+                const nameContainer = triggerEl.closest('.class-name-container') || triggerEl.closest('.flex-1') || triggerEl.parentElement;
+                if (!nameContainer || nameContainer.querySelector('.inline-rename-input')) return;
+
+                const originalHtml = nameContainer.innerHTML;
+                nameContainer.innerHTML = `
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 animate-pulse"></span>
+                        <input type="text" class="inline-rename-input px-3 py-1.5 text-xs sm:text-sm font-bold border-2 border-indigo-500 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 w-full max-w-[180px] sm:max-w-[280px]" value="${cls.name}" maxlength="25">
+                        <button type="button" class="confirm-inline-rename-btn px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors shrink-0">儲存</button>
+                        <button type="button" class="cancel-inline-rename-btn px-2 py-1.5 text-slate-400 hover:text-slate-600 text-xs font-bold shrink-0">取消</button>
+                    </div>
+                `;
+
+                const input = nameContainer.querySelector('.inline-rename-input');
+                const confirmBtn = nameContainer.querySelector('.confirm-inline-rename-btn');
+                const cancelBtn = nameContainer.querySelector('.cancel-inline-rename-btn');
+
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+
+                const handleSave = async () => {
+                    const newName = input.value.trim();
+                    if (!newName) {
+                        showToast("班級名稱不能為空白！", "warning");
+                        input.focus();
+                        return;
+                    }
+                    if (newName === cls.name) {
+                        nameContainer.innerHTML = originalHtml;
+                        return;
+                    }
+                    const duplicate = state.appData.classes.some(c => c.id !== classId && c.name === newName);
+                    if (duplicate) {
+                        showToast("已存在相同名稱的班級！", "warning");
+                        input.focus();
+                        return;
+                    }
+                    const oldName = cls.name;
+                    cls.name = newName;
+
+                    await saveData();
+                    await syncDataToCloud();
+                    renderClassSelector();
+                    renderClassList();
+                    renderHomeworkList();
+                    showToast(`已成功將「${oldName}」更名為「${newName}」`, "success");
+                };
+
+                const handleCancel = () => {
+                    nameContainer.innerHTML = originalHtml;
+                };
+
+                confirmBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    handleSave();
+                });
+
+                cancelBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    handleCancel();
+                });
+
+                input.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter') {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        handleSave();
+                    } else if (ev.key === 'Escape') {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        handleCancel();
+                    }
+                });
+
+                return;
+            }
+        });
+
+        classListEl.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('class-code-input')) {
+                e.preventDefault();
+                const classId = e.target.dataset.classId;
+                const newCode = e.target.value.trim().toUpperCase();
+                const cls = state.appData.classes.find(c => c.id === classId);
+                if (cls) {
+                    const oldCode = cls.accessCode;
+                    if (newCode && state.appData.classes.some(c => c.id !== classId && c.accessCode && c.accessCode.toUpperCase() === newCode)) {
+                        showToast("此權限碼已被其他班級使用！", "error");
+                        return;
+                    }
+                    if (oldCode && oldCode !== newCode) {
+                        await deleteCloudParentClass(oldCode);
+                    }
+                    cls.accessCode = newCode;
+                    await saveData();
+                    await syncDataToCloud();
+                    renderClassList();
+                    showToast(newCode ? `已設定「${cls.name}」權限碼：${newCode}` : `已清除「${cls.name}」權限碼`, "success");
+                }
+            } else if (e.key === 'Enter' && (e.target.classList.contains('class-max-seat-input') || e.target.classList.contains('class-skipped-seats-input'))) {
+                e.preventDefault();
+                const classId = e.target.dataset.classId;
+                const maxSeatInput = classListEl.querySelector(`.class-max-seat-input[data-class-id="${classId}"]`);
+                const skippedInput = classListEl.querySelector(`.class-skipped-seats-input[data-class-id="${classId}"]`);
+                const val = maxSeatInput ? parseInt(maxSeatInput.value, 10) : 35;
+                if (!val || val < 1 || val > 100) {
+                    showToast("請輸入 1 至 100 之間的有效座號！", "warning");
+                    return;
+                }
+                const skippedVal = skippedInput ? skippedInput.value.trim() : "";
+                await updateClassMaxSeat(classId, val, skippedVal);
+                renderClassList();
+                showToast(`已成功更新最後座號為 ${val} 號與缺號設定！`, "success");
+            }
+        });
+    }
+
+    // ==========================================
+    // MODULE: 學生個人 6 位數成績專屬密碼 (PIN) 管理與開通後台
+    // ==========================================
+    let currentEditingPinsClassId = null;
+
+    function renderStudentPinsList(cls) {
+        const container = document.getElementById('student-pins-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
+        cls.studentPins = cls.studentPins || {};
+
+        let enabledCount = 0;
+        const baseCode = String(cls.accessCode || '').trim();
+
+        for (let seat = 1; seat <= maxSeat; seat++) {
+            const pin = cls.studentPins[seat] || '';
+            const isEnabled = Boolean(pin && String(pin).trim().length > 0);
+            if (isEnabled) enabledCount++;
+
+            const row = document.createElement('div');
+            row.className = `p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                isEnabled ? 'bg-white border-slate-200/90 shadow-2xs hover:border-amber-300' : 'bg-slate-50/70 border-slate-200/60'
+            }`;
+
+            row.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl ${isEnabled ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-600'} font-black text-xs flex items-center justify-center shrink-0">
+                        ${seat}號
+                    </span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-800">${seat} 號學生</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                            }">
+                                ${isEnabled ? '已開通成績' : '未開通 (無法查閱成績)'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 shadow-2xs">
+                        <span class="text-[10px] font-bold text-slate-400">PIN:</span>
+                        <input type="text" maxlength="32" data-seat="${seat}" class="student-pin-input font-mono font-black text-xs text-amber-900 tracking-wider w-28 bg-transparent focus:outline-none uppercase" placeholder="未設定" value="${pin}">
+                    </div>
+                    <button type="button" data-seat="${seat}" class="btn-reset-seat-pin px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer" title="一鍵重設此座號預設密碼（班級代碼+座號）">
+                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                        <span>預設重設</span>
+                    </button>
+                    ${isEnabled ? `
+                        <button type="button" data-seat="${seat}" class="btn-disable-seat-pin px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors cursor-pointer" title="關閉開通">
+                            關閉
+                        </button>
+                    ` : `
+                        <button type="button" data-seat="${seat}" class="btn-enable-seat-pin px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer" title="啟用開通">
+                            開通
+                        </button>
+                    `}
+                </div>
+            `;
+
+            container.appendChild(row);
+        }
+
+        const enabledCountEl = document.getElementById('pins-enabled-count');
+        const totalCountEl = document.getElementById('pins-total-count');
+        if (enabledCountEl) enabledCountEl.textContent = enabledCount;
+        if (totalCountEl) totalCountEl.textContent = maxSeat;
+    }
+
+    function openStudentPinsModal(classId) {
+        const cls = state.appData.classes.find(c => c.id === classId);
+        if (!cls) return;
+        currentEditingPinsClassId = classId;
+
+        const modal = document.getElementById('student-pins-modal');
+        if (!modal) return;
+
+        const badge = document.getElementById('pin-modal-class-badge');
+        if (badge) badge.textContent = cls.name;
+
+        renderStudentPinsList(cls);
+        openModal(modal);
+    }
+    window.openStudentPinsModal = openStudentPinsModal;
+
+    const studentPinsModal = document.getElementById('student-pins-modal');
+    if (studentPinsModal) {
+        // Close modal buttons
+        document.getElementById('close-student-pins-modal-btn')?.addEventListener('click', () => {
+            closeModal(studentPinsModal);
+        });
+        document.getElementById('cancel-student-pins-btn')?.addEventListener('click', () => {
+            closeModal(studentPinsModal);
+        });
+
+        // Batch action: Random pins for all
+        document.getElementById('btn-batch-random-pins')?.addEventListener('click', () => {
+            const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+            if (!cls) return;
+            const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
+            cls.studentPins = cls.studentPins || {};
+            for (let s = 1; s <= maxSeat; s++) {
+                cls.studentPins[s] = String(Math.floor(100000 + Math.random() * 900000));
+            }
+            renderStudentPinsList(cls);
+            showToast("已隨機生成全班 PIN 碼，請點擊「儲存並同步至雲端」！", "info");
+        });
+
+        // Batch action: Clear all
+        document.getElementById('btn-batch-clear-pins')?.addEventListener('click', () => {
+            const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+            if (!cls) return;
+            cls.studentPins = {};
+            renderStudentPinsList(cls);
+            showToast("已清除全班 PIN 碼（成績系統將全面鎖定），請點擊「儲存並同步至雲端」！", "info");
+        });
+
+        // Copy roster
+        document.getElementById('btn-copy-pins-roster')?.addEventListener('click', async () => {
+            const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+            if (!cls) return;
+            const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
+            const code = String(cls.accessCode || '').trim();
+            cls.studentPins = cls.studentPins || {};
+            let rosterText = `【${cls.name}】學生個人專屬成績 PIN 碼表：\n班級代碼：${code || '未設定'}\n------------------------------------\n`;
+            for (let s = 1; s <= maxSeat; s++) {
+                const p = cls.studentPins[s] || `${code}${s}`;
+                rosterText += `座號 ${String(s).padStart(2, ' ')} 號：${p}\n`;
+            }
+            rosterText += `------------------------------------\n※ 預設密碼為【班級代碼 + 座號】（學生與家長共用相同 PIN 碼解鎖成績系統）。\n※ 學生手機在首次輸入驗證成功後將自動記憶憑證，日後免密直開！`;
+            await safeCopyToClipboard(rosterText, "已複製全班密碼對照表至剪貼簿！");
+        });
+
+        // Seat row click delegation (Reset, Disable, Enable)
+        const pinsListContainer = document.getElementById('student-pins-list-container');
+        if (pinsListContainer) {
+            pinsListContainer.addEventListener('click', (e) => {
+                const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+                if (!cls) return;
+                const code = String(cls.accessCode || '').trim();
+                cls.studentPins = cls.studentPins || {};
+
+                const resetBtn = e.target.closest('.btn-reset-seat-pin');
+                if (resetBtn) {
+                    const seat = resetBtn.dataset.seat;
+                    const newPin = `${code}${seat}`;
+                    cls.studentPins[seat] = newPin;
+                    renderStudentPinsList(cls);
+                    showToast(`已重設 ${seat} 號密碼為：${newPin}（請點擊儲存並同步）`, "info");
+                    return;
+                }
+
+                const disableBtn = e.target.closest('.btn-disable-seat-pin');
+                if (disableBtn) {
+                    const seat = disableBtn.dataset.seat;
+                    delete cls.studentPins[seat];
+                    renderStudentPinsList(cls);
+                    showToast(`已關閉 ${seat} 號開通狀態`, "info");
+                    return;
+                }
+
+                const enableBtn = e.target.closest('.btn-enable-seat-pin');
+                if (enableBtn) {
+                    const seat = enableBtn.dataset.seat;
+                    cls.studentPins[seat] = `${code}${seat}`;
+                    renderStudentPinsList(cls);
+                    showToast(`已為 ${seat} 號開通專屬密碼：${cls.studentPins[seat]}`, "info");
+                    return;
+                }
+            });
+
+            pinsListContainer.addEventListener('input', (e) => {
+                if (e.target.classList.contains('student-pin-input')) {
+                    const seat = e.target.dataset.seat;
+                    const val = e.target.value.trim().toUpperCase();
+                    const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+                    if (cls) {
+                        cls.studentPins = cls.studentPins || {};
+                        if (val) {
+                            cls.studentPins[seat] = val;
+                        } else {
+                            delete cls.studentPins[seat];
+                        }
+                    }
+                }
+            });
+        }
+
+        // Save & Sync button
+        document.getElementById('save-student-pins-btn')?.addEventListener('click', async () => {
+            const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
+            if (!cls) return;
+
+            // Collect inputs
+            const inputs = studentPinsModal.querySelectorAll('.student-pin-input');
+            cls.studentPins = cls.studentPins || {};
+            inputs.forEach(inp => {
+                const seat = inp.dataset.seat;
+                const val = inp.value.trim().toUpperCase();
+                if (val) {
+                    cls.studentPins[seat] = val;
+                } else {
+                    delete cls.studentPins[seat];
+                }
+            });
+
+            await saveData();
+            await syncClassStudentPinsToCloud(cls);
+
+            showToast("已成功儲存並同步學生 PIN 碼至雲端！學生與家長端即刻生效。", "success");
+            closeModal(studentPinsModal);
+            renderClassList();
+        });
+    }
+
+    bindClick('copy-parent-link-btn', async () => {
+        const baseUrl = PARENT_DASHBOARD_URL;
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const code = (currentClass && currentClass.accessCode) ? encodeURIComponent(currentClass.accessCode) : '';
+        const url = code ? `${baseUrl}?code=${code}` : baseUrl;
+        const msg = code ? `已複製「${currentClass.name}」家長端專屬連結 (附帶班級代碼)！` : "已複製家長端通用連結！";
+        await safeCopyToClipboard(url, msg);
+    });
+
+    const studentDetailsList = document.getElementById('student-details-list');
+    if (studentDetailsList) {
+        studentDetailsList.addEventListener('click', (e) => { 
+            if(e.target.classList.contains('homework-link')) { 
+                const studentCard = e.target.closest('[data-seat]');
+                const seat = studentCard ? parseInt(studentCard.dataset.seat, 10) : null;
+                if (seat) {
+                    state.lastActiveStudentSeat = seat;
+                }
+                state.scrollPositions['student-details-page'] = window.scrollY || document.documentElement.scrollTop || 0;
+                const detailPage = document.getElementById('detail-page');
+                if (detailPage) {
+                    detailPage.dataset.from = 'student-details-page';
+                    const backBtn = document.getElementById('back-to-main-btn');
+                    if (backBtn) {
+                        backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回學生詳情`;
+                    }
+                }
+                showDetailPage(e.target.dataset.id); 
+            } 
+        });
+    }
+
+    bindChange('class-selector', (e) => { 
+        state.currentClassId = e.target.value; 
+        localStorage.setItem('currentClassId', state.currentClassId); 
+        const userKey = getUserStorageKey(state.currentUser);
+        localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+        renderHomeworkList(); 
+    });
+
+    // 學生網格點擊
+    const studentGrid = document.getElementById('student-grid');
+    if (studentGrid) {
+        studentGrid.addEventListener('click', async (e) => {
+            const studentBtn = e.target.closest('.student-btn');
+            if (studentBtn) {
+                const seat = parseInt(studentBtn.dataset.seat); 
+                const hw = state.appData.homeworks.find(h => h.id === state.currentHomeworkId); 
+                if (!hw || !hw.students) return;
+                const studentIndex = hw.students.findIndex(s => s.seat === seat); 
+                if (studentIndex === -1) return;
+                const student = hw.students[studentIndex]; 
+                const typeConfig = getHomeworkType(hw.typeId);
+                let currentIndex = typeConfig.statuses.findIndex(s => s.key === student.status); 
+                if(currentIndex === -1) currentIndex = 0;
+                const nextIndex = (currentIndex + 1) % typeConfig.statuses.length;
+                const oldStatus = student.status; 
+                const newStatus = typeConfig.statuses[nextIndex].key;
+                hw.students[studentIndex].status = newStatus;
+                updateSingleStudentUI(seat, oldStatus, newStatus, typeConfig);
+                updateSummaryUI(hw);
+                await saveData();
+            }
+        });
+    }
+
+    // 條碼掃描模式切換與狀態初始化 (指定狀態 vs 變更為下一個狀態，兩者擇一)
+    const assignCheckbox = document.getElementById('scan-mode-assign-checkbox');
+    const nextCheckbox = document.getElementById('scan-mode-next-checkbox');
+    const targetSelect = document.getElementById('scan-target-status-select');
+
+    if (assignCheckbox) {
+        assignCheckbox.addEventListener('click', () => {
+            setScanActionMode('assign');
+            document.getElementById('barcode-scan-input')?.focus();
+        });
+    }
+
+    if (nextCheckbox) {
+        nextCheckbox.addEventListener('click', () => {
+            setScanActionMode('next');
+            document.getElementById('barcode-scan-input')?.focus();
+        });
+    }
+
+    if (targetSelect) {
+        targetSelect.addEventListener('change', () => {
+            setScanActionMode('assign');
+        });
+        targetSelect.addEventListener('focus', () => {
+            setScanActionMode('assign');
+        });
+    }
+
+    // 依據儲存偏好初始化掃描行為模式
+    const initialScanAction = localStorage.getItem('scan_action_type') || 'assign';
+    setScanActionMode(initialScanAction);
+
+    // 條碼掃描輸入
+    const scanInput = document.getElementById('barcode-scan-input');
+    if (scanInput) {
+        scanInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                const barcode = scanInput.value.trim(); 
+                scanInput.value = '';
+                if (!barcode || !state.currentClassId || !state.currentHomeworkId) return;
+                const currentClass = state.appData.classes.find(c => c.id === state.currentClassId), 
+                      hw = state.appData.homeworks.find(h => h.id === state.currentHomeworkId);
+                if (!currentClass || !hw) return;
+                let foundSeat = null;
+                const barcodeMap = currentClass.barcodes || currentClass.studentBarcodes || {};
+                for (const [seat, code] of Object.entries(barcodeMap)) { 
+                    if (code === barcode) { foundSeat = parseInt(seat); break; } 
+                }
+                if (!foundSeat) {
+                    const parsedNum = parseInt(barcode, 10);
+                    if (!isNaN(parsedNum) && hw.students.some(s => s.seat === parsedNum)) {
+                        foundSeat = parsedNum;
+                    }
+                }
+                if (!foundSeat) { showToast(`找不到條碼或座號 (${barcode}) 對應的學生`, "error"); return; }
+                const studentIndex = hw.students.findIndex(s => s.seat === foundSeat); 
+                if (studentIndex === -1) { showToast(`${foundSeat} 號不在作業名單中`, "error"); return; }
+                const student = hw.students[studentIndex]; 
+                const typeConfig = getHomeworkType(hw.typeId);
+                
+                const isNextMode = document.getElementById('scan-mode-next-checkbox')?.checked;
+                const oldStatus = student.status;
+                let newStatus = '';
+
+                if (isNextMode) {
+                    // 變更為下一個狀態（每掃描一次循環切換到下一個狀態）
+                    let currentIndex = typeConfig.statuses.findIndex(s => s.key === student.status);
+                    if (currentIndex === -1) currentIndex = 0;
+                    const nextIndex = (currentIndex + 1) % typeConfig.statuses.length;
+                    newStatus = typeConfig.statuses[nextIndex].key;
+                } else {
+                    // 變更為選單指定之狀態
+                    const targetStatusKey = document.getElementById('scan-target-status-select')?.value;
+                    newStatus = targetStatusKey || typeConfig.statuses[0].key;
+                }
+
+                hw.students[studentIndex].status = newStatus;
+                updateSingleStudentUI(foundSeat, oldStatus, newStatus, typeConfig);
+                updateSummaryUI(hw);
+                const btn = document.getElementById(`btn-seat-${foundSeat}`); 
+                if (btn) { 
+                    btn.classList.add('scale-[1.1]', 'ring-indigo-400'); 
+                    setTimeout(() => btn.classList.remove('scale-[1.1]', 'ring-indigo-400'), 250); 
+                }
+                const targetStatusText = typeConfig.statuses.find(s => s.key === newStatus)?.text || '已更新';
+                showToast(`${foundSeat} 號更新：${targetStatusText}`, "success"); 
+                await saveData();
+            }
+        });
+    }
+
+    // 黑板 / 聯絡簿字體與行距調整
+    bindClick('font-increase-btn', () => { 
+        state.blackboardFontSize = state.blackboardFontSize + 0.1; 
+        document.getElementById('blackboard-content').style.fontSize = `${state.blackboardFontSize}rem`; 
+        localStorage.setItem('hw_pref_fontSize', state.blackboardFontSize); 
+    });
+    bindClick('font-decrease-btn', () => { 
+        if(state.blackboardFontSize > 0.5) { 
+            state.blackboardFontSize = state.blackboardFontSize - 0.1; 
+            document.getElementById('blackboard-content').style.fontSize = `${state.blackboardFontSize}rem`; 
+            localStorage.setItem('hw_pref_fontSize', state.blackboardFontSize); 
+        } 
+    });
+    bindClick('lineheight-increase-btn', () => { 
+        state.blackboardLineHeight = state.blackboardLineHeight + 0.2; 
+        document.getElementById('blackboard-content').style.lineHeight = `${state.blackboardLineHeight}`; 
+        localStorage.setItem('hw_pref_lineHeight', state.blackboardLineHeight); 
+    });
+    bindClick('lineheight-decrease-btn', () => { 
+        if(state.blackboardLineHeight > 1.0) { 
+            state.blackboardLineHeight = state.blackboardLineHeight - 0.2; 
+            document.getElementById('blackboard-content').style.lineHeight = `${state.blackboardLineHeight}`; 
+            localStorage.setItem('hw_pref_lineHeight', state.blackboardLineHeight); 
+        } 
+    });
+
+    // 聯絡簿新增與編輯
+    bindSubmit('add-contact-item-form', async (e) => { 
+        e.preventDefault(); 
+        const input = document.getElementById('contact-book-input'), 
+              newItem = input.value.trim(), 
+              dateString = formatDate(state.selectedDate, 'YYYY-MM-DD'); 
+        if (newItem && state.currentClassId) { 
+            const currentClass = state.appData.classes.find(c => c.id === state.currentClassId); 
+            if (!currentClass) return; 
+            if(!currentClass.contactBook) currentClass.contactBook = {}; 
+            if(!currentClass.contactBook[dateString]) currentClass.contactBook[dateString] = []; 
+            currentClass.contactBook[dateString].push(newItem); 
+            await saveData(); 
+            renderContactBookItems(); 
+            input.value = ''; 
+            showToast("已寫上黑板！", "success"); 
+        } 
+    });
+
+    bindSubmit('edit-contact-form', async (e) => {
+        e.preventDefault();
+        const index = parseInt(document.getElementById('edit-contact-index').value);
+        const dateString = document.getElementById('edit-contact-date').value;
+        const newText = document.getElementById('edit-contact-name').value.trim();
+        closeModal(document.getElementById('edit-contact-modal'));
+        if (newText && state.currentClassId) {
+            const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+            if (currentClass && currentClass.contactBook[dateString]) {
+                currentClass.contactBook[dateString][index] = newText;
+                await saveData();
+                renderContactBookItems();
+                showToast("修改成功！");
+            }
+        }
+    });
+
+    const blackboardEl = document.getElementById('blackboard-content');
+    if(blackboardEl) {
+        blackboardEl.addEventListener('click', async (e) => {
+            if (!state.currentClassId) return; 
+            const currentClass = state.appData.classes.find(c => c.id === state.currentClassId), 
+                  dateString = formatDate(state.selectedDate, 'YYYY-MM-DD');
+            const deleteBtn = e.target.closest('.delete-contact-item-btn'); 
+            if (deleteBtn) { 
+                currentClass.contactBook[dateString] = currentClass.contactBook[dateString].filter((_, index) => index !== parseInt(deleteBtn.dataset.index)); 
+                await saveData(); 
+                renderContactBookItems(); 
+                showToast("已擦除", "info"); 
+                return; 
+            }
+            const editBtn = e.target.closest('.edit-contact-btn'); 
+            if (editBtn) {
+                const index = parseInt(editBtn.dataset.index);
+                const text = currentClass.contactBook[dateString][index];
+                const modal = document.getElementById('edit-contact-modal');
+                document.getElementById('edit-contact-index').value = index;
+                document.getElementById('edit-contact-date').value = dateString;
+                document.getElementById('edit-contact-name').value = text;
+                openModal(modal);
+                return;
+            }
+            const moveUpBtn = e.target.closest('.move-up-contact-btn');
+            if (moveUpBtn && !moveUpBtn.disabled) {
+                const index = parseInt(moveUpBtn.dataset.index);
+                const list = currentClass?.contactBook?.[dateString];
+                if (list && index > 0) {
+                    const temp = list[index];
+                    list[index] = list[index - 1];
+                    list[index - 1] = temp;
+                    await saveData();
+                    renderContactBookItems();
+                    if (typeof renderDualScreenContactBook === 'function') {
+                        renderDualScreenContactBook();
+                    }
+                    showToast("已向上調整順序", "info");
+                }
+                return;
+            }
+            const moveDownBtn = e.target.closest('.move-down-contact-btn');
+            if (moveDownBtn && !moveDownBtn.disabled) {
+                const index = parseInt(moveDownBtn.dataset.index);
+                const list = currentClass?.contactBook?.[dateString];
+                if (list && index < list.length - 1) {
+                    const temp = list[index];
+                    list[index] = list[index + 1];
+                    list[index + 1] = temp;
+                    await saveData();
+                    renderContactBookItems();
+                    if (typeof renderDualScreenContactBook === 'function') {
+                        renderDualScreenContactBook();
+                    }
+                    showToast("已向下調整順序", "info");
+                }
+                return;
+            }
+            const toHwBtn = e.target.closest('.to-hw-btn'); 
+            if (toHwBtn) { 
+                const index = parseInt(toHwBtn.dataset.index), 
+                      modal = document.getElementById('add-homework-modal'); 
+                document.getElementById('homework-modal-title').textContent = '新增作業'; 
+                document.getElementById('student-count').setAttribute('required', 'required'); 
+                modal.querySelector('form').reset(); 
+                document.getElementById('homework-name').value = currentClass.contactBook[dateString][index]; 
+                document.getElementById('edit-homework-id').value = ''; 
+                document.getElementById('student-count-container').style.display = 'grid'; 
+                document.getElementById('homework-type-container').style.display = 'block'; 
+                document.getElementById('missing-seats-hint').style.display = 'block'; 
+                updateTypeSelects(); 
+                if (currentClass && currentClass.lastMaxSeat) { 
+                    document.getElementById('student-count').value = currentClass.lastMaxSeat; 
+                    document.getElementById('homework-missing-seats').value = currentClass.lastMissingSeats || ''; 
+                } else { 
+                    const classHws = state.appData.homeworks.filter(h => h.classId === state.currentClassId); 
+                    if(classHws.length > 0) { 
+                        let maxSeat = 0; 
+                        (classHws[classHws.length-1].students || []).forEach(s => maxSeat = Math.max(maxSeat, s.seat)); 
+                        document.getElementById('student-count').value = maxSeat || 30; 
+                    } else document.getElementById('student-count').value = 30; 
+                } 
+                openModal(modal); 
+            }
+        });
+    }
+
+    bindClick('clear-contact-book-btn', () => { 
+        if (!state.currentClassId) return; 
+        showConfirmModal('清空本日', `確定清空 ${formatDate(state.selectedDate)} 嗎？`, async () => { 
+            state.appData.classes.find(c => c.id === state.currentClassId).contactBook[formatDate(state.selectedDate, 'YYYY-MM-DD')] = []; 
+            await saveData(); 
+            renderContactBookItems(); 
+            showToast("已清空", "info"); 
+        }); 
+    });
+    bindClick('clear-all-contact-book-btn', () => { 
+        if (!state.currentClassId) return; 
+        showConfirmModal('刪除全部', `確定刪除「所有日期」內容嗎？無法復原。`, async () => { 
+            state.appData.classes.find(c => c.id === state.currentClassId).contactBook = {}; 
+            await saveData(); 
+            renderContactBookItems(); 
+            showToast("已清空全部", "info"); 
+        }); 
+    });
+    bindClick('apply-yesterday-btn', async () => { 
+        if (!state.currentClassId) return; 
+        const yesterday = new Date(state.selectedDate); 
+        yesterday.setDate(state.selectedDate.getDate() - 1); 
+        const yStr = formatDate(yesterday, 'YYYY-MM-DD'), 
+              tStr = formatDate(state.selectedDate, 'YYYY-MM-DD'), 
+              currentClass = state.appData.classes.find(c => c.id === state.currentClassId), 
+              yesterdayItems = currentClass?.contactBook?.[yStr]; 
+        if (!yesterdayItems || yesterdayItems.length === 0) { 
+            showToast('無內容可套用', 'error'); 
+            return; 
+        } 
+        showConfirmModal('套用昨日', '確定套用嗎？將覆蓋本日現有內容！', async () => { 
+            if(!currentClass.contactBook) currentClass.contactBook = {}; 
+            currentClass.contactBook[tStr] = [...yesterdayItems]; 
+            await saveData(); 
+            renderContactBookItems(); 
+            showToast("已套用！", "success"); 
+        }); 
+    });
+
+    // 日期選擇彈窗
+    bindClick('open-date-picker-btn', () => { 
+        state.calendarDate = new Date(state.selectedDate); 
+        renderCalendar(); 
+        openModal(document.getElementById('date-picker-modal')); 
+    });
+    bindClick('close-date-picker-btn', () => closeModal(document.getElementById('date-picker-modal')));
+    bindClick('prev-month-btn', () => { 
+        state.calendarDate.setMonth(state.calendarDate.getMonth() - 1); 
+        renderCalendar(); 
+    });
+    bindClick('next-month-btn', () => { 
+        state.calendarDate.setMonth(state.calendarDate.getMonth() + 1); 
+        renderCalendar(); 
+    });
+    
+    const calGrid = document.getElementById('calendar-grid');
+    if(calGrid) {
+        calGrid.addEventListener('click', (e) => { 
+            const dayBtn = e.target.closest('.calendar-day'); 
+            if (dayBtn) { 
+                state.selectedDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth(), parseInt(dayBtn.dataset.day)); 
+                renderContactBookItems(); 
+                closeModal(document.getElementById('date-picker-modal')); 
+            } 
+        });
+    }
+
+    // 頂部同步旗標
+    bindClick('resume-sync-btn', async () => { 
+        if (!state.fileHandle) return; 
+        try { 
+            if ((await state.fileHandle.requestPermission({ mode: 'readwrite' })) === 'granted') { 
+                document.getElementById('sync-banner').classList.add('hidden'); 
+                document.body.classList.remove('has-banner'); 
+                await syncFromFileHandle(); 
+                fullRender(); 
+                showToast("已恢復硬碟連線", "success"); 
+            } 
+        } catch(e) {} 
+    });
+
+    // 彈窗通用按鈕
+    document.querySelectorAll('.cancel-btn, #close-warning-btn').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal'))));
+
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                if (modal.id === 'confirm-modal' || modal.id === 'name-prompt-modal') return;
+                closeModal(modal);
+            }
+        });
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal:not(.hidden)');
+            if (openModals.length > 0) {
+                const topModal = openModals[openModals.length - 1];
+                if (topModal.id !== 'name-prompt-modal') {
+                    closeModal(topModal);
+                }
+            }
+        }
+    });
+
+    // PWA 安裝
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        const installBtn = document.getElementById('install-pwa-btn');
+        if (installBtn) installBtn.classList.remove('hidden');
+    });
+
+    const installBtn = document.getElementById('install-pwa-btn');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast("已成功安裝班級經營系統 App！", "success");
+                }
+                deferredInstallPrompt = null;
+            } else {
+                showToast("提示：請點擊瀏覽器網址列右側的「安裝」圖示，或選單中的「加到主畫面」進行安裝。", "info");
+            }
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        showToast("班級經營系統 App 安裝完成！", "success");
+    });
+
+    // 畫面尺寸調整
+    let resizeTimeout = null;
+    window.addEventListener('resize', () => {
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (state.currentPage === 'detail-page' && state.currentHomeworkId) {
+                renderStudentGrid(state.currentHomeworkId);
+            }
+        }, 100);
+    });
+
+    // ============================================
+    // 秘技快捷鍵：在首頁依序按下 ianw0000 進入開發者模式
+    // ============================================
+    let devKeySequence = '';
+    const TARGET_DEV_CODE = 'ianw0000';
+    let devKeyTimer = null;
+
+    window.addEventListener('keydown', (e) => {
+        // 僅在首頁有效 (portal-page 未隱藏)
+        const portalEl = document.getElementById('portal-page');
+        if (!portalEl || portalEl.classList.contains('hidden')) {
+            devKeySequence = '';
+            return;
+        }
+
+        // 避免在表單輸入欄位 (例如帳號或密碼輸入框) 中打字時誤觸發
+        const activeTag = document.activeElement?.tagName?.toUpperCase();
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || document.activeElement?.isContentEditable) {
+            return;
+        }
+
+        const key = (e.key || '').toLowerCase();
+        if (key.length === 1) {
+            devKeySequence += key;
+            if (devKeySequence.length > TARGET_DEV_CODE.length) {
+                devKeySequence = devKeySequence.slice(-TARGET_DEV_CODE.length);
+            }
+
+            if (devKeySequence === TARGET_DEV_CODE) {
+                devKeySequence = '';
+                e.preventDefault();
+                enterDeveloperMode();
+            }
+
+            clearTimeout(devKeyTimer);
+            devKeyTimer = setTimeout(() => {
+                devKeySequence = '';
+            }, 5000);
+        }
+    }, true);
+
+    // ==========================================
+    // LINE 班級家長群通報文案綁定
+    // ==========================================
+    document.getElementById('copy-line-report-btn')?.addEventListener('click', openLineReportModal);
+    document.getElementById('mobile-sheet-line-report-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        openLineReportModal();
+    });
+    document.getElementById('copy-line-report-confirm-btn')?.addEventListener('click', () => {
+        const text = document.getElementById('line-report-textarea')?.value;
+        if (text) {
+            safeCopyToClipboard(text);
+            showToast("已複製到剪貼簿！", "success");
+        }
+    });
+    document.getElementById('close-line-report-modal-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('line-report-modal'));
+    });
+    document.getElementById('close-line-report-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('line-report-modal'));
+    });
+
+    // ==========================================
+    // 雙螢幕模式 (Beta版) 綁定
+    // ==========================================
+    document.getElementById('toggle-dual-screen-mode')?.addEventListener('change', (e) => {
+        localStorage.setItem('feature_dual_screen_enabled', e.target.checked ? 'true' : 'false');
+        updateDualScreenSidebar();
+        showToast(e.target.checked ? "已開啟雙螢幕模式 (Beta版)" : "已關閉雙螢幕模式", "info");
+    });
+    document.getElementById('dual-screen-toggle-btn')?.addEventListener('click', toggleDualScreenCollapse);
+    document.getElementById('dual-screen-refresh-btn')?.addEventListener('click', () => {
+        renderDualScreenContactBook();
+        showToast("當日聯絡簿已重新整理", "info");
+    });
+    // 初始化雙螢幕側邊欄狀態
+    updateDualScreenSidebar();
+
+    // ==========================================
+    // 手機端原生 App 底部導航欄與 FAB 綁定
+    // ==========================================
+    document.getElementById('mobile-nav-homework')?.addEventListener('click', () => {
+        showMainPage();
+        document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('text-indigo-600'));
+        document.getElementById('mobile-nav-homework')?.classList.add('text-indigo-600');
+    });
+    document.getElementById('mobile-nav-contact')?.addEventListener('click', () => {
+        showContactBookPage();
+    });
+    document.getElementById('mobile-nav-stats')?.addEventListener('click', () => {
+        const studentDetailsBtn = document.getElementById('student-details-btn');
+        if (studentDetailsBtn) {
+            studentDetailsBtn.click();
+        } else {
+            showStudentDetailsPage();
+        }
+    });
+    document.getElementById('mobile-nav-more')?.addEventListener('click', () => {
+        const sheet = document.getElementById('mobile-more-sheet');
+        if (sheet) openModal(sheet);
+    });
+    document.getElementById('mobile-more-sheet-close-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+    });
+    document.getElementById('mobile-fab-add')?.addEventListener('click', () => {
+        document.getElementById('show-add-modal-btn')?.click();
+    });
+
+    // 手機抽屜內部快捷按鈕
+    document.getElementById('mobile-sheet-manage-classes-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('manage-classes-btn')?.click();
+    });
+    document.getElementById('mobile-sheet-set-barcodes-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('set-barcodes-btn')?.click();
+    });
+    document.getElementById('mobile-sheet-student-details-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('student-details-btn')?.click();
+    });
+    document.getElementById('mobile-sheet-types-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('show-types-modal-btn')?.click();
+    });
+    document.getElementById('mobile-sheet-quick-auth-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('main-qr-scan-btn')?.click();
+    });
+    document.getElementById('mobile-sheet-settings-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('mobile-more-sheet'));
+        document.getElementById('settings-btn')?.click();
+    });
+
+    // ==========================================
+    // 離線優先 (Offline-First) 狀態監聽
+    // ==========================================
+    window.addEventListener('offline', () => {
+        showToast("目前處於離線模式，所有作業與聯絡簿將極速儲存於本地！", "warning");
+    });
+    window.addEventListener('online', () => {
+        showToast("已恢復網路連線，正在自動同步雲端資料...", "success");
+        try { syncDataToCloud(true); } catch(e) {}
+    });
+}
+
+export function enterDeveloperMode() {
+    state.isDevMode = true;
+    sessionStorage.setItem('app_dev_mode', 'true');
+    sessionStorage.setItem('has_passed_portal_in_session', 'true');
+    sessionStorage.removeItem('app_is_guest_mode');
+    localStorage.setItem('storageSelected', 'true');
+
+    if (!state.currentUser) {
+        state.currentUser = {
+            uid: 'dev_admin_' + (localStorage.getItem('visitor_id') || 'ianw'),
+            email: 'ianw.solar@gmail.com',
+            displayName: '開發者 (管理員模式)',
+            isDevMode: true
+        };
+        try {
+            localStorage.setItem('app_user_session', JSON.stringify(state.currentUser));
+        } catch(e) {}
+    } else {
+        state.currentUser.isDevMode = true;
+    }
+
+    // 關閉首頁認證相關彈窗
+    closePortalAuthModal();
+    
+    // 進入主系統
+    proceedIntoSystem();
+    const welcomeModal = document.getElementById('welcome-modal');
+    if (welcomeModal) closeModal(welcomeModal);
+
+    // 顯示管理員按鈕
+    document.getElementById('admin-modal-btn')?.classList.remove('hidden');
+    document.getElementById('admin-btn')?.classList.remove('hidden');
+
+    // 更新管理介面與狀態
+    updateDataManagementUI();
+    try { updatePortalUI(); } catch(e) {}
+    try {
+        if (window.updateChatVisibility) window.updateChatVisibility();
+        if (window.updateChatUnreadBadge) window.updateChatUnreadBadge();
+    } catch(e) {}
+
+    showToast("已進入開發者模式（具備完整管理員與維護權限）", "success");
+}
+window.enterDeveloperMode = enterDeveloperMode;
+
+export function setScanActionMode(mode) {
+    const assignCheckbox = document.getElementById('scan-mode-assign-checkbox');
+    const nextCheckbox = document.getElementById('scan-mode-next-checkbox');
+    const assignBox = document.getElementById('scan-mode-assign-box');
+    const nextBox = document.getElementById('scan-mode-next-box');
+    const targetSelect = document.getElementById('scan-target-status-select');
+
+    if (mode === 'next') {
+        if (assignCheckbox) assignCheckbox.checked = false;
+        if (nextCheckbox) nextCheckbox.checked = true;
+        if (targetSelect) {
+            targetSelect.disabled = true;
+            targetSelect.classList.add('opacity-40', 'pointer-events-none', 'bg-slate-100');
+            targetSelect.classList.remove('bg-white');
+        }
+        if (nextBox) {
+            nextBox.classList.add('border-indigo-400', 'ring-2', 'ring-indigo-100', 'bg-indigo-50/30');
+            nextBox.classList.remove('border-slate-200/80');
+        }
+        if (assignBox) {
+            assignBox.classList.remove('border-indigo-400', 'ring-2', 'ring-indigo-100', 'bg-indigo-50/30');
+            assignBox.classList.add('border-slate-200/80');
+        }
+        localStorage.setItem('scan_action_type', 'next');
+    } else {
+        if (assignCheckbox) assignCheckbox.checked = true;
+        if (nextCheckbox) nextCheckbox.checked = false;
+        if (targetSelect) {
+            targetSelect.disabled = false;
+            targetSelect.classList.remove('opacity-40', 'pointer-events-none', 'bg-slate-100');
+            targetSelect.classList.add('bg-white');
+        }
+        if (assignBox) {
+            assignBox.classList.add('border-indigo-400', 'ring-2', 'ring-indigo-100', 'bg-indigo-50/30');
+            assignBox.classList.remove('border-slate-200/80');
+        }
+        if (nextBox) {
+            nextBox.classList.remove('border-indigo-400', 'ring-2', 'ring-indigo-100', 'bg-indigo-50/30');
+            nextBox.classList.add('border-slate-200/80');
+        }
+        localStorage.setItem('scan_action_type', 'assign');
+    }
+}
+window.setScanActionMode = setScanActionMode;
+
+
+// ==========================================
+// 1. 一鍵生成 LINE 班級家長群每日通報文案
+// ==========================================
+export function generateLineReportText() {
+    const curClass = (state.appData?.classes || []).find(c => c.id === state.currentClassId) || state.appData?.classes?.[0];
+    const className = curClass?.name || '班級';
+    const classCode = curClass?.accessCode || '';
+    const now = new Date();
+    const days = ['日', '一', '二', '三', '四', '五', '六'];
+    const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]})`;
+
+    let text = `【${className} 今日聯絡簿與作業點收】${dateStr}\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+    // 今日作業點收狀況
+    const curHws = (state.appData?.homeworks || []).filter(h => h.classId === (curClass?.id || state.currentClassId));
+    text += `[今日作業點收狀況]\n`;
+    if (curHws.length === 0) {
+        text += `（今日尚無登記作業）\n`;
+    } else {
+        curHws.forEach((hw, idx) => {
+            let missingSeats = [];
+            if (Array.isArray(hw.students) && hw.students.length > 0) {
+                missingSeats = hw.students
+                    .filter(s => !isStudentCompleted(s, hw.typeId || 'default'))
+                    .map(s => `${s.seat}號`);
+            } else if (hw.seatStatus) {
+                const seatStatus = hw.seatStatus || {};
+                for (let i = 1; i <= (curClass?.maxSeats || 30); i++) {
+                    if (seatStatus[i] === 2) {
+                        missingSeats.push(`${i}號`);
+                    }
+                }
+            }
+            if (missingSeats.length === 0) {
+                text += `${idx + 1}. ${hw.name}（全班已交齊）\n`;
+            } else {
+                text += `${idx + 1}. ${hw.name}（缺交：${missingSeats.join('、')}）\n`;
+            }
+        });
+    }
+
+    text += `\n[今日黑板聯絡事項]\n`;
+    const todayYMD = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const cbItems = curClass?.contactBook?.[todayYMD] || state.appData?.contactBooks?.[curClass?.id || state.currentClassId]?.[todayYMD] || [];
+    if (cbItems.length === 0) {
+        text += `（今日暫無特殊聯絡事項，請隨時留意班級動態）\n`;
+    } else {
+        cbItems.forEach((item, idx) => {
+            text += `${idx + 1}. ${item.name || item}\n`;
+        });
+    }
+
+    text += `\n[家長專屬即時查核連結（免密碼直達）]\n`;
+    const baseUrl = PARENT_DASHBOARD_URL;
+    text += classCode ? `${baseUrl}?code=${classCode}\n` : `${baseUrl}\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `七賢國中107 王禹硯 開發 • 班級經營系統`;
+
+    return text;
+}
+
+export function openLineReportModal() {
+    const reportText = generateLineReportText();
+    const textarea = document.getElementById('line-report-textarea');
+    if (textarea) textarea.value = reportText;
+    
+    // 自動複製進剪貼簿
+    safeCopyToClipboard(reportText);
+    showToast("已自動複製 LINE 家長群通報文案！", "success");
+
+    const modal = document.getElementById('line-report-modal');
+    if (modal) openModal(modal);
+}
+
+// ==========================================
+// 2. 雙螢幕模式 (Beta版) 當日聯絡簿側邊欄
+// ==========================================
+let isDualScreenExpanded = true;
+
+export function updateDualScreenSidebar() {
+    const isEnabled = localStorage.getItem('feature_dual_screen_enabled') === 'true';
+    const container = document.getElementById('dual-screen-sidebar-container');
+    const content = document.getElementById('dual-screen-sidebar-content');
+    const btn = document.getElementById('dual-screen-toggle-btn');
+    const chk = document.getElementById('toggle-dual-screen-mode');
+    const hwList = document.getElementById('homework-list');
+    if (chk) chk.checked = isEnabled;
+    if (!container) return;
+
+    if (!isEnabled) {
+        container.classList.add('hidden');
+        if (hwList) hwList.classList.remove('dual-screen-active');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    if (isDualScreenExpanded) {
+        if (content) content.classList.remove('hidden');
+        container.classList.remove('w-0', 'min-w-0');
+        container.classList.add('w-full', 'xl:w-1/3', 'xl:min-w-[320px]');
+        // 展開狀態：箭頭指向右邊 (點擊向右收合)
+        if (btn) {
+            btn.title = "收合當日聯絡簿";
+            btn.innerHTML = `<svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>`;
+        }
+        if (hwList) hwList.classList.add('dual-screen-active');
+    } else {
+        if (content) content.classList.add('hidden');
+        container.classList.remove('w-full', 'xl:w-1/3', 'xl:min-w-[320px]');
+        container.classList.add('w-0', 'min-w-0');
+        // 收合狀態：箭頭指向左邊 (點擊向左展開)
+        if (btn) {
+            btn.title = "展開當日聯絡簿";
+            btn.innerHTML = `<svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>`;
+        }
+        if (hwList) hwList.classList.remove('dual-screen-active');
+    }
+    renderDualScreenContactBook();
+}
+
+export function renderDualScreenContactBook() {
+    const dateText = document.getElementById('dual-screen-date-text');
+    const listEl = document.getElementById('dual-screen-contact-list');
+    if (!listEl) return;
+
+    const now = new Date();
+    const days = ['日', '一', '二', '三', '四', '五', '六'];
+    const todayYMD = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    if (dateText) {
+        dateText.textContent = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} (週${days[now.getDay()]})`;
+    }
+
+    const curClassId = state.currentClassId;
+    const curClass = (state.appData?.classes || []).find(c => c.id === curClassId);
+    const rawItems = curClass?.contactBook?.[todayYMD] || state.appData?.contactBooks?.[curClassId]?.[todayYMD] || [];
+    const items = rawItems.map(it => typeof it === 'string' ? { name: it } : it);
+
+    if (items.length === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-emerald-200/60 font-bold text-xs bg-emerald-950/40 rounded-xl border border-emerald-800/40">今日黑板尚無聯絡事項</div>`;
+        return;
+    }
+
+    listEl.innerHTML = items.map((it, idx) => `
+        <div class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-700/60 flex items-start gap-2 shadow-xs">
+            <span class="w-5 h-5 rounded-full bg-amber-400 text-stone-900 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">${idx+1}</span>
+            <span class="text-xs font-bold text-stone-100 leading-snug">${it.name || it}</span>
+        </div>
+    `).join('');
+}
+
+export function toggleDualScreenCollapse() {
+    const container = document.getElementById('dual-screen-sidebar-container');
+    const content = document.getElementById('dual-screen-sidebar-content');
+    const btn = document.getElementById('dual-screen-toggle-btn');
+    const hwList = document.getElementById('homework-list');
+    if (!content) return;
+
+    isDualScreenExpanded = !isDualScreenExpanded;
+    if (isDualScreenExpanded) {
+        content.classList.remove('hidden');
+        if (container) {
+            container.classList.remove('w-0', 'min-w-0');
+            container.classList.add('w-full', 'xl:w-1/3', 'xl:min-w-[320px]');
+        }
+        // 展開模式：箭頭指向右邊 (向右收合)
+        if (btn) {
+            btn.title = "收合當日聯絡簿";
+            btn.innerHTML = `<svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>`;
+        }
+        if (hwList) hwList.classList.add('dual-screen-active');
+    } else {
+        content.classList.add('hidden');
+        if (container) {
+            container.classList.remove('w-full', 'xl:w-1/3', 'xl:min-w-[320px]');
+            container.classList.add('w-0', 'min-w-0');
+        }
+        // 收合模式：箭頭指向左邊 (向左展開)
+        if (btn) {
+            btn.title = "展開當日聯絡簿";
+            btn.innerHTML = `<svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>`;
+        }
+        if (hwList) hwList.classList.remove('dual-screen-active');
+    }
+}
+
+
