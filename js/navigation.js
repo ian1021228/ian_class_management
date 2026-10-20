@@ -99,6 +99,18 @@ export function applyCheckMode(mode) {
         }
     }
 
+    // 作業選單列依規範隱藏點收方式按鈕，一律於設定頁中調整
+    const topCheckBtn = document.getElementById('top-check-mode-btn');
+    if (topCheckBtn) {
+        topCheckBtn.classList.add('hidden');
+        topCheckBtn.style.display = 'none';
+    }
+    const mobileCheckBtn = document.getElementById('mobile-sheet-check-mode-btn');
+    if (mobileCheckBtn) {
+        mobileCheckBtn.classList.add('hidden');
+        mobileCheckBtn.style.display = 'none';
+    }
+
     // 更新頂部導覽列標籤
     const topLabel = document.getElementById('top-check-mode-label');
     if (topLabel) {

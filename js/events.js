@@ -329,6 +329,7 @@ export function setupButtonEvents() {
     // 5. 系統設定按鈕
     bindClick('settings-btn', () => {
         updateDataManagementUI(handleRestoreBackup);
+        applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
         openModal(document.getElementById('settings-modal'));
     });
 
