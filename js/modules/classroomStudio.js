@@ -192,8 +192,8 @@ export function adjustGroupScore(groupId, delta, clientEvent = null) {
  * 渲染 Studio 主體
  */
 export function renderClassroomStudio() {
-    const modal = document.getElementById('classroom-studio-modal');
-    if (!modal) return;
+    const page = document.getElementById('classroom-studio-page') || document.getElementById('classroom-studio-modal');
+    if (!page) return;
 
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass) return;
@@ -402,12 +402,28 @@ function renderGroupsSection(currentClass) {
     });
 }
 
-export function openClassroomStudioModal(tab = 'seating') {
-    const modal = document.getElementById('classroom-studio-modal');
-    if (!modal) return;
-    currentStudioTab = tab;
+/**
+ * 重置所有小組競賽積分為 0
+ */
+export function resetAllGroupScores() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    if (!confirm('確定要將所有小組的競賽積分歸零重置嗎？此動作將清空所有小組目前的得分。')) return;
+
+    if (!currentClass.groupsConfig) currentClass.groupsConfig = {};
+    currentClass.groupsConfig.groupScores = {};
+    saveData();
     renderClassroomStudio();
-    openModal(modal);
+    showToast('已成功重置所有小組競賽積分為 0', 'success');
+}
+
+export function openClassroomStudioModal(tab = 'seating') {
+    if (window.showClassroomStudioPage) {
+        window.showClassroomStudioPage(false, tab);
+    } else {
+        currentStudioTab = tab;
+        renderClassroomStudio();
+    }
 }
 
 export function initClassroomStudio() {
@@ -415,9 +431,6 @@ export function initClassroomStudio() {
     document.getElementById('mobile-sheet-seating-btn')?.addEventListener('click', () => {
         document.getElementById('mobile-more-sheet')?.classList.add('hidden');
         openClassroomStudioModal('seating');
-    });
-    document.getElementById('close-studio-modal-btn')?.addEventListener('click', () => {
-        closeModal(document.getElementById('classroom-studio-modal'));
     });
 
     // 視角 180° 翻轉
@@ -446,6 +459,9 @@ export function initClassroomStudio() {
         }
     });
 
+    // 一鍵重置小組積分
+    document.getElementById('studio-reset-group-scores-btn')?.addEventListener('click', resetAllGroupScores);
+
     // 標籤頁切換
     ['seating', 'groups'].forEach(tab => {
         document.getElementById(`studio-tab-btn-${tab}`)?.addEventListener('click', () => {
@@ -454,3 +470,7 @@ export function initClassroomStudio() {
         });
     });
 }
+
+window.renderClassroomStudio = renderClassroomStudio;
+window.resetAllGroupScores = resetAllGroupScores;
+

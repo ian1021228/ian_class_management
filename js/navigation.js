@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { openModal, closeModal, showToast, formatDate } from './utils.js';
+import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js';
 import { saveData, checkAndCleanupStorage } from './storage.js';
 import { 
     renderClassSelector, 
@@ -141,7 +141,18 @@ export function hideAllPages() {
     if (state.currentPage) {
         state.scrollPositions[state.currentPage] = window.scrollY || document.documentElement.scrollTop;
     }
-    ['portal-page', 'main-page', 'detail-page', 'student-details-page', 'contact-book-page', 'homework-types-page'].forEach(id => { 
+    [
+        'portal-page',
+        'main-page',
+        'detail-page',
+        'student-details-page',
+        'contact-book-page',
+        'homework-types-page',
+        'attendance-page',
+        'arena-draw-points-page',
+        'classroom-studio-page',
+        'exam-timer-page'
+    ].forEach(id => { 
         const el = document.getElementById(id); 
         if (el) el.classList.add('hidden'); 
     });
@@ -308,6 +319,210 @@ export function showHomeworkTypesPage(fromHistory = false) {
     restoreScroll('homework-types-page');
     updateMobileNavVisibility('homework-types');
 }
+
+export function showAttendancePage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('attendance-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'attendance' }, '#attendance');
+    if (window.renderAttendanceHub) {
+        window.renderAttendanceHub();
+    }
+    restoreScroll('attendance-page');
+    updateMobileNavVisibility('attendance');
+    closeGlobalNavDrawer();
+}
+
+export function showDrawPointsPage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('arena-draw-points-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'draw-points' }, '#draw-points');
+    if (window.renderDrawAndPointsModal) {
+        window.renderDrawAndPointsModal();
+    }
+    restoreScroll('arena-draw-points-page');
+    updateMobileNavVisibility('draw-points');
+    closeGlobalNavDrawer();
+}
+
+export function showClassroomStudioPage(fromHistory = false, tab = 'seating') {
+    hideAllPages();
+    const pageEl = document.getElementById('classroom-studio-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'classroom-studio', tab }, '#classroom-studio');
+    if (window.renderClassroomStudio) {
+        window.renderClassroomStudio();
+    }
+    restoreScroll('classroom-studio-page');
+    updateMobileNavVisibility('classroom-studio');
+    closeGlobalNavDrawer();
+}
+
+export function showExamTimerPage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('exam-timer-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'exam-timer' }, '#exam-timer');
+    if (window.renderExamTimerModal) {
+        window.renderExamTimerModal();
+    }
+    restoreScroll('exam-timer-page');
+    updateMobileNavVisibility('exam-timer');
+    closeGlobalNavDrawer();
+}
+
+export function openGlobalNavDrawer() {
+    const drawer = document.getElementById('global-nav-drawer');
+    const backdrop = document.getElementById('global-nav-drawer-backdrop');
+    if (!drawer) return;
+
+    // 更新抽屜內目前班級標題
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const titleEl = document.getElementById('drawer-class-title');
+    if (titleEl) titleEl.textContent = currentClass?.name || '班級管理系統';
+
+    // 更新抽屜內班級下拉選單
+    const selectEl = document.getElementById('drawer-class-select');
+    if (selectEl && state.appData?.classes) {
+        selectEl.innerHTML = '';
+        state.appData.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            if (c.id === state.currentClassId) opt.selected = true;
+            selectEl.appendChild(opt);
+        });
+    }
+
+    // 更新全螢幕圖標與文字
+    updateDrawerFullscreenState();
+
+    if (backdrop) {
+        backdrop.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+        });
+    }
+    drawer.classList.remove('translate-x-full');
+    drawer.classList.add('translate-x-0');
+}
+
+export function closeGlobalNavDrawer() {
+    const drawer = document.getElementById('global-nav-drawer');
+    const backdrop = document.getElementById('global-nav-drawer-backdrop');
+    if (!drawer) return;
+    drawer.classList.remove('translate-x-0');
+    drawer.classList.add('translate-x-full');
+    if (backdrop) {
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        setTimeout(() => {
+            backdrop.classList.add('hidden');
+        }, 300);
+    }
+}
+
+export function toggleGlobalNavDrawer() {
+    const drawer = document.getElementById('global-nav-drawer');
+    if (!drawer) return;
+    if (drawer.classList.contains('translate-x-full')) {
+        openGlobalNavDrawer();
+    } else {
+        closeGlobalNavDrawer();
+    }
+}
+
+export function updateDrawerFullscreenState() {
+    const isFs = isAppFullscreen();
+    const icon = document.getElementById('drawer-fs-icon');
+    const text = document.getElementById('drawer-fs-text');
+    if (icon) {
+        icon.className = isFs ? 'fa-solid fa-compress text-indigo-400 text-base' : 'fa-solid fa-expand text-indigo-400 text-base';
+    }
+    if (text) {
+        text.textContent = isFs ? '退出真實全螢幕' : '切換真實全螢幕';
+    }
+}
+
+export function initGlobalNavDrawer() {
+    const burgerBtn = document.getElementById('global-nav-burger-btn');
+    const closeBtn = document.getElementById('close-global-nav-drawer-btn');
+    const backdrop = document.getElementById('global-nav-drawer-backdrop');
+    const fsBtn = document.getElementById('drawer-toggle-fullscreen-btn');
+    const classSelect = document.getElementById('drawer-class-select');
+    const settingsBtn = document.getElementById('drawer-settings-btn');
+    const logoutBtn = document.getElementById('drawer-logout-btn');
+
+    burgerBtn?.addEventListener('click', toggleGlobalNavDrawer);
+    closeBtn?.addEventListener('click', closeGlobalNavDrawer);
+    backdrop?.addEventListener('click', closeGlobalNavDrawer);
+
+    // 全螢幕切換
+    fsBtn?.addEventListener('click', () => {
+        toggleAppFullscreen();
+        setTimeout(updateDrawerFullscreenState, 150);
+    });
+
+    // 監聽原生全螢幕變化
+    document.addEventListener('fullscreenchange', updateDrawerFullscreenState);
+    document.addEventListener('webkitfullscreenchange', updateDrawerFullscreenState);
+
+    // 班級快速切換
+    classSelect?.addEventListener('change', (e) => {
+        const newClassId = e.target.value;
+        if (newClassId && newClassId !== state.currentClassId) {
+            state.currentClassId = newClassId;
+            localStorage.setItem('currentClassId', newClassId);
+            saveData();
+            fullRender();
+            closeGlobalNavDrawer();
+            showToast(`已切換為「${state.appData.classes.find(c => c.id === newClassId)?.name || ''}」`, 'success');
+        }
+    });
+
+    // 導覽抽屜頁籤連結
+    document.getElementById('drawer-nav-main')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showMainPage();
+    });
+    document.getElementById('drawer-nav-attendance')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showAttendancePage();
+    });
+    document.getElementById('drawer-nav-draw')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showDrawPointsPage();
+    });
+    document.getElementById('drawer-nav-studio')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showClassroomStudioPage();
+    });
+    document.getElementById('drawer-nav-timer')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showExamTimerPage();
+    });
+    document.getElementById('drawer-nav-contact')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showContactBookPage();
+    });
+    document.getElementById('drawer-nav-student-stats')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        showStudentDetailsPage();
+    });
+
+    // 設定與登出
+    settingsBtn?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        openModal(document.getElementById('settings-modal'));
+    });
+    logoutBtn?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        document.getElementById('logout-btn')?.click();
+    });
+}
+
 
 export function promptSystemUsageAndNavigate() {
     if (state.currentUser) {

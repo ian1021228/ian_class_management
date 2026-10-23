@@ -10,7 +10,7 @@
  */
 
 import { state } from '../state.js';
-import { formatDate, showToast, openModal, closeModal, escapeHtml } from '../utils.js';
+import { formatDate, showToast, openModal, closeModal, escapeHtml, toggleAppFullscreen } from '../utils.js';
 import { getAttendanceSummaryForClass } from './attendanceHub.js';
 
 let timerInterval = null;
@@ -160,8 +160,8 @@ function updateTimerControlButtons() {
  * 渲染考試計時器全景畫面並連動出勤中樞
  */
 export function renderExamTimerModal() {
-    const modal = document.getElementById('exam-timer-modal');
-    if (!modal) return;
+    const page = document.getElementById('exam-timer-page') || document.getElementById('exam-timer-modal');
+    if (!page) return;
 
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass) return;
@@ -198,7 +198,7 @@ export function renderExamTimerModal() {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = `px-3.5 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
-                isCur ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                isCur ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`;
             btn.textContent = `${mins} 分鐘`;
             btn.addEventListener('click', () => {
@@ -216,10 +216,11 @@ export function renderExamTimerModal() {
 }
 
 export function openExamTimerModal() {
-    const modal = document.getElementById('exam-timer-modal');
-    if (!modal) return;
-    renderExamTimerModal();
-    openModal(modal);
+    if (window.showExamTimerPage) {
+        window.showExamTimerPage();
+    } else {
+        renderExamTimerModal();
+    }
 }
 
 export function initExamTimer() {
@@ -227,10 +228,6 @@ export function initExamTimer() {
     document.getElementById('mobile-sheet-timer-btn')?.addEventListener('click', () => {
         document.getElementById('mobile-more-sheet')?.classList.add('hidden');
         openExamTimerModal();
-    });
-    document.getElementById('close-exam-timer-btn')?.addEventListener('click', () => {
-        pauseExamTimer();
-        closeModal(document.getElementById('exam-timer-modal'));
     });
 
     // 播放/暫停
@@ -255,14 +252,11 @@ export function initExamTimer() {
         showToast(`已切換測驗科目為「${currentSubject}」`, 'info');
     });
 
-    // 全螢幕投影切換
+    // 全螢幕投影切換 (呼叫原生 OS Fullscreen API)
     document.getElementById('exam-timer-fullscreen-btn')?.addEventListener('click', () => {
-        const modal = document.getElementById('exam-timer-modal');
-        if (!modal) return;
-        if (!document.fullscreenElement) {
-            modal.requestFullscreen().catch(() => {});
-        } else {
-            document.exitFullscreen().catch(() => {});
-        }
+        toggleAppFullscreen();
     });
 }
+
+window.renderExamTimerModal = renderExamTimerModal;
+

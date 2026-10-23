@@ -3455,21 +3455,8 @@ export function setupButtonEvents() {
         closeModal(document.getElementById('line-report-modal'));
     });
 
-    // ==========================================
-    // 雙螢幕模式 (Beta版) 綁定
-    // ==========================================
-    document.getElementById('toggle-dual-screen-mode')?.addEventListener('change', (e) => {
-        localStorage.setItem('feature_dual_screen_enabled', e.target.checked ? 'true' : 'false');
-        updateDualScreenSidebar();
-        showToast(e.target.checked ? "已開啟雙螢幕模式 (Beta版)" : "已關閉雙螢幕模式", "info");
-    });
-    document.getElementById('dual-screen-toggle-btn')?.addEventListener('click', toggleDualScreenCollapse);
-    document.getElementById('dual-screen-refresh-btn')?.addEventListener('click', () => {
-        renderDualScreenContactBook();
-        showToast("當日聯絡簿已重新整理", "info");
-    });
-    // 初始化雙螢幕側邊欄狀態
-    updateDualScreenSidebar();
+    // 雙螢幕模式已移除
+    // updateDualScreenSidebar();
 
     // ==========================================
     // 手機端原生 App 底部導航欄與 FAB 綁定

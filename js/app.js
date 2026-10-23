@@ -65,6 +65,11 @@ import {
     showStudentDetailsPage,
     showContactBookPage,
     showHomeworkTypesPage,
+    showAttendancePage,
+    showDrawPointsPage,
+    showClassroomStudioPage,
+    showExamTimerPage,
+    initGlobalNavDrawer,
     openPortalAuthModal,
     closePortalAuthModal,
     proceedIntoSystem,
@@ -111,6 +116,13 @@ window.stopDeviceQrLoginSession = stopDeviceQrLoginSession;
 window.openPhoneQrScannerModal = openPhoneQrScannerModal;
 window.closePhoneQrScannerModal = closePhoneQrScannerModal;
 window.refreshDynamicIsland = refreshDynamicIsland;
+window.showAttendancePage = showAttendancePage;
+window.showDrawPointsPage = showDrawPointsPage;
+window.showClassroomStudioPage = showClassroomStudioPage;
+window.showExamTimerPage = showExamTimerPage;
+window.showMainPage = showMainPage;
+window.showContactBookPage = showContactBookPage;
+window.showStudentDetailsPage = showStudentDetailsPage;
 
 // 滾動提示指示器
 let portalScrollDismissed = false;
@@ -269,6 +281,32 @@ async function init() {
     }
 
     initPortalScrollIndicator();
+    initGlobalNavDrawer();
+
+    // 首頁四大核心功能按鈕直連全畫面
+    document.getElementById('open-attendance-hub-btn')?.addEventListener('click', () => showAttendancePage());
+    document.getElementById('open-draw-points-modal-btn')?.addEventListener('click', () => showDrawPointsPage());
+    document.getElementById('open-classroom-studio-btn')?.addEventListener('click', () => showClassroomStudioPage());
+    document.getElementById('open-exam-timer-btn')?.addEventListener('click', () => showExamTimerPage());
+
+    // 手機版快捷抽屜直連全畫面
+    document.getElementById('mobile-sheet-attendance-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-more-sheet')?.classList.add('hidden');
+        showAttendancePage();
+    });
+    document.getElementById('mobile-sheet-draw-points-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-more-sheet')?.classList.add('hidden');
+        showDrawPointsPage();
+    });
+    document.getElementById('mobile-sheet-seating-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-more-sheet')?.classList.add('hidden');
+        showClassroomStudioPage();
+    });
+    document.getElementById('mobile-sheet-timer-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-more-sheet')?.classList.add('hidden');
+        showExamTimerPage();
+    });
+
     if (fbAuth?.currentUser && fbDb && sessionStorage.getItem('app_is_guest_mode') !== 'true' && !state.currentUser?.isDevMode) {
         startRealtimeCloudSync();
     }
@@ -280,7 +318,10 @@ async function init() {
         return;
     }
 
-    const explicitAppSubPages = ['#main', '#detail', '#student-details', '#contact-book', '#homework-types'];
+    const explicitAppSubPages = [
+        '#main', '#detail', '#student-details', '#contact-book', '#homework-types',
+        '#attendance', '#draw-points', '#classroom-studio', '#exam-timer'
+    ];
     if (!window.location.hash || window.location.hash === '#portal' || !explicitAppSubPages.includes(window.location.hash)) {
         showPortalPage(true);
         return;
@@ -291,6 +332,23 @@ async function init() {
         pushPageState({ page: 'main' }, '#main'); 
         showMainPage(true);
         if (state.appData.classes.length === 0) openModal(document.getElementById('manage-classes-modal'));
+        return;
+    }
+
+    if (window.location.hash === '#attendance') {
+        showAttendancePage(true);
+        return;
+    }
+    if (window.location.hash === '#draw-points') {
+        showDrawPointsPage(true);
+        return;
+    }
+    if (window.location.hash === '#classroom-studio') {
+        showClassroomStudioPage(true);
+        return;
+    }
+    if (window.location.hash === '#exam-timer') {
+        showExamTimerPage(true);
         return;
     }
 }

@@ -202,11 +202,11 @@ export function executeFairDraw() {
 }
 
 /**
- * 渲染抽籤與加分全景彈窗
+ * 渲染抽籤與加分全景畫面
  */
 export function renderDrawAndPointsModal() {
-    const modal = document.getElementById('arena-draw-points-modal');
-    if (!modal) return;
+    const page = document.getElementById('arena-draw-points-page') || document.getElementById('arena-draw-points-modal');
+    if (!page) return;
 
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass) return;
@@ -306,11 +306,34 @@ export function renderDrawAndPointsModal() {
     }
 }
 
-export function openDrawAndPointsModal() {
-    const modal = document.getElementById('arena-draw-points-modal');
-    if (!modal) return;
+/**
+ * 重置全班所有學生個人積分為 0
+ */
+export function resetAllStudentPoints() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    if (!confirm('確定要將全班所有學生的個人積分歸零重置嗎？此動作將清空所有個人積分。')) return;
+
+    currentClass.pointsBySeat = {};
+    if (!currentClass.pointsHistory) currentClass.pointsHistory = [];
+    currentClass.pointsHistory.unshift({
+        seat: '全班',
+        name: '全班歸零',
+        delta: 0,
+        reason: '重置全班個人分數',
+        time: new Date().toTimeString().slice(0, 5)
+    });
+    saveData();
     renderDrawAndPointsModal();
-    openModal(modal);
+    showToast('已成功重置全班所有學生的個人積分為 0', 'success');
+}
+
+export function openDrawAndPointsModal() {
+    if (window.showDrawPointsPage) {
+        window.showDrawPointsPage();
+    } else {
+        renderDrawAndPointsModal();
+    }
 }
 
 export function initArenaDrawAndPoints() {
@@ -318,9 +341,6 @@ export function initArenaDrawAndPoints() {
     document.getElementById('mobile-sheet-draw-points-btn')?.addEventListener('click', () => {
         document.getElementById('mobile-more-sheet')?.classList.add('hidden');
         openDrawAndPointsModal();
-    });
-    document.getElementById('close-arena-modal-btn')?.addEventListener('click', () => {
-        closeModal(document.getElementById('arena-draw-points-modal'));
     });
 
     // 抽籤主按鈕
@@ -336,6 +356,9 @@ export function initArenaDrawAndPoints() {
         renderDrawAndPointsModal();
         showToast('已重設籤筒！所有學生已重新放回籤筒中', 'info');
     });
+
+    // 一鍵重置全班分數
+    document.getElementById('arena-reset-all-points-btn')?.addEventListener('click', resetAllStudentPoints);
 
     // 即時加分按鈕組
     [-1, 1, 2, 3].forEach(delta => {
@@ -357,3 +380,7 @@ export function initArenaDrawAndPoints() {
         awardWholeClassBonus(2, '全班團隊表現特優');
     });
 }
+
+window.renderDrawAndPointsModal = renderDrawAndPointsModal;
+window.resetAllStudentPoints = resetAllStudentPoints;
+

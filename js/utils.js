@@ -428,4 +428,47 @@ window.showConfirmModal = showConfirmModal;
 window.showNamePromptModal = showNamePromptModal;
 window.safeCopyToClipboard = safeCopyToClipboard;
 
+/**
+ * 檢查當前是否處於真實 OS 全螢幕
+ */
+export function isAppFullscreen() {
+    return Boolean(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+    );
+}
+
+/**
+ * 切換真實 OS 全螢幕 (呼叫瀏覽器原生 Fullscreen API)
+ */
+export function toggleAppFullscreen() {
+    try {
+        if (!isAppFullscreen()) {
+            const el = document.documentElement;
+            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+            if (rfs) {
+                const p = rfs.call(el);
+                if (p && p.catch) {
+                    p.catch(err => {
+                        console.warn('OS Fullscreen toggle error:', err);
+                        showToast('請先與頁面點擊互動後再切換全螢幕，或按鍵盤 F11', 'info');
+                    });
+                }
+            }
+        } else {
+            const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (efs) {
+                efs.call(document).catch(() => {});
+            }
+        }
+    } catch (e) {
+        console.error('Fullscreen API failed:', e);
+    }
+}
+window.toggleAppFullscreen = toggleAppFullscreen;
+window.isAppFullscreen = isAppFullscreen;
+
+
 
