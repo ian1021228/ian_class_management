@@ -60,7 +60,10 @@ import {
     applyCheckMode,
     pushPageState,
     showPortalPage,
+    showOverviewPage,
     showMainPage,
+    showPointsPage,
+    showLotteryPage,
     showDetailPage,
     showStudentDetailsPage,
     showContactBookPage,
@@ -116,6 +119,9 @@ window.stopDeviceQrLoginSession = stopDeviceQrLoginSession;
 window.openPhoneQrScannerModal = openPhoneQrScannerModal;
 window.closePhoneQrScannerModal = closePhoneQrScannerModal;
 window.refreshDynamicIsland = refreshDynamicIsland;
+window.showOverviewPage = showOverviewPage;
+window.showPointsPage = showPointsPage;
+window.showLotteryPage = showLotteryPage;
 window.showAttendancePage = showAttendancePage;
 window.showDrawPointsPage = showDrawPointsPage;
 window.showClassroomStudioPage = showClassroomStudioPage;
@@ -317,10 +323,16 @@ async function init() {
     // 6. 頁面導航初始化 (未登入時預設顯示首頁且隱藏漢堡按鈕，進入系統工作台後才會顯示)
     const hash = window.location.hash;
     const hasPassedPortal = sessionStorage.getItem('has_passed_portal_in_session') === 'true' || !!state.currentUser;
-    if (hash === '#attendance') {
+    if (hash === '#overview') {
+        showOverviewPage(true);
+    } else if (hash === '#attendance') {
         showAttendancePage(true);
+    } else if (hash === '#points') {
+        showPointsPage(true);
+    } else if (hash === '#lottery' || hash === '#draw') {
+        showLotteryPage(true);
     } else if (hash === '#draw-points') {
-        showDrawPointsPage(true);
+        showPointsPage(true);
     } else if (hash === '#classroom-studio') {
         showClassroomStudioPage(true);
     } else if (hash === '#exam-timer') {
@@ -335,10 +347,12 @@ async function init() {
         showExamScoresPage(true);
     } else if (hash === '#classes' || hash === '#manage-class') {
         showManageClassPage(true);
-    } else if (hash === '#main' || (hasPassedPortal && hash !== '#portal')) {
+    } else if (hash === '#main') {
         applyCheckMode(localStorage.getItem('checkMode') || 'manual');
         pushPageState({ page: 'main' }, '#main'); 
         showMainPage(true);
+    } else if (hasPassedPortal && hash !== '#portal') {
+        showOverviewPage(true);
     } else {
         showPortalPage(true);
     }

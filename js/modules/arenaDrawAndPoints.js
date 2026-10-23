@@ -1,11 +1,8 @@
 /**
- * 班級經營系統 - 模組 4：課堂加扣分與抽籤系統 (arenaDrawAndPoints.js)
+ * 班級經營系統 - 模組 4：課堂加扣分與課堂抽籤系統 (arenaDrawAndPoints.js)
  * 支援：
- * 1. CLASS GOAL 全班共同集分看板與達標福利進度條
- * 2. 學生個人加扣分卡片網格 (大字積分、- 與 + 圓形微調按鈕、即時彈力動效)
- * 3. 全班 +1 (自動跳過今日請假/缺席學生)
- * 4. 密碼級公平不重複抽籤籤筒 (Fair Lottery Pool)
- * 5. 積分歷史紀錄
+ * 1. 課堂加扣分獨立頁面 (#points-page)：CLASS GOAL 全班共同集分、學生加扣分卡片網格、全班 +1、加分歷史紀錄、全班重置
+ * 2. 課堂抽籤獨立頁面 (#lottery-page)：3D 公平籤筒（點擊籤筒直接抽籤）、密碼級不重複隨機點名、即時評分膠囊、個人積分排行榜
  */
 
 import { state } from '../state.js';
@@ -16,7 +13,6 @@ import { isStudentAbsentOrLeaveToday } from './attendanceHub.js';
 
 let isDrawing = false;
 let currentDrawnSeat = null;
-let currentArenaTab = 'points'; // 'points' | 'draw'
 
 function ensureClassPointsData(classObj) {
     if (!classObj) return null;
@@ -45,6 +41,13 @@ function ensureClassPointsData(classObj) {
     return classObj;
 }
 
+function getCurrentClass() {
+    if (!state.currentClassId && state.appData?.classes?.length > 0) {
+        state.currentClassId = state.appData.classes[0].id;
+    }
+    return state.appData?.classes?.find(c => c.id === state.currentClassId) || (state.appData?.classes?.length > 0 ? state.appData.classes[0] : null);
+}
+
 /**
  * 取得學生目前積分
  */
@@ -57,7 +60,7 @@ export function getStudentPoints(classObj, seat) {
  * 調整學生積分並紀錄歷史
  */
 export function adjustStudentPoints(seat, delta, reason = '課堂表現', clientEvent = null) {
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const currentClass = getCurrentClass();
     if (!currentClass) return;
     ensureClassPointsData(currentClass);
 
@@ -78,7 +81,8 @@ export function adjustStudentPoints(seat, delta, reason = '課堂表現', client
     }
 
     saveData();
-    renderDrawAndPointsModal();
+    renderPointsPage();
+    renderLotteryPage();
 
     if (clientEvent && clientEvent.clientX && clientEvent.clientY) {
         spawnScorePop(
@@ -101,7 +105,7 @@ export function adjustStudentPoints(seat, delta, reason = '課堂表現', client
  * 全班加分（★自動略過今日登記為缺席或請假的學生！）
  */
 export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const currentClass = getCurrentClass();
     if (!currentClass) return;
     ensureClassPointsData(currentClass);
 
@@ -128,17 +132,21 @@ export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
     });
 
     saveData();
-    renderDrawAndPointsModal();
+    renderPointsPage();
+    renderLotteryPage();
     showToast(`全班獎勵發放成功！已為 ${awardedCount} 位學生各加 ${delta} 分${skippedCount > 0 ? ` (自動略過 ${skippedCount} 位請假/缺席學生)` : ''}`, 'success');
 }
 
 /**
- * 執行密碼級不重複抽籤
+ * 執行密碼級不重複抽籤（點擊籤筒或抽籤按鈕觸發）
  */
 export function executeFairDraw() {
     if (isDrawing) return;
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-    if (!currentClass) return;
+    const currentClass = getCurrentClass();
+    if (!currentClass) {
+        showToast('請先建立或選擇班級', 'info');
+        return;
+    }
     ensureClassPointsData(currentClass);
 
     const activeSeats = getActiveSeatsForClass(currentClass);
@@ -173,7 +181,7 @@ export function executeFairDraw() {
     if (stageBox) stageBox.classList.add('draw-stage-rolling');
 
     let rollTimes = 0;
-    const maxRolls = 20;
+    const maxRolls = 18;
     const rollInterval = setInterval(() => {
         const randSeat = activeSeats[Math.floor(Math.random() * activeSeats.length)];
         if (stageNum) stageNum.textContent = `${randSeat} 號`;
@@ -198,50 +206,28 @@ export function executeFairDraw() {
 
             saveData();
             isDrawing = false;
-            renderDrawAndPointsModal();
+            renderLotteryPage();
             spawnScorePop(window.innerWidth / 2, window.innerHeight * 0.45, `選中 ${pickedSeat} 號！`, true);
         }
     }, 70);
 }
 
 /**
- * 渲染課堂加扣分與抽籤全景畫面
+ * 渲染課堂加扣分獨立頁面 (#points-page)
  */
-export function renderDrawAndPointsModal() {
-    const page = document.getElementById('arena-draw-points-page');
+export function renderPointsPage() {
+    const page = document.getElementById('points-page');
     if (!page) return;
 
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const currentClass = getCurrentClass();
     if (!currentClass) return;
     ensureClassPointsData(currentClass);
 
     const activeSeats = getActiveSeatsForClass(currentClass);
 
     // 班級標籤
-    const classBadge = document.getElementById('arena-class-badge');
+    const classBadge = document.getElementById('points-class-badge');
     if (classBadge) classBadge.textContent = currentClass.name;
-
-    // 標籤頁切換
-    const pointsTabBtn = document.getElementById('arena-tab-btn-points');
-    const drawTabBtn = document.getElementById('arena-tab-btn-draw');
-    const pointsView = document.getElementById('arena-points-view');
-    const drawView = document.getElementById('arena-draw-view');
-
-    if (currentArenaTab === 'points') {
-        pointsTabBtn?.classList.add('bg-stone-800', 'text-white');
-        pointsTabBtn?.classList.remove('bg-white', 'text-stone-600');
-        drawTabBtn?.classList.remove('bg-stone-800', 'text-white');
-        drawTabBtn?.classList.add('bg-white', 'text-stone-600');
-        pointsView?.classList.remove('hidden');
-        drawView?.classList.add('hidden');
-    } else {
-        drawTabBtn?.classList.add('bg-stone-800', 'text-white');
-        drawTabBtn?.classList.remove('bg-white', 'text-stone-600');
-        pointsTabBtn?.classList.remove('bg-stone-800', 'text-white');
-        pointsTabBtn?.classList.add('bg-white', 'text-stone-600');
-        drawView?.classList.remove('hidden');
-        pointsView?.classList.add('hidden');
-    }
 
     // 1. CLASS GOAL 全班共同集分計算
     const goal = currentClass.classGoal || { enabled: true, target: 1000, reward: '自由活動' };
@@ -326,7 +312,47 @@ export function renderDrawAndPointsModal() {
         }
     }
 
-    // 3. 抽籤籤筒畫面渲染
+    // 3. 積分變動歷史日誌
+    const historyList = document.getElementById('arena-points-history-list');
+    if (historyList) {
+        const hist = currentClass.pointsHistory || [];
+        if (hist.length === 0) {
+            historyList.innerHTML = `<div class="text-xs text-stone-400 py-3 text-center">尚無加減分紀錄</div>`;
+        } else {
+            historyList.innerHTML = hist.slice(0, 15).map(h => `
+                <div class="flex items-center justify-between p-2 rounded-xl bg-stone-50 text-[11px] font-medium border border-stone-100">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <span class="font-bold text-stone-800">${h.seat ? `${h.seat}號` : ''} ${escapeHtml(h.name)}</span>
+                        <span class="text-stone-400 truncate">(${escapeHtml(h.reason)})</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="font-black font-mono ${h.delta > 0 ? 'text-emerald-600' : h.delta < 0 ? 'text-rose-600' : 'text-stone-500'}">${h.delta > 0 ? `+${h.delta}` : h.delta}</span>
+                        <span class="text-[10px] text-stone-400 font-mono">${h.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+/**
+ * 渲染課堂抽籤獨立頁面 (#lottery-page)
+ */
+export function renderLotteryPage() {
+    const page = document.getElementById('lottery-page');
+    if (!page) return;
+
+    const currentClass = getCurrentClass();
+    if (!currentClass) return;
+    ensureClassPointsData(currentClass);
+
+    const activeSeats = getActiveSeatsForClass(currentClass);
+
+    // 班級標籤
+    const classBadge = document.getElementById('lottery-class-badge');
+    if (classBadge) classBadge.textContent = currentClass.name;
+
+    // 1. 籤筒輪數與候選狀態標籤
     const poolState = currentClass.drawPoolState;
     const drawnSet = new Set(poolState.drawnSeats || []);
     const remainingCount = Math.max(0, activeSeats.length - drawnSet.size);
@@ -336,6 +362,7 @@ export function renderDrawAndPointsModal() {
         roundPill.textContent = `第 ${poolState.round || 1} 輪（剩餘 ${remainingCount} 人未抽）`;
     }
 
+    // 2. 籤筒座號清單 Chips
     const poolGrid = document.getElementById('arena-pool-chips-grid');
     if (poolGrid) {
         poolGrid.innerHTML = '';
@@ -355,51 +382,83 @@ export function renderDrawAndPointsModal() {
         });
     }
 
-    // 積分變動日誌
-    const historyList = document.getElementById('arena-points-history-list');
-    if (historyList) {
-        const hist = currentClass.pointsHistory || [];
-        if (hist.length === 0) {
-            historyList.innerHTML = `<div class="text-xs text-stone-400 py-3 text-center">尚無加減分紀錄</div>`;
+    // 3. 個人積分排行榜 (Leaderboard)
+    const leaderboardList = document.getElementById('arena-leaderboard-list');
+    if (leaderboardList) {
+        leaderboardList.innerHTML = '';
+        if (activeSeats.length === 0) {
+            leaderboardList.innerHTML = `<div class="text-xs text-slate-400 py-6 text-center">目前班級尚無學生名單</div>`;
         } else {
-            historyList.innerHTML = hist.slice(0, 10).map(h => `
-                <div class="flex items-center justify-between p-2 rounded-lg bg-stone-50 text-[11px] font-medium border border-stone-100">
-                    <div class="flex items-center gap-1.5 truncate">
-                        <span class="font-bold text-stone-800">${h.seat ? `${h.seat}號` : ''} ${escapeHtml(h.name)}</span>
-                        <span class="text-stone-400 truncate">(${escapeHtml(h.reason)})</span>
+            const ranked = activeSeats.map(seat => ({
+                seat,
+                name: getStudentNameOnly(currentClass, seat) || `${seat}號`,
+                points: getStudentPoints(currentClass, seat)
+            })).sort((a, b) => b.points - a.points);
+
+            leaderboardList.innerHTML = ranked.map((st, idx) => {
+                let badgeClass = 'bg-stone-100 text-stone-600';
+                if (idx === 0) badgeClass = 'bg-amber-100 text-amber-800 border border-amber-300 shadow-xs';
+                else if (idx === 1) badgeClass = 'bg-slate-200 text-slate-800 border border-slate-300';
+                else if (idx === 2) badgeClass = 'bg-amber-50 text-amber-900 border border-amber-200';
+
+                return `
+                    <div class="flex items-center justify-between p-2.5 rounded-2xl bg-white border border-slate-100 hover:border-slate-200 shadow-2xs transition-all">
+                        <div class="flex items-center gap-2.5 truncate">
+                            <span class="w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 ${badgeClass}">${idx + 1}</span>
+                            <span class="font-black text-xs font-mono text-slate-800 truncate">${st.seat}號</span>
+                            <span class="font-bold text-xs text-slate-700 truncate">${escapeHtml(st.name)}</span>
+                        </div>
+                        <span class="font-mono font-black text-sm text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-xl border border-indigo-100 shrink-0">${st.points} 分</span>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <span class="font-black font-mono ${h.delta > 0 ? 'text-emerald-600' : 'text-rose-600'}">${h.delta > 0 ? `+${h.delta}` : h.delta}</span>
-                        <span class="text-[10px] text-stone-400 font-mono">${h.time}</span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 }
 
 /**
- * 初始化課堂加扣分模組事件
+ * 兼容舊版模組渲染出口
+ */
+export function renderDrawAndPointsModal() {
+    renderPointsPage();
+    renderLotteryPage();
+}
+
+/**
+ * 初始化課堂加扣分與抽籤模組事件
  */
 export function initArenaDrawAndPoints() {
-    // 標籤頁切換
-    document.getElementById('arena-tab-btn-points')?.addEventListener('click', () => {
-        currentArenaTab = 'points';
-        renderDrawAndPointsModal();
-    });
-    document.getElementById('arena-tab-btn-draw')?.addEventListener('click', () => {
-        currentArenaTab = 'draw';
-        renderDrawAndPointsModal();
+    // 1. 課堂抽籤籤筒點擊（點擊籤筒本體直接抽籤！）
+    const stageAvatar = document.getElementById('arena-stage-avatar');
+    if (stageAvatar) {
+        stageAvatar.addEventListener('click', (e) => {
+            e.preventDefault();
+            executeFairDraw();
+        });
+    }
+
+    // 抽籤按鈕
+    document.getElementById('arena-trigger-draw-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        executeFairDraw();
     });
 
-    // CLASS GOAL 輸入監聽
+    // 2. 頁面間直達跳轉按鈕
+    document.getElementById('points-to-lottery-btn')?.addEventListener('click', () => {
+        if (window.showLotteryPage) window.showLotteryPage();
+    });
+    document.getElementById('lottery-to-points-btn')?.addEventListener('click', () => {
+        if (window.showPointsPage) window.showPointsPage();
+    });
+
+    // 3. CLASS GOAL 目標與福利輸入監聽
     document.getElementById('class-goal-target-input')?.addEventListener('change', (e) => {
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
         ensureClassPointsData(currentClass);
         currentClass.classGoal.target = parseInt(e.target.value, 10) || 1000;
         saveData();
-        renderDrawAndPointsModal();
+        renderPointsPage();
     });
 
     document.getElementById('class-goal-reward-input')?.addEventListener('change', (e) => {
@@ -408,10 +467,10 @@ export function initArenaDrawAndPoints() {
         ensureClassPointsData(currentClass);
         currentClass.classGoal.reward = e.target.value.trim();
         saveData();
-        renderDrawAndPointsModal();
+        renderPointsPage();
     });
 
-    // 全班 +1
+    // 4. 全班 +1
     document.getElementById('points-whole-class-add-1-btn')?.addEventListener('click', () => {
         awardWholeClassBonus(1, '全班專注守秩序');
     });
@@ -435,7 +494,7 @@ export function initArenaDrawAndPoints() {
         }
     });
 
-    // 詳細加分模式開關
+    // 5. 詳細加分模式歷史開關
     document.getElementById('btn-toggle-points-history')?.addEventListener('click', () => {
         const card = document.getElementById('arena-history-collapsible-card');
         if (card) {
@@ -443,21 +502,39 @@ export function initArenaDrawAndPoints() {
         }
     });
 
-    // 抽籤主按鈕
-    document.getElementById('arena-trigger-draw-btn')?.addEventListener('click', executeFairDraw);
+    // 6. 重置全班分數按鈕
+    document.getElementById('arena-reset-all-points-btn')?.addEventListener('click', () => {
+        if (confirm('確定要將目前班級所有學生的個人加扣分歸零嗎？此操作無法復原。')) {
+            const currentClass = getCurrentClass();
+            if (!currentClass) return;
+            ensureClassPointsData(currentClass);
+            currentClass.pointsBySeat = {};
+            currentClass.pointsHistory.unshift({
+                seat: 0,
+                name: '全班重置',
+                delta: 0,
+                reason: '教師重置全班分數',
+                time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
+            });
+            saveData();
+            renderPointsPage();
+            renderLotteryPage();
+            showToast('已重置全班個人分數為 0 分', 'info');
+        }
+    });
 
-    // 重設籤筒按鈕
+    // 7. 重設籤筒按鈕
     document.getElementById('arena-reset-pool-btn')?.addEventListener('click', () => {
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const currentClass = getCurrentClass();
         if (!currentClass) return;
         ensureClassPointsData(currentClass);
         currentClass.drawPoolState.drawnSeats = [];
         saveData();
-        renderDrawAndPointsModal();
+        renderLotteryPage();
         showToast('已重設籤筒！所有學生已重新放回籤筒中', 'info');
     });
 
-    // 抽籤即時加分膠囊按鈕
+    // 8. 抽籤即時加分膠囊按鈕
     [-1, 1, 2, 3].forEach(delta => {
         const btnId = delta > 0 ? `arena-score-add-${delta}-btn` : 'arena-score-sub-1-btn';
         document.getElementById(btnId)?.addEventListener('click', (e) => {
@@ -471,3 +548,5 @@ export function initArenaDrawAndPoints() {
 }
 
 window.renderDrawAndPointsModal = renderDrawAndPointsModal;
+window.renderPointsPage = renderPointsPage;
+window.renderLotteryPage = renderLotteryPage;

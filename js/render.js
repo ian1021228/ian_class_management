@@ -79,27 +79,34 @@ export function updateTypeSelects() {
 }
 
 export function renderClassSelector() {
-    const classSelector = document.getElementById('class-selector'); 
-    if (!classSelector) return; 
-    classSelector.innerHTML = '';
+    const selectors = [
+        document.getElementById('class-selector'),
+        document.getElementById('overview-class-selector')
+    ].filter(Boolean);
+
     const heroPill = document.getElementById('hero-banner-class-pill');
     if (state.appData.classes.length === 0) {
-        const option = document.createElement('option'); 
-        option.textContent = '請先建立班級'; 
-        classSelector.appendChild(option); 
-        classSelector.disabled = true;
+        selectors.forEach(sel => {
+            sel.innerHTML = '<option>請先建立班級</option>';
+            sel.disabled = true;
+        });
         if (heroPill) heroPill.textContent = '尚未建立班級';
         if (window.refreshDynamicIsland) window.refreshDynamicIsland();
         return;
     }
-    classSelector.disabled = false;
-    state.appData.classes.forEach(c => { 
-        const option = document.createElement('option'); 
-        option.value = c.id; 
-        option.textContent = c.name; 
-        if (c.id === state.currentClassId) option.selected = true; 
-        classSelector.appendChild(option); 
+
+    selectors.forEach(sel => {
+        sel.disabled = false;
+        sel.innerHTML = '';
+        state.appData.classes.forEach(c => { 
+            const option = document.createElement('option'); 
+            option.value = c.id; 
+            option.textContent = c.name; 
+            if (c.id === state.currentClassId) option.selected = true; 
+            sel.appendChild(option); 
+        });
     });
+
     const curCls = state.appData.classes.find(c => c.id === state.currentClassId) || state.appData.classes[0];
     if (heroPill && curCls) heroPill.textContent = curCls.name;
     if (window.refreshDynamicIsland) window.refreshDynamicIsland();

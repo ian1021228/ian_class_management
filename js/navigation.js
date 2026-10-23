@@ -144,12 +144,15 @@ export function hideAllPages() {
     }
     [
         'portal-page',
+        'overview-page',
         'main-page',
         'detail-page',
         'student-details-page',
         'contact-book-page',
         'homework-types-page',
         'attendance-page',
+        'points-page',
+        'lottery-page',
         'arena-draw-points-page',
         'classroom-studio-page',
         'exam-timer-page',
@@ -253,21 +256,35 @@ export function showPortalPage(fromHistory = false) {
     if (burgerBtn) burgerBtn.classList.add('hidden');
 }
 
+export function showOverviewPage(fromHistory = false) {
+    hideAllPages();
+    const overviewEl = document.getElementById('overview-page');
+    if (overviewEl) overviewEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'overview' }, '#overview');
+    renderClassSelector();
+    renderZeroScrollDashboard();
+    restoreScroll('overview-page');
+    updateMobileNavVisibility('overview');
+    closeGlobalNavDrawer();
+    const burgerBtn = document.getElementById('global-nav-burger-btn');
+    if (burgerBtn) burgerBtn.classList.remove('hidden');
+}
+
 export function showMainPage(fromHistory = false) {
     hideAllPages(); 
     const mainPageEl = document.getElementById('main-page'); 
     if (mainPageEl) mainPageEl.classList.remove('hidden');
-    // 確保預設展示總覽儀表板，隱藏內嵌學生詳情
-    const zeroDashboard = document.getElementById('zero-scroll-dashboard');
+    
+    // 預設展示專屬作業清單工作台，隱藏內嵌學生詳情
+    const hwWorkplace = document.getElementById('main-homework-workplace');
     const studentContainer = document.getElementById('main-student-details-container');
-    if (zeroDashboard) zeroDashboard.classList.remove('hidden');
+    if (hwWorkplace) hwWorkplace.classList.remove('hidden');
     if (studentContainer) studentContainer.classList.add('hidden');
 
     if (!fromHistory) pushPageState({ page: 'main' }, '#main');
     checkAndCleanupStorage(); 
     updateTypeSelects(); 
     renderClassSelector(); 
-    renderZeroScrollDashboard();
     renderHomeworkList();
     state.currentHomeworkId = null; 
     const detailPage = document.getElementById('detail-page');
@@ -299,14 +316,19 @@ export function showDetailPage(homeworkId, fromHistory = false) {
 }
 
 export function showStudentDetailsPage(fromHistory = false) {
-    showMainPage(fromHistory); 
-    const zeroDashboard = document.getElementById('zero-scroll-dashboard');
+    hideAllPages();
+    const mainPageEl = document.getElementById('main-page'); 
+    if (mainPageEl) mainPageEl.classList.remove('hidden');
+    const hwWorkplace = document.getElementById('main-homework-workplace');
     const studentContainer = document.getElementById('main-student-details-container');
-    if (zeroDashboard) zeroDashboard.classList.add('hidden');
+    if (hwWorkplace) hwWorkplace.classList.add('hidden');
     if (studentContainer) studentContainer.classList.remove('hidden');
 
+    if (!fromHistory) pushPageState({ page: 'student-details' }, '#student-details');
     renderStudentDetailsPage(); 
     closeGlobalNavDrawer();
+    restoreScroll('main-page');
+    updateMobileNavVisibility('main');
 
     if (state.lastActiveStudentSeat) {
         const targetSeat = state.lastActiveStudentSeat;
@@ -361,17 +383,35 @@ export function showAttendancePage(fromHistory = false) {
     closeGlobalNavDrawer();
 }
 
-export function showDrawPointsPage(fromHistory = false) {
+export function showPointsPage(fromHistory = false) {
     hideAllPages();
-    const pageEl = document.getElementById('arena-draw-points-page');
+    const pageEl = document.getElementById('points-page');
     if (pageEl) pageEl.classList.remove('hidden');
-    if (!fromHistory) pushPageState({ page: 'draw-points' }, '#draw-points');
-    if (window.renderDrawAndPointsModal) {
-        window.renderDrawAndPointsModal();
+    if (!fromHistory) pushPageState({ page: 'points' }, '#points');
+    if (window.renderPointsPage) {
+        window.renderPointsPage();
     }
-    restoreScroll('arena-draw-points-page');
-    updateMobileNavVisibility('draw-points');
+    restoreScroll('points-page');
+    updateMobileNavVisibility('points');
     closeGlobalNavDrawer();
+}
+
+export function showLotteryPage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('lottery-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'lottery' }, '#lottery');
+    if (window.renderLotteryPage) {
+        window.renderLotteryPage();
+    }
+    restoreScroll('lottery-page');
+    updateMobileNavVisibility('lottery');
+    closeGlobalNavDrawer();
+}
+
+export function showDrawPointsPage(fromHistory = false) {
+    // 兼容量舊入口，導向課堂加扣分獨立頁
+    showPointsPage(fromHistory);
 }
 
 export function showClassroomStudioPage(fromHistory = false, tab = 'seating') {
@@ -441,13 +481,22 @@ export function showQuickAuthPage(fromHistory = false) {
 }
 
 if (typeof window !== 'undefined') {
+    window.showOverviewPage = showOverviewPage;
     window.showMainPage = showMainPage;
+    window.showPointsPage = showPointsPage;
+    window.showLotteryPage = showLotteryPage;
+    window.showDrawPointsPage = showDrawPointsPage;
     window.showDetailPage = showDetailPage;
     window.showContactBookPage = showContactBookPage;
     window.showExamScoresPage = showExamScoresPage;
     window.showManageClassPage = showManageClassPage;
     window.showQuickAuthPage = showQuickAuthPage;
     window.showPortalPage = showPortalPage;
+    window.showAttendancePage = showAttendancePage;
+    window.showClassroomStudioPage = showClassroomStudioPage;
+    window.showExamTimerPage = showExamTimerPage;
+    window.proceedIntoSystem = proceedIntoSystem;
+    window.openPortalAuthModal = openPortalAuthModal;
 }
 
 export function openGlobalNavDrawer() {
@@ -639,14 +688,20 @@ export function initGlobalNavDrawer() {
         action();
     };
 
+    document.getElementById('drawer-nav-overview')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showOverviewPage());
+    });
     document.getElementById('drawer-nav-main')?.addEventListener('click', () => {
         navigateFromDrawer(() => showMainPage());
     });
-    document.getElementById('drawer-nav-attendance')?.addEventListener('click', () => {
-        navigateFromDrawer(() => showAttendancePage());
+    document.getElementById('drawer-nav-points')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showPointsPage());
     });
     document.getElementById('drawer-nav-draw')?.addEventListener('click', () => {
-        navigateFromDrawer(() => showDrawPointsPage());
+        navigateFromDrawer(() => showLotteryPage());
+    });
+    document.getElementById('drawer-nav-attendance')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showAttendancePage());
     });
     document.getElementById('drawer-nav-studio')?.addEventListener('click', () => {
         navigateFromDrawer(() => showClassroomStudioPage());
@@ -665,6 +720,9 @@ export function initGlobalNavDrawer() {
     });
     document.getElementById('drawer-nav-classes')?.addEventListener('click', () => {
         navigateFromDrawer(() => showManageClassPage());
+    });
+    document.getElementById('drawer-nav-types')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showHomeworkTypesPage());
     });
     document.getElementById('drawer-nav-auth')?.addEventListener('click', () => {
         navigateFromDrawer(() => showQuickAuthPage());
@@ -755,7 +813,7 @@ export function proceedIntoSystem() {
     }
     applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
 
-    showMainPage();
+    showOverviewPage();
     const portalEl = document.getElementById('portal-page');
     if (portalEl) portalEl.classList.add('hidden');
     

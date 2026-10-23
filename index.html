@@ -98,47 +98,88 @@
 
         <!-- 導覽連結清單 (獨立全螢幕頁面與工具) -->
         <div class="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
-            <div class="px-3 py-1.5 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">核心功能頁面</div>
+            <div class="px-3 py-1.5 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">總覽與核心工作台</div>
+
+            <!-- 0. 課堂總覽 (置頂總覽頁面，一屏總覽所有狀態) -->
+            <button type="button" id="drawer-nav-overview" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-indigo-900 hover:bg-indigo-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-indigo-200/80">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-black text-stone-900">課堂總覽</div>
+                    <div class="text-[11px] text-stone-500 font-medium truncate">全班狀態・值日生・出勤・待收速覽</div>
+                </div>
+            </button>
 
             <!-- 1. 作業點收 -->
-            <button type="button" id="drawer-nav-main" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-stone-700 hover:text-amber-800 hover:bg-amber-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_homework.png" class="w-9 h-9 object-contain shrink-0 drop-shadow-xs" alt="作業點收">
+            <button type="button" id="drawer-nav-main" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-blue-900 hover:bg-blue-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-blue-200/80">
+                    <i class="fa-solid fa-list-check"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-black text-stone-900">作業點收</div>
-                    <div class="text-[11px] text-stone-500 font-medium truncate">座號矩陣・條碼掃描・學生詳情</div>
+                    <div class="text-[11px] text-stone-500 font-medium truncate">作業清單・座號矩陣・條碼登記・學生詳情</div>
                 </div>
             </button>
 
-            <!-- 2. 聯絡簿與值日生 -->
-            <button type="button" id="drawer-nav-contact" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-stone-700 hover:text-teal-800 hover:bg-teal-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_blackboard.png" class="w-9 h-9 object-contain shrink-0 drop-shadow-xs" alt="聯絡簿與值日生">
+            <!-- 2. 課堂加扣分 (獨立頁面) -->
+            <button type="button" id="drawer-nav-points" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-amber-900 hover:bg-amber-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-amber-200/80">
+                    <i class="fa-solid fa-star text-amber-500"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-black text-stone-900">課堂加扣分</div>
+                    <div class="text-[11px] text-stone-500 font-medium truncate">CLASS GOAL共同目標・單人微調・全班+1</div>
+                </div>
+            </button>
+
+            <!-- 3. 課堂抽籤 (獨立頁面) -->
+            <button type="button" id="drawer-nav-draw" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-orange-900 hover:bg-orange-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-orange-200/80">
+                    <i class="fa-solid fa-dice text-orange-500"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-black text-stone-900">課堂抽籤</div>
+                    <div class="text-[11px] text-stone-500 font-medium truncate">3D籤筒・密碼級不重複隨機點名・即時評分</div>
+                </div>
+            </button>
+
+            <!-- 4. 聯絡簿與值日生 -->
+            <button type="button" id="drawer-nav-contact" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-teal-900 hover:bg-teal-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-teal-200/80">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-black text-stone-900">聯絡簿與值日生</div>
-                    <div class="text-[11px] text-stone-500 font-medium truncate">黑板板書・智慧輪替・LINE通報</div>
+                    <div class="text-[11px] text-stone-500 font-medium truncate">黑板板書・日曆膠囊・智慧輪替・LINE通報</div>
                 </div>
             </button>
 
-            <!-- 3. 成績系統 -->
-            <button type="button" id="drawer-nav-scores" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-stone-700 hover:text-teal-800 hover:bg-teal-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_scores.png" class="w-9 h-9 object-contain shrink-0 drop-shadow-xs" alt="班級成績">
+            <!-- 5. 班級成績 -->
+            <button type="button" id="drawer-nav-scores" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-emerald-900 hover:bg-emerald-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-emerald-200/80">
+                    <i class="fa-solid fa-chart-line"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-black text-stone-900">班級成績</div>
                     <div class="text-[11px] text-stone-500 font-medium truncate">小考發布・全班成績・多元匯出</div>
                 </div>
             </button>
 
-            <!-- 4. 管理班級 -->
-            <button type="button" id="drawer-nav-classes" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-stone-700 hover:text-amber-800 hover:bg-amber-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_classes.png" class="w-9 h-9 object-contain shrink-0 drop-shadow-xs" alt="管理班級">
+            <!-- 6. 管理班級 -->
+            <button type="button" id="drawer-nav-classes" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-amber-900 hover:bg-amber-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-base shrink-0 shadow-xs border border-amber-200/80">
+                    <i class="fa-solid fa-school"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-black text-stone-900">管理班級</div>
                     <div class="text-[11px] text-stone-500 font-medium truncate">名單設定・最後座號・缺號排除</div>
                 </div>
             </button>
 
-            <!-- 5. 快速授權 -->
-            <button type="button" id="drawer-nav-auth" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-stone-700 hover:text-emerald-800 hover:bg-emerald-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0 shadow-xs border border-emerald-200/80">
+            <!-- 7. 快速授權 -->
+            <button type="button" id="drawer-nav-auth" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-yellow-900 hover:bg-yellow-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-9 h-9 rounded-xl bg-yellow-100 text-yellow-800 flex items-center justify-center text-base shrink-0 shadow-xs border border-yellow-200/80">
                     <i class="fa-solid fa-bolt text-amber-500"></i>
                 </span>
                 <div class="flex-1 min-w-0">
@@ -149,38 +190,22 @@
 
             <div class="pt-2 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">課堂輔助工具</div>
 
-            <!-- 6. 考試計時 (歸類在課堂輔助工具) -->
-            <button type="button" id="drawer-nav-timer" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-rose-800 hover:bg-rose-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_timer.png" class="w-8 h-8 object-contain shrink-0 drop-shadow-xs" alt="考試計時">
+            <!-- 8. 考試計時 -->
+            <button type="button" id="drawer-nav-timer" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-rose-900 hover:bg-rose-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-sm shrink-0 shadow-xs border border-rose-200/80">
+                    <i class="fa-solid fa-stopwatch text-rose-600"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-xs font-black text-stone-900">考試計時</div>
                     <div class="text-[10px] text-stone-500 font-medium truncate">多考程排程・投影看板・倒數鈴聲</div>
                 </div>
             </button>
 
-            <!-- 7. 課堂加扣分 (全新功能) -->
-            <button type="button" id="drawer-nav-points" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-emerald-800 hover:bg-emerald-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0 shadow-xs border border-emerald-200/80">
-                    <i class="fa-solid fa-star text-amber-500"></i>
-                </span>
-                <div class="flex-1 min-w-0">
-                    <div class="text-xs font-black text-stone-900">課堂加扣分</div>
-                    <div class="text-[10px] text-stone-500 font-medium truncate">全班集分福利・單人加扣・詳細加分</div>
-                </div>
-            </button>
-
-            <!-- 8. 課堂抽籤 -->
-            <button type="button" id="drawer-nav-draw" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-orange-800 hover:bg-orange-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_arena.png" class="w-8 h-8 object-contain shrink-0 drop-shadow-xs" alt="課堂抽籤">
-                <div class="flex-1 min-w-0">
-                    <div class="text-xs font-black text-stone-900">課堂抽籤</div>
-                    <div class="text-[10px] text-stone-500 font-medium truncate">公平籤筒・不重複隨機點名</div>
-                </div>
-            </button>
-
             <!-- 9. 出勤簽到 -->
-            <button type="button" id="drawer-nav-attendance" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-emerald-800 hover:bg-emerald-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_attendance.png" class="w-8 h-8 object-contain shrink-0 drop-shadow-xs" alt="出勤簽到">
+            <button type="button" id="drawer-nav-attendance" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-emerald-900 hover:bg-emerald-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-sm shrink-0 shadow-xs border border-emerald-200/80">
+                    <i class="fa-solid fa-user-check"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-xs font-black text-stone-900">出勤簽到</div>
                     <div class="text-[10px] text-stone-500 font-medium truncate">應到實到・自主打卡</div>
@@ -188,11 +213,24 @@
             </button>
 
             <!-- 10. 座位分組 -->
-            <button type="button" id="drawer-nav-studio" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-purple-800 hover:bg-purple-100/60 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
-                <img src="assets/images/planet_seating.png" class="w-8 h-8 object-contain shrink-0 drop-shadow-xs" alt="座位分組">
+            <button type="button" id="drawer-nav-studio" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-purple-900 hover:bg-purple-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm shrink-0 shadow-xs border border-purple-200/80">
+                    <i class="fa-solid fa-chair text-purple-600"></i>
+                </span>
                 <div class="flex-1 min-w-0">
                     <div class="text-xs font-black text-stone-900">座位分組</div>
-                    <div class="text-[10px] text-stone-500 font-medium truncate">180°視角・隨機排位</div>
+                    <div class="text-[10px] text-stone-500 font-medium truncate">講台位置180°翻轉・重排全部・雙人併桌</div>
+                </div>
+            </button>
+
+            <!-- 11. 作業種類 -->
+            <button type="button" id="drawer-nav-types" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-orange-900 hover:bg-orange-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+                <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm shrink-0 shadow-xs border border-orange-200/80">
+                    <i class="fa-solid fa-shapes text-orange-600"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-black text-stone-900">作業種類</div>
+                    <div class="text-[10px] text-stone-500 font-medium truncate">自訂科目類別・色彩管理</div>
                 </div>
             </button>
 
@@ -200,23 +238,29 @@
 
             <!-- 家長端直達 -->
             <a href="parent.html" target="_blank" rel="noopener noreferrer" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-indigo-800 bg-indigo-50/70 hover:bg-indigo-100/80 font-black text-xs transition-all border border-indigo-200/70">
-                <i class="fa-solid fa-house-chimney-user text-indigo-600 text-sm"></i>
+                <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm shrink-0 border border-indigo-200/80">
+                    <i class="fa-solid fa-house-chimney-user"></i>
+                </span>
                 <span>家長端專屬即時查核看板</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-indigo-400 ml-auto"></i>
             </a>
 
             <!-- 學生端直達 -->
             <a href="student.html" target="_blank" rel="noopener noreferrer" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100/80 font-black text-xs transition-all border border-emerald-200/70">
-                <i class="fa-solid fa-graduation-cap text-emerald-600 text-sm"></i>
+                <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0 border border-emerald-200/80">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </span>
                 <span>學生端數位聯絡簿</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-emerald-400 ml-auto"></i>
             </a>
 
             <!-- 系統更新紀錄 -->
             <button type="button" id="drawer-changelog-btn" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-amber-900 bg-amber-50/80 hover:bg-amber-100 font-black text-xs transition-all border border-amber-200/80 cursor-pointer">
-                <i class="fa-solid fa-book-bookmark text-amber-600 text-sm"></i>
+                <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0 border border-amber-200/80">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </span>
                 <span>系統更新紀錄 (Changelog)</span>
-                <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.2.1</span>
+                <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.3.1</span>
             </button>
 
             <div class="pt-3 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">系統與顯示</div>
@@ -1636,50 +1680,40 @@
         </div>
     </div>
 
-    <!-- 一屏全景極簡總覽 (Zero-Scroll Dashboard) & 作業點收工作台 -->
-    <div id="main-page" class="w-full min-h-[100dvh] h-[100dvh] max-h-[100dvh] overflow-hidden p-3 sm:p-5 lg:p-6 hidden page-section flex flex-col justify-between select-none">
+        <!-- ============================================================== -->
+    <!-- 0. 課堂全景總覽專屬頁面 (Overview Zero-Scroll Dashboard Page)       -->
+    <!-- ============================================================== -->
+    <div id="overview-page" class="w-full min-h-[100dvh] h-[100dvh] max-h-[100dvh] overflow-hidden p-3 sm:p-5 lg:p-6 hidden page-section flex flex-col justify-between select-none">
         <!-- 頂部功能列 Header -->
         <header class="flex-shrink-0 relative z-10 p-3 sm:p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-[#EBDCCB] shadow-sm mb-3">
             <div class="flex items-center justify-between gap-3 sm:gap-4 w-full">
-                <!-- 左側：呼吸間距、Logo、班級選擇器 -->
+                <!-- 左側：呼吸間距、Logo、標題與班級選擇器 -->
                 <div class="flex items-center gap-2.5 sm:gap-4 flex-shrink-0 pl-11 sm:pl-12">
-                     <button id="main-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="班級經營系統">
+                     <button id="overview-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="班級經營系統">
                          <img src="icon.svg" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="班級經營系統">
-                         <span class="text-lg sm:text-xl font-black text-stone-900 tracking-tight whitespace-nowrap hidden sm:inline">班級經營系統</span>
+                         <span class="text-lg sm:text-xl font-black text-stone-900 tracking-tight whitespace-nowrap hidden sm:inline">課堂全景總覽</span>
                      </button>
-                     <select id="class-selector" class="rounded-xl border border-stone-200/90 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm bg-white font-extrabold text-indigo-700 cursor-pointer transition-all"></select>
+                     <select id="overview-class-selector" class="class-selector-sync rounded-xl border border-stone-200/90 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm bg-white font-extrabold text-indigo-700 cursor-pointer transition-all"></select>
                 </div>
 
-                <!-- 右側操作按鈕列 (自然簡潔、FontAwesome 向量圖標) -->
+                <!-- 右側操作按鈕列 (快捷前往作業點收、更新紀錄、設定) -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <!-- 作業種類 -->
-                    <button id="show-types-modal-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-shapes text-orange-500"></i>
-                        <span class="hidden md:inline">作業種類</span>
+                    <button id="overview-to-homework-btn" type="button" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl border border-indigo-200/80 shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-list-check text-indigo-600"></i>
+                        <span>前往作業點收</span>
                     </button>
-
-                    <!-- 學生詳情 -->
-                    <button id="student-details-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-id-card-clip text-emerald-600"></i>
-                        <span class="hidden md:inline">學生詳情</span>
+                    <button id="overview-changelog-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-bookmark text-amber-600"></i>
+                        <span class="hidden md:inline">更新紀錄</span>
                     </button>
-
-                    <!-- 設定 -->
-                    <button id="settings-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
+                    <button id="overview-settings-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
                         <i class="fa-solid fa-gear text-stone-500"></i>
                         <span>設定</span>
-                    </button>
-
-                    <!-- 新增作業 -->
-                    <button id="show-add-modal-btn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-1.5 sm:py-2 px-3.5 sm:px-5 text-xs sm:text-sm rounded-xl shadow-sm shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>新增作業</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- 手繪水彩全景橫幅與快速躍遷工作台 (Storybook Hero Banner & Classroom Quick-Jump Dock) -->
         <div id="main-hero-banner" class="flex-shrink-0 relative rounded-3xl overflow-hidden border border-[#EBDCCB] shadow-md mb-3 storybook-banner-card group">
             <!-- 專屬全景插圖背景 -->
             <div class="absolute inset-0 z-0">
@@ -1693,9 +1727,9 @@
                 <div class="space-y-1.5 max-w-2xl">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="storybook-planet-pill text-amber-900 border-amber-300/80 bg-amber-50/90">
-                            <img src="assets/images/planet_homework.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="課堂工作台">
-                            <span>智慧課堂</span>
-                            <span class="bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">v5.3.0</span>
+                            <i class="fa-solid fa-gauge-high text-amber-600"></i>
+                            <span>課堂總覽</span>
+                            <span class="bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">v5.3.1</span>
                         </span>
                         <span id="hero-banner-class-pill" class="storybook-planet-pill text-indigo-900 border-indigo-200 bg-white/90">
                             <i class="fa-solid fa-chalkboard text-indigo-600"></i>
@@ -1707,63 +1741,86 @@
                         </button>
                     </div>
                     <h2 class="text-base sm:text-xl font-black text-stone-900 tracking-tight leading-tight">
-                        手繪繪本風格智慧課堂工作台
+                        手繪繪本風格課堂全景總覽工作台
                     </h2>
                     <p class="text-xs text-stone-600 font-bold hidden sm:block">
-                        沉浸式手繪繪本風格教室，支援各科作業點收、座號矩陣、條碼掃描與未交名單快速複製。
+                        一屏總覽今日值日生、出勤狀態、座位概況與待收作業速覽，支援各功能即時直達跳轉。
                     </p>
                 </div>
 
                 <!-- 右側：課堂工具快速躍遷 (Classroom Quick-Jump Dock) -->
-                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full xl:w-auto shrink-0">
+                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2 w-full xl:w-auto shrink-0">
                     <!-- 1. 出勤簽到 -->
                     <button type="button" id="open-attendance-hub-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-emerald-50/90 border border-emerald-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_attendance.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="出勤簽到">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-clipboard-user"></i>
+                        </span>
                         <div class="min-w-0">
                             <span class="block text-xs font-black text-stone-900 group-hover:text-emerald-800 leading-tight">出勤簽到</span>
                             <span class="block text-[10px] text-stone-500 font-bold truncate">自主打卡</span>
                         </div>
                     </button>
 
-                    <!-- 2. 課堂加扣分與抽籤 -->
+                    <!-- 2. 課堂加扣分 -->
                     <button type="button" id="open-draw-points-modal-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-amber-50/90 border border-amber-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_arena.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="加扣分與抽籤">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-star text-amber-500"></i>
+                        </span>
                         <div class="min-w-0">
                             <span class="block text-xs font-black text-stone-900 group-hover:text-amber-800 leading-tight">課堂加扣分</span>
                             <span class="block text-[10px] text-stone-500 font-bold truncate">共同集分福利</span>
                         </div>
                     </button>
 
-                    <!-- 3. 座位分組 -->
-                    <button type="button" id="open-classroom-studio-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-purple-50/90 border border-purple-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_seating.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="座位分組">
+                    <!-- 3. 課堂抽籤 -->
+                    <button type="button" id="open-lottery-quick-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-orange-50/90 border border-orange-200/90 shadow-xs cursor-pointer text-left group transition-all">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-dice text-orange-500"></i>
+                        </span>
                         <div class="min-w-0">
-                            <span class="block text-xs font-black text-stone-900 group-hover:text-purple-800 leading-tight">座位分組</span>
-                            <span class="block text-[10px] text-stone-500 font-bold truncate">隨機排位</span>
+                            <span class="block text-xs font-black text-stone-900 group-hover:text-orange-800 leading-tight">課堂抽籤</span>
+                            <span class="block text-[10px] text-stone-500 font-bold truncate">公平籤筒</span>
                         </div>
                     </button>
 
-                    <!-- 4. 考試計時 -->
+                    <!-- 4. 座位分組 -->
+                    <button type="button" id="open-classroom-studio-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-purple-50/90 border border-purple-200/90 shadow-xs cursor-pointer text-left group transition-all">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chair text-purple-600"></i>
+                        </span>
+                        <div class="min-w-0">
+                            <span class="block text-xs font-black text-stone-900 group-hover:text-purple-800 leading-tight">座位分組</span>
+                            <span class="block text-[10px] text-stone-500 font-bold truncate">排位與分組</span>
+                        </div>
+                    </button>
+
+                    <!-- 5. 考試計時 -->
                     <button type="button" id="open-exam-timer-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-rose-50/90 border border-rose-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_timer.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="考試計時">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-stopwatch text-rose-600"></i>
+                        </span>
                         <div class="min-w-0">
                             <span class="block text-xs font-black text-stone-900 group-hover:text-rose-800 leading-tight">考試計時</span>
                             <span class="block text-[10px] text-stone-500 font-bold truncate">考程大看板</span>
                         </div>
                     </button>
 
-                    <!-- 5. 聯絡簿與值日生 -->
+                    <!-- 6. 聯絡簿與值日生 -->
                     <button type="button" id="open-contact-book-quick-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-teal-50/90 border border-teal-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_blackboard.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="聯絡簿與值日生">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </span>
                         <div class="min-w-0">
                             <span class="block text-xs font-black text-stone-900 group-hover:text-teal-800 leading-tight">聯絡簿</span>
                             <span class="block text-[10px] text-stone-500 font-bold truncate">板書與值日生</span>
                         </div>
                     </button>
 
-                    <!-- 6. 班級成績 -->
+                    <!-- 7. 班級成績 -->
                     <button type="button" id="open-student-stats-quick-btn" class="storybook-planet-dock-card flex items-center gap-2 p-2 sm:px-2.5 sm:py-2 rounded-2xl bg-white/95 hover:bg-blue-50/90 border border-blue-200/90 shadow-xs cursor-pointer text-left group transition-all">
-                        <img src="assets/images/planet_scores.png" class="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 group-hover:scale-110 transition-transform" alt="班級成績">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </span>
                         <div class="min-w-0">
                             <span class="block text-xs font-black text-stone-900 group-hover:text-blue-800 leading-tight">班級成績</span>
                             <span class="block text-[10px] text-stone-500 font-bold truncate">成績分析</span>
@@ -1774,6 +1831,7 @@
         </div>
 
         <!-- 一屏全景極簡總覽主內容容器 (Zero-Scroll Flex Container) -->
+
         <div id="zero-scroll-dashboard" class="flex-1 flex flex-col min-h-0 space-y-3">
             <!-- 模組一：本日值日生與重要注意事項橫幅 (Duty & Announcements Banner) -->
             <div id="dashboard-duty-banner" class="flex-shrink-0 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#FFFDF9] via-[#FDF8EE] to-[#FAF3E0] border border-[#EBDCCB] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
@@ -1869,6 +1927,86 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 1. 作業點收專屬全畫面頁面 (Homework Checking & Management)           -->
+    <!-- ============================================================== -->
+    <div id="main-page" class="container mx-auto w-[96%] max-w-[1600px] p-4 sm:p-6 lg:p-8 min-h-screen hidden page-section select-none pb-24">
+        <!-- 頂部功能列 Header -->
+        <header class="flex-shrink-0 relative z-10 p-4 sm:p-5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#EBDCCB] shadow-sm mb-4">
+            <div class="flex items-center justify-between gap-3 sm:gap-4 w-full flex-wrap">
+                <!-- 左側：呼吸間距、Logo、標題、班級選擇器 -->
+                <div class="flex items-center gap-2.5 sm:gap-4 flex-shrink-0 pl-11 sm:pl-12">
+                     <button id="main-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="班級經營系統">
+                         <img src="icon.svg" class="w-8 h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="班級經營系統">
+                         <span class="text-xl font-black text-stone-900 tracking-tight whitespace-nowrap hidden sm:inline">作業點收工作台</span>
+                     </button>
+                     <select id="class-selector" class="class-selector-sync rounded-xl border border-stone-200/90 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm bg-white font-extrabold text-indigo-700 cursor-pointer transition-all"></select>
+                </div>
+
+                <!-- 右側操作按鈕列 (作業種類、學生詳情、設定、新增作業) -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <!-- 作業種類 -->
+                    <button id="show-types-modal-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-2 px-3.5 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-shapes text-orange-500"></i>
+                        <span class="hidden md:inline">作業種類</span>
+                    </button>
+
+                    <!-- 學生詳情 -->
+                    <button id="student-details-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-2 px-3.5 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-id-card-clip text-emerald-600"></i>
+                        <span class="hidden md:inline">學生詳情</span>
+                    </button>
+
+                    <!-- 設定 -->
+                    <button id="settings-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-2 px-3.5 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-gear text-stone-500"></i>
+                        <span>設定</span>
+                    </button>
+
+                    <!-- 新增作業 -->
+                    <button id="show-add-modal-btn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2 px-4 sm:px-5 text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-600/25 transition-all cursor-pointer flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>新增作業</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 作業點收搜尋與篩選列 + 作業卡片網格 -->
+        <div id="homework-view-container" class="space-y-4">
+            <!-- 搜尋與篩選工具列 -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-white p-4 rounded-3xl border border-[#EBDCCB] shadow-sm">
+                <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto flex-1">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass text-stone-400 text-xs"></i>
+                        </div>
+                        <input type="text" id="search-homework" class="block w-full pl-10 pr-3.5 py-2 border border-stone-200 rounded-xl bg-stone-50/50 focus:bg-white placeholder-stone-400 text-xs sm:text-sm font-bold focus:outline-none focus:border-indigo-500 transition-colors" placeholder="搜尋作業名稱...">
+                    </div>
+                    <select id="filter-type" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-2 px-3 cursor-pointer focus:outline-none focus:border-indigo-500">
+                        <option value="all">所有作業種類</option>
+                    </select>
+                    <div class="flex items-center gap-1.5">
+                        <input type="date" id="filter-date-start" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500">
+                        <span class="text-stone-400">-</span>
+                        <input type="date" id="filter-date-end" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="flex justify-end items-center gap-2 shrink-0 self-end md:self-auto">
+                    <label for="sort-homework" class="text-xs font-bold text-stone-400 hidden sm:block">排序：</label>
+                    <select id="sort-homework" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-2 px-3 cursor-pointer focus:outline-none focus:border-indigo-500">
+                        <option value="time">建立時間 (新→舊)</option>
+                        <option value="missing">缺交人數 (多→少)</option>
+                        <option value="name">名稱 (A→Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 作業卡片網格 -->
+            <div id="homework-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
 
         <!-- 學生詳情統計容器 (內嵌於作業點收頁面，點選頂部「學生詳情」按鈕即時切換) -->
         <div id="main-student-details-container" class="hidden flex-1 flex flex-col min-h-0 space-y-4">
@@ -1903,55 +2041,9 @@
             </header>
             <div id="student-details-list" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12 pr-1"></div>
         </div>
-
-        <!-- 折疊式完整作業庫容器 (當點選 [作業庫] 時展開，預設隱藏以確保一屏全景零滾動) -->
-        <div id="main-homework-container" class="hidden fixed inset-0 z-50 bg-[#FDFBF7] p-5 sm:p-8 overflow-y-auto custom-scrollbar select-none">
-            <div class="max-w-6xl mx-auto space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-stone-200">
-                    <div class="flex items-center gap-3">
-                        <button type="button" id="close-full-hw-btn" class="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center cursor-pointer transition-all">
-                            <i class="fa-solid fa-arrow-left"></i>
-                        </button>
-                        <h3 class="text-lg font-black text-stone-900">班級作業庫總覽</h3>
-                    </div>
-                    <span class="text-xs font-bold text-stone-500">查看與管理歷史全部作業</span>
-                </div>
-
-                <!-- 搜尋與篩選列 -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-white p-3.5 rounded-2xl border border-stone-200">
-                    <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto flex-1">
-                        <div class="relative flex-1 min-w-[180px]">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-magnifying-glass text-stone-400 text-xs"></i>
-                            </div>
-                            <input type="text" id="search-homework" class="block w-full pl-9 pr-3 py-1.5 border border-stone-200 rounded-xl bg-white placeholder-stone-400 text-xs sm:text-sm font-medium" placeholder="搜尋作業名稱...">
-                        </div>
-                        <select id="filter-type" class="text-xs rounded-xl border-stone-200 bg-white font-semibold text-stone-600 py-1.5 px-2.5 cursor-pointer">
-                            <option value="all">所有種類</option>
-                        </select>
-                        <div class="flex items-center gap-1.5">
-                            <input type="date" id="filter-date-start" class="text-xs rounded-xl border-stone-200 bg-white font-semibold text-stone-600 py-1 px-2 cursor-pointer">
-                            <span class="text-stone-400">-</span>
-                            <input type="date" id="filter-date-end" class="text-xs rounded-xl border-stone-200 bg-white font-semibold text-stone-600 py-1 px-2 cursor-pointer">
-                        </div>
-                    </div>
-                    <div class="flex justify-end items-center gap-2 shrink-0">
-                        <label for="sort-homework" class="text-xs font-bold text-stone-400 hidden sm:block">排序：</label>
-                        <select id="sort-homework" class="text-xs rounded-xl border-stone-200 bg-white font-semibold text-stone-600 py-1.5 px-3 cursor-pointer">
-                            <option value="time">建立時間 (新→舊)</option>
-                            <option value="missing">缺交人數 (多→少)</option>
-                            <option value="name">名稱 (A→Z)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 作業卡片網格 -->
-                <div id="homework-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12"></div>
-            </div>
-        </div>
     </div>
-    
-    <!-- 載入動畫 -->
+
+<!-- 載入動畫 -->
     <div id="loading-page" class="flex flex-col items-center justify-center h-screen space-y-4 page-section">
         <div class="relative w-12 h-12">
             <div class="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
@@ -2043,7 +2135,7 @@
             <div class="flex items-center justify-between mb-3 pl-11 sm:pl-12">
                 <div class="flex items-center gap-2">
                     <span class="storybook-planet-pill text-amber-900 border-amber-300 bg-amber-50/90">
-                        <img src="assets/images/planet_homework.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="作業種類">
+                        <i class="fa-solid fa-shapes text-amber-600"></i>
                         <span>作業種類配置</span>
                     </span>
                 </div>
@@ -2070,7 +2162,7 @@
             <div class="relative z-10 pl-11 sm:pl-12">
                 <div class="flex items-center justify-between mb-3">
                     <span class="storybook-planet-pill text-teal-900 border-teal-300 bg-teal-50/90">
-                        <img src="assets/images/planet_blackboard.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="聯絡簿與值日生">
+                        <i class="fa-solid fa-chalkboard-user text-teal-600"></i>
                         <span>聯絡簿與值日生</span>
                     </span>
                 </div>
@@ -2260,11 +2352,13 @@
 
                 <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4 pl-12 sm:pl-14">
-                        <img src="assets/images/planet_attendance.png" class="w-14 h-14 object-contain shrink-0 drop-shadow-md" alt="出勤簽到">
+                        <span class="w-14 h-14 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0 shadow-md border border-emerald-200">
+                            <i class="fa-solid fa-clipboard-user"></i>
+                        </span>
                         <div>
                             <div class="flex items-center gap-2.5 flex-wrap">
                                 <span class="storybook-planet-pill text-emerald-900 border-emerald-300 bg-emerald-50/90">
-                                    <img src="assets/images/planet_attendance.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="出勤簽到">
+                                    <i class="fa-solid fa-clipboard-user text-emerald-600"></i>
                                     <span>出勤簽到</span>
                                 </span>
                                 <h2 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">每日自主出勤與遲到簽到中樞</h2>
@@ -2450,51 +2544,49 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 2. 課堂加扣分與抽籤全畫面頁面 (Fair Arena Dedicated Page)            -->
+    <!-- 2. 課堂加扣分獨立全畫面頁面 (Classroom Points Dedicated Page)       -->
     <!-- ============================================================== -->
-    <div id="arena-draw-points-page" class="hidden min-h-screen w-full pb-20 page-section select-none">
+    <div id="points-page" class="hidden min-h-screen w-full pb-20 page-section select-none">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
             <!-- 課堂加扣分全景橫幅 -->
             <div class="storybook-banner-card relative rounded-3xl overflow-hidden border border-[#EBDCCB] shadow-xl group">
                 <!-- 大面積水彩全景背景插圖 -->
                 <div class="absolute inset-0 z-0">
-                    <img src="assets/images/bg_arena_draw_points.jpg" alt="溫馨手繪星空舞台" class="storybook-banner-art w-full h-full object-cover brightness-[1.02]">
+                    <img src="assets/images/bg_arena_draw_points.jpg" alt="溫馨手繪課堂舞台" class="storybook-banner-art w-full h-full object-cover brightness-[1.02]">
                     <div class="absolute inset-0 bg-gradient-to-r from-[#FDFBF7]/95 via-[#FDFBF7]/85 to-[#FDFBF7]/40 sm:block hidden"></div>
                     <div class="absolute inset-0 bg-[#FDFBF7]/90 sm:hidden block"></div>
                 </div>
 
                 <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4 pl-12 sm:pl-14">
-                        <img src="assets/images/planet_arena.png" class="w-14 h-14 object-contain shrink-0 drop-shadow-md" alt="課堂加扣分">
+                        <span class="w-14 h-14 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl shrink-0 shadow-md border border-amber-200">
+                            <i class="fa-solid fa-star"></i>
+                        </span>
                         <div>
                             <div class="flex items-center gap-2.5 flex-wrap">
-                                <span class="storybook-planet-pill text-orange-900 border-orange-300 bg-orange-50/90">
+                                <span class="storybook-planet-pill text-amber-900 border-amber-300 bg-amber-50/90">
                                     <i class="fa-solid fa-star text-amber-500"></i>
-                                    <span>課堂加扣分與抽籤</span>
+                                    <span>課堂加扣分</span>
                                 </span>
-                                <h2 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">課堂加扣分與公平抽籤系統</h2>
-                                <span id="arena-class-badge" class="px-3 py-0.5 rounded-full bg-white text-stone-800 text-xs font-bold border border-[#EBDCCB] shadow-xs">目前班級</span>
+                                <h2 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">課堂加扣分系統</h2>
+                                <span id="points-class-badge" class="px-3 py-0.5 rounded-full bg-white text-stone-800 text-xs font-bold border border-[#EBDCCB] shadow-xs">目前班級</span>
                             </div>
-                            <p class="text-xs sm:text-sm text-stone-600 mt-1 font-bold">全班共同集分福利・單人加減分・全班+1自動跳過缺席・密碼級不重複隨機抽籤</p>
+                            <p class="text-xs sm:text-sm text-stone-600 mt-1 font-bold">全班共同集分福利・單人加減分・全班+1自動跳過缺席</p>
                         </div>
                     </div>
 
-                    <!-- 分頁切換 Tab（課堂加扣分 vs 課堂抽籤） -->
-                    <div class="flex items-center p-1 bg-white/90 backdrop-blur-md rounded-2xl border border-[#EBDCCB] shadow-xs shrink-0 self-end sm:self-auto">
-                        <button type="button" id="tab-arena-points-btn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-amber-600 text-white shadow-xs flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-star"></i>
-                            <span>課堂加扣分</span>
-                        </button>
-                        <button type="button" id="tab-arena-draw-btn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-stone-600 hover:text-stone-900 transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-dice"></i>
-                            <span>課堂抽籤籤筒</span>
+                    <!-- 捷徑跳轉至課堂抽籤獨立頁 -->
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <button type="button" id="points-to-lottery-btn" class="px-4 py-2.5 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200/90 font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs">
+                            <i class="fa-solid fa-dice text-orange-500"></i>
+                            <span>前往課堂抽籤</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- 視圖一：全新課堂加扣分系統 (Classroom Points System) -->
-            <div id="arena-points-view" class="space-y-4">
+            <!-- 課堂加扣分系統主內容 -->
+            <div id="points-view-container" class="space-y-4">
                 <!-- 模組：全班共同集分 (CLASS GOAL) -->
                 <div class="p-5 sm:p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-[#EBDCCB] shadow-sm space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/80">
@@ -2564,7 +2656,12 @@
                         <span class="text-xs font-bold text-stone-600">按 - / + 即可扣分或加分，每次 1 分。</span>
                         <div class="flex items-center gap-2">
                             <button type="button" id="btn-toggle-points-history" class="px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-xs font-black text-stone-700 shadow-xs cursor-pointer active:scale-95 transition-all">
-                                <span>開啟詳細加分模式</span>
+                                <i class="fa-solid fa-clock-rotate-left mr-1 text-stone-400"></i>
+                                <span>開啟加分歷史紀錄</span>
+                            </button>
+                            <button type="button" id="arena-reset-all-points-btn" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-black text-rose-700 shadow-xs cursor-pointer active:scale-95 transition-all" title="將全班所有學生的個人積分歸零">
+                                <i class="fa-solid fa-trash-can mr-1 text-rose-500"></i>
+                                <span>重置全班分數</span>
                             </button>
                         </div>
                     </div>
@@ -2594,12 +2691,67 @@
                     <p class="text-[11px] text-stone-500 font-medium pl-1">全班加減分會自動略過今天登記為缺席或請假的學生；未登記與遲到仍會計入。</p>
                 </div>
 
+                <!-- 折疊式歷史紀錄面板 -->
+                <div id="arena-history-collapsible-card" class="hidden p-5 rounded-3xl bg-white/95 border border-[#EBDCCB] shadow-md">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+                        <h4 class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
+                            <span>最近加減分紀錄</span>
+                        </h4>
+                    </div>
+                    <div id="arena-points-history-list" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar pr-1 text-xs"></div>
+                </div>
+
                 <!-- 學生加扣分卡片網格 -->
                 <div id="points-students-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 pb-12"></div>
             </div>
+        </div>
+    </div>
 
-            <!-- 視圖二：課堂抽籤籤筒 (Lottery Draw View) -->
-            <div id="arena-draw-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <!-- ============================================================== -->
+    <!-- 2b. 課堂抽籤獨立全畫面頁面 (Fair Lottery Dedicated Page)           -->
+    <!-- ============================================================== -->
+    <div id="lottery-page" class="hidden min-h-screen w-full pb-20 page-section select-none">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
+            <!-- 課堂抽籤全景橫幅 -->
+            <div class="storybook-banner-card relative rounded-3xl overflow-hidden border border-[#EBDCCB] shadow-xl group">
+                <!-- 大面積水彩全景背景插圖 -->
+                <div class="absolute inset-0 z-0">
+                    <img src="assets/images/bg_arena_draw_points.jpg" alt="溫馨手繪星空舞台" class="storybook-banner-art w-full h-full object-cover brightness-[1.02]">
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#FDFBF7]/95 via-[#FDFBF7]/85 to-[#FDFBF7]/40 sm:block hidden"></div>
+                    <div class="absolute inset-0 bg-[#FDFBF7]/90 sm:hidden block"></div>
+                </div>
+
+                <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 pl-12 sm:pl-14">
+                        <span class="w-14 h-14 rounded-3xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl shrink-0 shadow-md border border-orange-200">
+                            <i class="fa-solid fa-dice"></i>
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <span class="storybook-planet-pill text-orange-900 border-orange-300 bg-orange-50/90">
+                                    <i class="fa-solid fa-dice text-orange-500"></i>
+                                    <span>課堂抽籤</span>
+                                </span>
+                                <h2 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">課堂抽籤籤筒</h2>
+                                <span id="lottery-class-badge" class="px-3 py-0.5 rounded-full bg-white text-stone-800 text-xs font-bold border border-[#EBDCCB] shadow-xs">目前班級</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-stone-600 mt-1 font-bold">3D 公平籤筒・密碼級不重複隨機點名・點擊籤筒或按鈕即可抽籤</p>
+                        </div>
+                    </div>
+
+                    <!-- 捷徑跳轉至課堂加扣分獨立頁 -->
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <button type="button" id="lottery-to-points-btn" class="px-4 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs">
+                            <i class="fa-solid fa-star text-amber-500"></i>
+                            <span>前往課堂加扣分</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 課堂抽籤籤筒主視圖 -->
+            <div id="lottery-draw-view" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <!-- 左側：3D 抽籤舞台與即時加分 -->
                 <div class="lg:col-span-7 flex flex-col items-center justify-between gap-5 bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-xl">
                     <!-- 籤筒狀態標籤 -->
@@ -2611,14 +2763,15 @@
                         </button>
                     </div>
 
-                    <!-- 抽籤中央舞台 -->
-                    <div id="arena-stage-avatar" class="draw-stage-box w-60 h-60 sm:w-72 sm:h-72 rounded-3xl bg-gradient-to-tr from-amber-400 via-orange-500 to-rose-500 p-1.5 flex flex-col items-center justify-center text-white shadow-2xl shadow-orange-500/25 my-2">
-                        <div class="w-full h-full rounded-[1.4rem] bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center p-5 text-center">
-                            <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-3xl mb-3 border border-white/40">
+                    <!-- 抽籤中央舞台 (★點擊籤筒直接抽籤！) -->
+                    <div id="arena-stage-avatar" class="draw-stage-box w-60 h-60 sm:w-72 sm:h-72 rounded-3xl bg-gradient-to-tr from-amber-400 via-orange-500 to-rose-500 p-1.5 flex flex-col items-center justify-center text-white shadow-2xl shadow-orange-500/25 my-2 cursor-pointer hover:scale-105 active:scale-95 transition-transform select-none group" title="點擊籤筒即可隨機抽籤">
+                        <div class="w-full h-full rounded-[1.4rem] bg-slate-900/40 backdrop-blur-sm flex flex-col items-center justify-center p-5 text-center pointer-events-none">
+                            <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-3xl mb-3 border border-white/40 group-hover:rotate-12 transition-transform">
                                 <i class="fa-solid fa-dice"></i>
                             </div>
                             <span id="arena-stage-seat-number" class="font-mono font-black text-4xl sm:text-5xl tracking-tight text-amber-300">準備抽籤</span>
-                            <span id="arena-stage-student-name" class="font-black text-lg sm:text-xl text-white mt-1.5">點擊下方按鈕</span>
+                            <span id="arena-stage-student-name" class="font-black text-lg sm:text-xl text-white mt-1.5">點擊籤筒或按鈕</span>
+                            <span class="text-[11px] text-amber-200/90 font-bold mt-1 opacity-80 group-hover:opacity-100"><i class="fa-solid fa-hand-pointer mr-1"></i>點擊籤筒即可隨機抽籤</span>
                         </div>
                     </div>
 
@@ -2631,7 +2784,7 @@
                         <button type="button" id="arena-score-add-3-btn" class="ios-spring px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs shadow-xs cursor-pointer">+3 完美</button>
                     </div>
 
-                    <!-- 抽籤觸發控制 -->
+                    <!-- 抽籤觸發控制按鈕 -->
                     <div class="w-full space-y-3 pt-2">
                         <button type="button" id="arena-trigger-draw-btn" class="ios-spring w-full py-4 sm:py-5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-black text-lg sm:text-xl shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
                             <i class="fa-solid fa-dice text-2xl"></i>
@@ -2646,37 +2799,31 @@
                     </div>
                 </div>
 
-                <!-- 右側：學生積分排行榜與加分日誌 (5 cols) -->
+                <!-- 右側：學生積分排行榜與抽籤說明 (5 cols) -->
                 <div class="lg:col-span-5 flex flex-col gap-5">
-                    <!-- 積分排行榜 (附一鍵重置全班分數按鈕) -->
+                    <!-- 積分排行榜 -->
                     <div class="p-5 sm:p-6 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/90 shadow-xl flex-1 flex flex-col">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-ranking-star text-amber-500 text-base"></i>
                                 <h3 class="text-sm sm:text-base font-black text-slate-900">課堂個人積分榮譽榜</h3>
                             </div>
-                            <button type="button" id="arena-reset-all-points-btn" class="text-xs font-black text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95" title="將全班所有學生的個人積分歸零">
-                                <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                <span>重置全班分數</span>
-                            </button>
                         </div>
                         <div id="arena-leaderboard-list" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar pr-1 flex-1"></div>
                     </div>
 
-                    <!-- 積分異動歷史 -->
-                    <div class="p-5 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200/90 shadow-lg">
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
-                            <h4 class="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i>
-                                <span>最近加分紀錄</span>
-                            </h4>
-                        </div>
-                        <div id="arena-points-history-list" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1 text-xs"></div>
+                    <!-- 課堂公平機制說明卡 -->
+                    <div class="p-5 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200/90 shadow-lg space-y-2">
+                        <h4 class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-info text-amber-500"></i>
+                            <span>公平抽籤機制說明</span>
+                        </h4>
+                        <p class="text-[11px] text-slate-600 font-medium leading-relaxed">
+                            採用密碼級隨機演算法，全班同學未抽過者優先選中。當輪全數抽完後自動開啟新的一輪；今日請假或缺席的同學會自動略過。
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
         </div>
     </div>
 
@@ -2696,11 +2843,13 @@
 
                 <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4 pl-12 sm:pl-14">
-                        <img src="assets/images/planet_seating.png" class="w-14 h-14 object-contain shrink-0 drop-shadow-md" alt="座位分組">
+                        <span class="w-14 h-14 rounded-3xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl shrink-0 shadow-md border border-purple-200">
+                            <i class="fa-solid fa-chair text-purple-600"></i>
+                        </span>
                         <div>
                             <div class="flex items-center gap-2.5 flex-wrap">
                                 <span class="storybook-planet-pill text-purple-900 border-purple-300 bg-purple-50/90">
-                                    <img src="assets/images/planet_seating.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="座位分組">
+                                    <i class="fa-solid fa-chair text-purple-600"></i>
                                     <span>座位分組</span>
                                 </span>
                                 <h2 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">座位編排與課堂小組工作台</h2>
@@ -2930,7 +3079,9 @@
                     </div>
                     <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="flex items-center gap-4 pl-12 sm:pl-14">
-                            <img src="assets/images/planet_timer.png" class="w-14 h-14 object-contain shrink-0 drop-shadow-md" alt="考試計時">
+                            <span class="w-14 h-14 rounded-3xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl shrink-0 shadow-md border border-rose-200">
+                                <i class="fa-solid fa-stopwatch text-rose-600"></i>
+                            </span>
                             <div>
                                 <div class="flex items-center gap-2.5 flex-wrap">
                                     <span class="storybook-planet-pill text-rose-900 border-rose-300 bg-rose-50/90">
@@ -3736,11 +3887,13 @@
             <header class="storybook-banner-card rounded-3xl border border-[#EBDCCB] shadow-xl overflow-hidden relative group">
                 <div class="relative z-10 p-5 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4 pl-12 sm:pl-14">
-                        <img src="assets/images/planet_classes.png" class="w-14 h-14 object-contain shrink-0 drop-shadow-md" alt="管理班級">
+                        <span class="w-14 h-14 rounded-3xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shrink-0 shadow-md border border-amber-200">
+                            <i class="fa-solid fa-school"></i>
+                        </span>
                         <div>
                             <div class="flex items-center gap-2.5 flex-wrap">
                                 <span class="storybook-planet-pill text-amber-900 border-amber-300 bg-amber-50/90">
-                                    <img src="assets/images/planet_classes.png" class="w-4 h-4 object-contain inline-block shrink-0" alt="管理班級">
+                                    <i class="fa-solid fa-school text-amber-700"></i>
                                     <span>管理班級</span>
                                 </span>
                                 <h1 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">班級名冊與權限管理</h1>
@@ -4514,11 +4667,44 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
-                    <!-- v5.3.0 課堂輔助與加扣分全面重構版 (Classroom Assistant & Points Upgrade Edition) -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/70 to-emerald-50/50 border-2 border-amber-600 shadow-lg relative">
+                    <!-- v5.3.1 課堂全景總覽與抽籤加扣分獨立升級版 (Classroom Overview & Fair Lottery Dedicated Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-amber-50/50 border-2 border-indigo-600 shadow-lg relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.3.0 課堂輔助與加扣分重構版</span>
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.3.1 課堂全景總覽與抽籤加扣分獨立版</span>
+                                <span class="text-xs font-bold text-indigo-950">課堂總覽獨立置頂・作業點收頁面還原・課堂抽籤點擊籤筒直接抽籤・抽籤與加扣分獨立雙頁面・全站 FontAwesome SVG 圖標</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-indigo-800">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>課堂抽籤籤筒點擊支援</b>：修復籤筒點擊無反應問題，直接輕觸 3D 籤筒中央舞台本體或點擊「開始抽籤」按鈕，立即啟動密碼級不重複隨機滾動抽籤，並於選中學生後即時彈出 -1 / +1 / +2 / +3 快速評分膠囊。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>課堂加扣分與課堂抽籤拆分為獨立雙頁面</b>：課堂加扣分（#points-page）與課堂抽籤（#lottery-page）正式獨立為各自全螢幕頁面，各自擁有專屬導覽入口與頁內雙向直達跳轉按鈕，加扣分頁面更增設「開啟加分歷史紀錄」與「重置全班分數」確認防護。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>置頂課堂全景總覽頁面（#overview-page）</b>：於功能導覽最頂端新增專屬課堂總覽，一屏極簡掌握今日值日生輪更、出勤打卡實施率、座位配置概覽與待收作業速覽，並具備 7 大課堂工具快速躍遷 Dock。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>作業點收頁面（#main-page）完整復原</b>：還原作業點收工作台專屬職能，直接展開作業名稱搜尋、種類篩選、日期區間、缺交人數排序與歷史作業卡片網格，並保留頂部內嵌切換學生詳情統計功能。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>全站介面圖標 100% 升級 FontAwesome 向量 SVG</b>：導覽抽屜、頁面橫幅、功能微標籤與操作按鈕全面採用 FontAwesome 向量 SVG 素材庫，徹底清除舊版點陣圖片與系統 Emoji，維持高解析極致清晰度。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.3.0 課堂輔助與加扣分全面重構版 (Classroom Assistant & Points Upgrade Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-orange-50/70 to-emerald-50/50 border border-amber-300 shadow-sm relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-amber-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">v5.3.0 課堂輔助與加扣分重構版</span>
                                 <span class="text-xs font-bold text-amber-950">全新加扣分系統、考試計時多考程排程與大看板、班級名單座號雙輸入框、作業點收內嵌學生詳情、全螢幕隱藏頁尾</span>
                             </div>
                             <span class="text-xs font-mono font-bold text-amber-800">2026-10-23</span>
@@ -5704,7 +5890,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.2.1"></script>
+<script type="module" src="js/app.js?v=5.3.1"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->
@@ -5714,7 +5900,9 @@
             <!-- 頂部功能列 (Header - 預留左上角漢堡鈕間距) -->
             <header class="bg-[#FFFDF9]/95 border-b border-[#EBDCCB] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
                 <div class="flex items-center gap-3 pl-11 sm:pl-12">
-                    <img src="assets/images/planet_scores.png" class="w-10 h-10 object-contain drop-shadow-md shrink-0" alt="班級成績">
+                    <span class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0 shadow-xs border border-emerald-200">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </span>
                     <div>
                         <div class="flex items-center gap-2">
                             <h2 class="text-lg sm:text-xl font-black text-stone-900 tracking-tight">班級成績與小考管理系統</h2>

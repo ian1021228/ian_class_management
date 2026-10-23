@@ -97,7 +97,10 @@ import {
     applyCheckMode,
     pushPageState,
     showPortalPage,
+    showOverviewPage,
     showMainPage,
+    showPointsPage,
+    showLotteryPage,
     showDetailPage,
     showStudentDetailsPage,
     showContactBookPage,
@@ -107,8 +110,9 @@ import {
     closePortalAuthModal,
     proceedIntoSystem,
     openCopyClassModal,
-    showWelcomeStep2
-, fullRender } from './navigation.js';
+    showWelcomeStep2,
+    fullRender
+} from './navigation.js';
 
 import {
     setupExamScoresEvents,
@@ -329,10 +333,26 @@ export function setupButtonEvents() {
     };
 
     // 5. 系統設定按鈕
-    bindClick('settings-btn', () => {
+    const openSettingsModal = () => {
         updateDataManagementUI(handleRestoreBackup);
         applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
         openModal(document.getElementById('settings-modal'));
+    };
+    bindClick('settings-btn', openSettingsModal);
+    bindClick('overview-settings-btn', openSettingsModal);
+
+    // 總覽頁面頂部快捷按鈕
+    bindClick('overview-to-homework-btn', () => {
+        showMainPage();
+    });
+    bindClick('overview-changelog-btn', () => {
+        openModal(document.getElementById('changelog-modal'));
+    });
+    bindClick('overview-logo-btn', () => {
+        showOverviewPage();
+    });
+    bindClick('open-lottery-quick-btn', () => {
+        showLotteryPage();
     });
 
     // 6. 新增作業按鈕
@@ -3116,13 +3136,26 @@ export function setupButtonEvents() {
         });
     }
 
-    bindChange('class-selector', (e) => { 
+    const handleClassSelectorChange = (e) => { 
         state.currentClassId = e.target.value; 
         localStorage.setItem('currentClassId', state.currentClassId); 
         const userKey = getUserStorageKey(state.currentUser);
         localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+
+        // 同步所有班級選單選項
+        ['class-selector', 'overview-class-selector', 'drawer-class-select'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value !== state.currentClassId) el.value = state.currentClassId;
+        });
+
         renderHomeworkList(); 
-    });
+        if (window.renderZeroScrollDashboard) window.renderZeroScrollDashboard();
+        if (window.renderPointsPage) window.renderPointsPage();
+        if (window.renderLotteryPage) window.renderLotteryPage();
+    };
+
+    bindChange('class-selector', handleClassSelectorChange);
+    bindChange('overview-class-selector', handleClassSelectorChange);
 
     // 學生網格點擊
     const studentGrid = document.getElementById('student-grid');
