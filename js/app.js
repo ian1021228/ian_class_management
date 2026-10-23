@@ -239,7 +239,8 @@ async function init() {
         console.warn("Replace icons error:", e);
     }
 
-    // 3. 綁定所有互動事件
+    // 3. 綁定所有互動事件 (第一時間綁定全域漢堡抽屜，確保點擊零延遲)
+    initGlobalNavDrawer();
     setupButtonEvents(); 
     setupQrLoginEvents();
     checkUrlForQrLogin();
@@ -281,7 +282,6 @@ async function init() {
     }
 
     initPortalScrollIndicator();
-    initGlobalNavDrawer();
 
     // 首頁四大核心功能按鈕直連全畫面
     document.getElementById('open-attendance-hub-btn')?.addEventListener('click', () => showAttendancePage());

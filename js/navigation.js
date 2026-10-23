@@ -377,8 +377,15 @@ export function openGlobalNavDrawer() {
     const backdrop = document.getElementById('global-nav-drawer-backdrop');
     if (!drawer) return;
 
+    // 若首頁有開啟中的「給老師的話」等前導彈窗，主動關閉避免視覺衝突
+    const letterModal = document.getElementById('letter-to-teacher-modal');
+    if (letterModal && !letterModal.classList.contains('hidden')) {
+        closeModal(letterModal);
+        try { localStorage.setItem('has_seen_letter_to_teacher', 'true'); } catch(e) {}
+    }
+
     // 更新抽屜內目前班級標題
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const currentClass = state.appData?.classes?.find(c => c.id === state.currentClassId);
     const titleEl = document.getElementById('drawer-class-title');
     if (titleEl) titleEl.textContent = currentClass?.name || '班級管理系統';
 
@@ -405,7 +412,7 @@ export function openGlobalNavDrawer() {
             backdrop.classList.add('opacity-100');
         });
     }
-    drawer.classList.remove('translate-x-full');
+    drawer.classList.remove('-translate-x-full', 'translate-x-full');
     drawer.classList.add('translate-x-0');
 }
 
@@ -414,7 +421,7 @@ export function closeGlobalNavDrawer() {
     const backdrop = document.getElementById('global-nav-drawer-backdrop');
     if (!drawer) return;
     drawer.classList.remove('translate-x-0');
-    drawer.classList.add('translate-x-full');
+    drawer.classList.add('-translate-x-full');
     if (backdrop) {
         backdrop.classList.remove('opacity-100');
         backdrop.classList.add('opacity-0');
@@ -424,14 +431,27 @@ export function closeGlobalNavDrawer() {
     }
 }
 
+let lastNavToggleTime = 0;
 export function toggleGlobalNavDrawer() {
+    const now = Date.now();
+    if (now - lastNavToggleTime < 250) return;
+    lastNavToggleTime = now;
+
     const drawer = document.getElementById('global-nav-drawer');
     if (!drawer) return;
-    if (drawer.classList.contains('translate-x-full')) {
+    const isClosed = drawer.classList.contains('-translate-x-full') || !drawer.classList.contains('translate-x-0');
+    if (isClosed) {
         openGlobalNavDrawer();
     } else {
         closeGlobalNavDrawer();
     }
+}
+
+// 掛載至全域 window，方便任意時機即時呼叫
+if (typeof window !== 'undefined') {
+    window.openGlobalNavDrawer = openGlobalNavDrawer;
+    window.closeGlobalNavDrawer = closeGlobalNavDrawer;
+    window.toggleGlobalNavDrawer = toggleGlobalNavDrawer;
 }
 
 export function updateDrawerFullscreenState() {
@@ -455,61 +475,99 @@ export function initGlobalNavDrawer() {
     const settingsBtn = document.getElementById('drawer-settings-btn');
     const logoutBtn = document.getElementById('drawer-logout-btn');
 
-    burgerBtn?.addEventListener('click', toggleGlobalNavDrawer);
-    closeBtn?.addEventListener('click', closeGlobalNavDrawer);
-    backdrop?.addEventListener('click', closeGlobalNavDrawer);
+    if (burgerBtn) {
+        burgerBtn.onclick = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            toggleGlobalNavDrawer();
+        };
+    }
+
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            if (e) e.preventDefault();
+            closeGlobalNavDrawer();
+        };
+    }
+
+    if (backdrop) {
+        backdrop.onclick = (e) => {
+            if (e) e.preventDefault();
+            closeGlobalNavDrawer();
+        };
+    }
+
+    // 按 Esc 鍵快速收合側邊抽屜
+    if (!window.__navDrawerEscBound) {
+        window.__navDrawerEscBound = true;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const drawer = document.getElementById('global-nav-drawer');
+                if (drawer && drawer.classList.contains('translate-x-0')) {
+                    closeGlobalNavDrawer();
+                }
+            }
+        });
+    }
 
     // 全螢幕切換
-    fsBtn?.addEventListener('click', () => {
-        toggleAppFullscreen();
-        setTimeout(updateDrawerFullscreenState, 150);
-    });
+    if (fsBtn && !fsBtn.dataset.bound) {
+        fsBtn.dataset.bound = 'true';
+        fsBtn.addEventListener('click', () => {
+            toggleAppFullscreen();
+            setTimeout(updateDrawerFullscreenState, 150);
+        });
+    }
 
     // 監聽原生全螢幕變化
     document.addEventListener('fullscreenchange', updateDrawerFullscreenState);
     document.addEventListener('webkitfullscreenchange', updateDrawerFullscreenState);
 
     // 班級快速切換
-    classSelect?.addEventListener('change', (e) => {
-        const newClassId = e.target.value;
-        if (newClassId && newClassId !== state.currentClassId) {
-            state.currentClassId = newClassId;
-            localStorage.setItem('currentClassId', newClassId);
-            saveData();
-            fullRender();
-            closeGlobalNavDrawer();
-            showToast(`已切換為「${state.appData.classes.find(c => c.id === newClassId)?.name || ''}」`, 'success');
-        }
-    });
+    if (classSelect && !classSelect.dataset.bound) {
+        classSelect.dataset.bound = 'true';
+        classSelect.addEventListener('change', (e) => {
+            const newClassId = e.target.value;
+            if (newClassId && newClassId !== state.currentClassId) {
+                state.currentClassId = newClassId;
+                localStorage.setItem('currentClassId', newClassId);
+                saveData();
+                fullRender();
+                closeGlobalNavDrawer();
+                showToast(`已切換為「${state.appData.classes.find(c => c.id === newClassId)?.name || ''}」`, 'success');
+            }
+        });
+    }
 
-    // 導覽抽屜頁籤連結
-    document.getElementById('drawer-nav-main')?.addEventListener('click', () => {
+    // 導覽抽屜頁籤連結 (若從首頁跳轉，先註記通過門戶，確保直接顯示該全畫面)
+    const navigateFromDrawer = (action) => {
+        sessionStorage.setItem('has_passed_portal_in_session', 'true');
         closeGlobalNavDrawer();
-        showMainPage();
+        action();
+    };
+
+    document.getElementById('drawer-nav-main')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showMainPage());
     });
     document.getElementById('drawer-nav-attendance')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showAttendancePage();
+        navigateFromDrawer(() => showAttendancePage());
     });
     document.getElementById('drawer-nav-draw')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showDrawPointsPage();
+        navigateFromDrawer(() => showDrawPointsPage());
     });
     document.getElementById('drawer-nav-studio')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showClassroomStudioPage();
+        navigateFromDrawer(() => showClassroomStudioPage());
     });
     document.getElementById('drawer-nav-timer')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showExamTimerPage();
+        navigateFromDrawer(() => showExamTimerPage());
     });
     document.getElementById('drawer-nav-contact')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showContactBookPage();
+        navigateFromDrawer(() => showContactBookPage());
     });
     document.getElementById('drawer-nav-student-stats')?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        showStudentDetailsPage();
+        navigateFromDrawer(() => showStudentDetailsPage());
     });
 
     // 設定與登出

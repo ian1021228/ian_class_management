@@ -69,17 +69,17 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- 全域常態固定右上角漢堡選單與滑出式導覽抽屜 (Global Floating Nav Drawer) -->
+    <!-- 全域常態固定左上角漢堡選單與滑出式導覽抽屜 (Global Floating Nav Drawer) -->
     <!-- ============================================================== -->
-    <button id="global-nav-burger-btn" type="button" aria-label="系統全域導覽選單" class="fixed top-4 right-4 z-[99] w-12 h-12 rounded-2xl bg-white/85 hover:bg-white backdrop-blur-xl border border-slate-200/90 shadow-lg hover:shadow-xl text-slate-800 hover:text-indigo-600 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none" title="功能選單 (可快速跳轉所有功能或切換真實全螢幕)">
-        <i class="fa-solid fa-bars text-xl"></i>
+    <button id="global-nav-burger-btn" type="button" aria-label="系統全域導覽選單" onclick="window.__toggleNavDrawer && window.__toggleNavDrawer()" class="fixed top-3.5 left-3.5 sm:top-4 sm:left-4 z-[150] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/90 hover:bg-white backdrop-blur-xl border border-slate-200/90 shadow-lg hover:shadow-xl text-slate-800 hover:text-indigo-600 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none pointer-events-auto" title="功能選單 (位於左上角，可隨時快速跳轉所有全畫面功能或切換真實全螢幕)">
+        <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
     </button>
 
     <!-- 抽屜半透明毛玻璃遮罩 -->
-    <div id="global-nav-drawer-backdrop" class="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-xs hidden transition-opacity duration-300 opacity-0"></div>
+    <div id="global-nav-drawer-backdrop" onclick="window.__closeNavDrawer && window.__closeNavDrawer()" class="fixed inset-0 z-[151] bg-slate-950/45 backdrop-blur-xs hidden transition-opacity duration-300 opacity-0 pointer-events-auto"></div>
 
-    <!-- 抽屜本體 -->
-    <aside id="global-nav-drawer" class="fixed top-0 right-0 z-[101] h-full w-84 sm:w-96 max-w-[90vw] bg-white/95 backdrop-blur-2xl border-l border-slate-200/90 shadow-2xl flex flex-col transition-transform duration-300 translate-x-full select-none">
+    <!-- 抽屜本體 (自左側滑出) -->
+    <aside id="global-nav-drawer" class="fixed top-0 left-0 z-[152] h-full w-84 sm:w-96 max-w-[90vw] bg-white/95 backdrop-blur-2xl border-r border-slate-200/90 shadow-2xl flex flex-col transition-transform duration-300 -translate-x-full select-none pointer-events-auto">
         <!-- 抽屜標題列 -->
         <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-indigo-50/40 shrink-0">
             <div class="flex items-center gap-3">
@@ -210,6 +210,55 @@
         </div>
     </aside>
 
+    <script>
+        // 確保不論任何階段點擊左上角漢堡鈕均能立即可靠響應開合
+        window.__toggleNavDrawer = function() {
+            if (typeof window.toggleGlobalNavDrawer === 'function') {
+                window.toggleGlobalNavDrawer();
+                return;
+            }
+            const drawer = document.getElementById('global-nav-drawer');
+            const backdrop = document.getElementById('global-nav-drawer-backdrop');
+            if (!drawer) return;
+            const isClosed = drawer.classList.contains('-translate-x-full') || !drawer.classList.contains('translate-x-0');
+            if (isClosed) {
+                drawer.classList.remove('-translate-x-full', 'translate-x-full');
+                drawer.classList.add('translate-x-0');
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        backdrop.classList.remove('opacity-0');
+                        backdrop.classList.add('opacity-100');
+                    });
+                }
+            } else {
+                drawer.classList.remove('translate-x-0');
+                drawer.classList.add('-translate-x-full');
+                if (backdrop) {
+                    backdrop.classList.remove('opacity-100');
+                    backdrop.classList.add('opacity-0');
+                    setTimeout(() => backdrop.classList.add('hidden'), 300);
+                }
+            }
+        };
+        window.__closeNavDrawer = function() {
+            if (typeof window.closeGlobalNavDrawer === 'function') {
+                window.closeGlobalNavDrawer();
+                return;
+            }
+            const drawer = document.getElementById('global-nav-drawer');
+            const backdrop = document.getElementById('global-nav-drawer-backdrop');
+            if (!drawer) return;
+            drawer.classList.remove('translate-x-0');
+            drawer.classList.add('-translate-x-full');
+            if (backdrop) {
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        };
+    </script>
+
     <!-- 系統廣播橫幅 (管理員推播用) -->
     <div id="system-banner" class="hidden mx-auto max-w-2xl bg-amber-500/95 backdrop-blur-xl text-white px-5 py-3 rounded-b-2xl justify-between items-center text-sm z-[95] fixed top-0 left-4 right-4 shadow-2xl border border-amber-400 shadow-amber-500/20">
         <span id="system-banner-msg" class="font-bold tracking-wide flex items-center gap-2">
@@ -275,8 +324,8 @@
         <!-- 頂部導覽列 (Sticky Navigation Bar) -->
         <header class="sticky top-0 z-40 bg-[#f6f1e8]/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
             <div class="max-w-7xl mx-auto px-4 sm:px-10 h-16 sm:h-20 flex items-center justify-between gap-3">
-                <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端，維持寬度不被壓縮) -->
-                <button id="portal-nav-logo-btn" class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none text-left shrink-0" title="返回首頁頂端">
+                <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端，維持寬度不被壓縮，保留左上角漢堡按鈕呼吸間距) -->
+                <button id="portal-nav-logo-btn" class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none text-left shrink-0 ml-12 sm:ml-14" title="返回首頁頂端">
                     <img src="icon.svg" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="班級經營系統">
                     <div class="shrink-0 flex flex-col justify-center">
                         <span class="text-base sm:text-xl lg:text-2xl font-black text-stone-900 tracking-tight block whitespace-nowrap">班級經營系統</span>
@@ -549,7 +598,7 @@
                                 </span>
                                 <div>
                                     <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
-                                    <span class="text-xs text-stone-400 font-bold">最新版本 v5.1.0 • 2026/10/23</span>
+                                    <span class="text-xs text-stone-400 font-bold">最新版本 v5.1.1 • 2026/10/23</span>
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200">最新版本</span>
@@ -558,21 +607,20 @@
                         <div class="p-4 bg-gradient-to-br from-indigo-50/80 via-emerald-50/50 to-amber-50/40 rounded-2xl border border-indigo-100/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
                             <div class="font-bold text-indigo-950 flex items-center gap-1.5">
                                 <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                                <span>v5.1.0 全功能獨立全畫面革新版（全畫面頁面・常態漢堡選單・真實全螢幕・應到實到）：</span>
+                                <span>v5.1.1 左上角常態漢堡選單與零延遲導覽升級：</span>
                             </div>
                             <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>多軌遲到簽到與出勤打卡中樞</b>：支援觸控看板、條碼槍極速感應與導師點名，精準到秒判定遲到、早鳥準時加分與雙工作表 Excel 匯出。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>抽籤問答與公平加分系統</b>：密碼級不重複抽籤籤筒、選中學生即時評分膠囊、全班加分自動排除請假缺席學生。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>座位分組工作台與 180° 翻轉</b>：教師視角與學生視角一鍵翻轉、點選座位交換與鎖定、S型蛇行順序、均勻分組與榮譽台。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>智慧黑板直橫書寫與值日生輪替</b>：黑板直書右至左排版無縫切換、值日生手動/每日自動輪更、電子白板全螢幕 Zen 模式。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>考試計時系統與浮動教師快捷島</b>：小考倒數大螢幕看板、到考人數自動連動出勤中樞、Web Audio 擬真鐘聲；磁吸懸浮中控島 (Cmd+K)。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>漢堡選單常態固定於左上角</b>：符合人體工學與自然視線，抽屜改由左側滑出，點擊即時開合無延遲。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>全域最高層級（z-[150]）保護</b>：解決被其他彈窗遮蔽點擊無反應問題，支援 Esc 快捷關閉與背景遮罩輕觸關閉。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>各全畫面專屬呼吸留白</b>：首頁、作業頁、出勤中樞、抽籤擂台、分組座位、考試計時均完美適配左側按鈕空間。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>真實原生 OS 全螢幕與分數重置</b>：一鍵鋪滿投影白板，課堂個人與小組積分隨時歸零重啟。</span></li>
                             </ul>
                         </div>
 
                         <div class="flex items-center justify-between pt-1">
                             <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-950 font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
                                 <i class="fa-solid fa-clock-rotate-left text-emerald-700"></i>
-                                <span>查看完整版本演進日誌 (v1.0 ~ v5.1.0)</span>
+                                <span>查看完整版本演進日誌 (v1.0 ~ v5.1.1)</span>
                             </button>
                         </div>
                     </div>
@@ -1550,8 +1598,8 @@
     <div id="main-page" class="container mx-auto w-[96%] max-w-[1600px] p-5 sm:p-8 lg:p-10 hidden page-section">
         <header class="flex flex-col gap-6 mb-10 relative z-10 p-6 glass-card rounded-3xl">
             <div class="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-5 2xl:gap-8 w-full">
-                <!-- 左側：標題與班級選單 -->
-                <div class="flex items-center gap-4 flex-shrink-0">
+                <!-- 左側：標題與班級選單 (保留左側漢堡按鈕呼吸間距) -->
+                <div class="flex items-center gap-4 flex-shrink-0 pl-11 sm:pl-12">
                      <button id="main-logo-btn" class="cursor-pointer group flex items-center gap-2.5 sm:gap-3 select-none text-left shrink-0" title="班級經營系統">
                          <img src="icon.svg" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="班級經營系統">
                          <span class="text-xl sm:text-2xl xl:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-600 animated-gradient-text tracking-tight drop-shadow-sm group-hover:opacity-90 transition-opacity whitespace-nowrap">班級經營系統</span>
@@ -1719,7 +1767,7 @@
     <div id="detail-page" class="hidden container mx-auto w-[96%] max-w-[1600px] p-5 sm:p-8 lg:p-10 page-section h-screen flex flex-col">
         <header class="mb-6 flex-shrink-0 relative z-10 p-6 glass-card rounded-3xl">
             <div class="flex items-center justify-between mb-4">
-                <button id="back-to-main-btn" class="text-slate-500 hover:text-indigo-600 font-bold inline-flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-x-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
+                <button id="back-to-main-btn" class="ml-11 sm:ml-12 text-slate-500 hover:text-indigo-600 font-bold inline-flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-x-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表
                 </button>
             </div>
@@ -1797,7 +1845,7 @@
         <header class="mb-8 flex flex-col gap-4 relative z-10 p-6 glass-card rounded-3xl">
             <div>
                  <div class="flex items-center justify-between mb-3">
-                     <button id="back-from-student-details-btn" class="text-slate-400 hover:text-indigo-600 font-bold cursor-pointer flex items-center gap-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
+                     <button id="back-from-student-details-btn" class="ml-11 sm:ml-12 text-slate-400 hover:text-indigo-600 font-bold cursor-pointer flex items-center gap-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表
                      </button>
                  </div>
@@ -1842,7 +1890,7 @@
     <div id="contact-book-page" class="hidden container mx-auto w-[96%] max-w-[1600px] p-5 sm:p-8 lg:p-10 page-section">
          <header class="mb-6 relative z-10 p-6 glass-card rounded-3xl">
             <div class="flex items-center justify-between mb-3">
-                <button id="back-from-contact-book-btn" class="text-slate-400 hover:text-indigo-600 font-bold cursor-pointer flex items-center gap-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
+                <button id="back-from-contact-book-btn" class="ml-11 sm:ml-12 text-slate-400 hover:text-indigo-600 font-bold cursor-pointer flex items-center gap-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表
                 </button>
             </div>
@@ -1978,7 +2026,7 @@
                     <img src="assets/images/banner_attendance.jpg" alt="" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 pl-12 sm:pl-14">
                         <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl border border-white/30 shadow-md">
                             <i class="fa-solid fa-clipboard-user"></i>
                         </div>
@@ -2177,7 +2225,7 @@
                     <img src="assets/images/banner_quiz_stage.jpg" alt="" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 pl-12 sm:pl-14">
                         <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl border border-white/30 shadow-md">
                             <i class="fa-solid fa-trophy"></i>
                         </div>
@@ -2300,7 +2348,7 @@
                     <img src="assets/images/banner_seating_grouping.jpg" alt="" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 pl-12 sm:pl-14">
                         <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl border border-white/30 shadow-md">
                             <i class="fa-solid fa-border-all"></i>
                         </div>
@@ -2404,7 +2452,7 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-6">
             <!-- 頂部資訊列 -->
             <div class="p-5 sm:p-6 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex items-center gap-3.5">
+                <div class="flex items-center gap-3.5 pl-12 sm:pl-14">
                     <span class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl shadow-inner">
                         <i class="fa-solid fa-stopwatch"></i>
                     </span>
@@ -3678,6 +3726,35 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
+                    <!-- v5.1.1 左上角常態漢堡選單與零延遲導覽升級 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-emerald-50/50 border-2 border-indigo-600 shadow-lg relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.1.1 頂部導覽革新版</span>
+                                <span class="text-xs font-bold text-indigo-950">漢堡按鈕常態固定於左上角、左側極速抽屜、最高前景層級修復與 Esc 鍵支援</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-slate-500">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-slate-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>漢堡按鈕移至左上角 (Top-Left Floating Menu)</b>：常態固定於視窗左上角（top-4 left-4），符合使用者直覺視線與右手觸控習慣，隨時點擊無死角。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>左側極速滑出式抽屜 (Left Slide-Over Navigation)</b>：導覽抽屜改由左側滑出，零延遲呈現 7 大核心全畫面頁面直達入口、目前班級切換與真實 OS 全螢幕切換。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>層級徹底修復（z-[150] ~ z-[152]）</b>：全面排查並提升按鈕與抽屜層級，徹底解決被既有彈窗（如致敬彈窗、橫幅）遮蔽導致點擊無反應之問題。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>頁面頂部佈局黃金間距優化</b>：首頁、作業點收、出勤中樞、抽籤擂台、分組工作坊、考試計時各頂部橫幅均保留專屬呼吸間距，確保大螢幕與手機端排版精緻無重疊。</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     <!-- v5.1.0 全功能獨立全畫面架構與右上常態漢堡選單革新 -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-emerald-50/50 border-2 border-indigo-600 shadow-lg relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -4725,7 +4802,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.0.0"></script>
+<script type="module" src="js/app.js?v=5.1.1"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->
