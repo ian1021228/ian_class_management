@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ian-class-mgmt-v5.0.0';
+const CACHE_NAME = 'ian-class-mgmt-v5.2.0';
 const urlsToCache = [
   './index.html',
   './parent.html',
@@ -28,6 +28,12 @@ const urlsToCache = [
   './js/modules/classroomStudio.js',
   './js/modules/examTimer.js',
   './js/modules/dynamicIsland.js',
+  './assets/images/bg_homework_hub.jpg',
+  './assets/images/bg_attendance_hub.jpg',
+  './assets/images/bg_arena_draw_points.jpg',
+  './assets/images/bg_seating_groups.jpg',
+  './assets/images/bg_exam_timer.jpg',
+  './assets/images/bg_contact_blackboard.jpg',
   './assets/images/banner_classroom.jpg',
   './assets/images/banner_attendance.jpg',
   './assets/images/banner_quiz_stage.jpg',

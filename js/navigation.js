@@ -151,16 +151,27 @@ export function hideAllPages() {
         'attendance-page',
         'arena-draw-points-page',
         'classroom-studio-page',
-        'exam-timer-page'
+        'exam-timer-page',
+        'manage-class-page',
+        'quick-auth-page',
+        'exam-scores-fullscreen-view'
     ].forEach(id => { 
         const el = document.getElementById(id); 
-        if (el) el.classList.add('hidden'); 
+        if (el) {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
     });
     updateGuestHomeBtnVisibility();
 }
 
 export function restoreScroll(targetPageId) { 
     state.currentPage = targetPageId; 
+    const burgerBtn = document.getElementById('global-nav-burger-btn');
+    if (burgerBtn) {
+        // 首頁嚴格隱藏漢堡按鈕，進入系統工作台後一律常態顯示
+        burgerBtn.classList.toggle('hidden', targetPageId === 'portal-page');
+    }
     const savedY = state.scrollPositions[targetPageId] || 0;
     window.scrollTo({ top: savedY, behavior: 'auto' }); 
     requestAnimationFrame(() => {
@@ -177,7 +188,7 @@ export function updateMobileNavVisibility(pageName) {
     const fabAdd = document.getElementById('mobile-fab-add');
     if (!bottomNav) return;
 
-    if (pageName === 'portal') {
+    if (pageName === 'portal' || pageName === 'portal-page') {
         bottomNav.classList.add('hidden');
         if (fabAdd) fabAdd.classList.add('hidden');
         return;
@@ -186,20 +197,32 @@ export function updateMobileNavVisibility(pageName) {
     // 在應用程式各主分頁內顯示手機導航欄 (由 sm:hidden 保證大螢幕不顯示)
     bottomNav.classList.remove('hidden');
 
-    // 切換底部導航欄 active 樣式
+    // 切換底部導航欄 active 樣式 (5 大核心分頁：作業、聯絡簿、成績、班級、選單)
     const tabMap = {
         'main': 'mobile-nav-homework',
+        'main-page': 'mobile-nav-homework',
+        'detail': 'mobile-nav-homework',
+        'detail-page': 'mobile-nav-homework',
+        'types': 'mobile-nav-homework',
+        'homework-types': 'mobile-nav-homework',
         'contact-book': 'mobile-nav-contact',
-        'student-details': 'mobile-nav-stats'
+        'contact-book-page': 'mobile-nav-contact',
+        'scores': 'mobile-nav-scores',
+        'exam-scores': 'mobile-nav-scores',
+        'exam-scores-page': 'mobile-nav-scores',
+        'classes': 'mobile-nav-classes',
+        'manage-class': 'mobile-nav-classes',
+        'manage-class-page': 'mobile-nav-classes'
     };
-    ['mobile-nav-homework', 'mobile-nav-contact', 'mobile-nav-stats', 'mobile-nav-more'].forEach(btnId => {
+    ['mobile-nav-homework', 'mobile-nav-contact', 'mobile-nav-scores', 'mobile-nav-classes', 'mobile-nav-menu'].forEach(btnId => {
         const btn = document.getElementById(btnId);
         if (btn) {
-            btn.classList.remove('text-indigo-600');
+            btn.classList.remove('text-indigo-600', 'text-teal-600', 'text-amber-600', 'text-purple-600');
             btn.classList.add('text-slate-500');
         }
     });
-    const curActiveBtn = document.getElementById(tabMap[pageName] || 'mobile-nav-homework');
+    const curActiveId = tabMap[pageName] || 'mobile-nav-homework';
+    const curActiveBtn = document.getElementById(curActiveId);
     if (curActiveBtn) {
         curActiveBtn.classList.remove('text-slate-500');
         curActiveBtn.classList.add('text-indigo-600');
@@ -207,7 +230,7 @@ export function updateMobileNavVisibility(pageName) {
 
     // 只有在 main 作業主清單頁面顯示 FAB 新增作業按鈕
     if (fabAdd) {
-        if (pageName === 'main') {
+        if (pageName === 'main' || pageName === 'main-page') {
             fabAdd.classList.remove('hidden');
         } else {
             fabAdd.classList.add('hidden');
@@ -216,20 +239,7 @@ export function updateMobileNavVisibility(pageName) {
 }
 
 export function showPortalPage(fromHistory = false) {
-    hideAllPages();
-    const portalPageEl = document.getElementById('portal-page');
-    if (portalPageEl) portalPageEl.classList.remove('hidden');
-    if (!fromHistory) pushPageState({ page: 'portal' }, '#portal');
-    updatePortalUI();
-    restoreScroll('portal-page');
-    updateGuestHomeBtnVisibility();
-    updateMobileNavVisibility('portal');
-    const scrollIndicator = document.getElementById('portal-scroll-indicator');
-    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    if (scrollIndicator && scrollY <= 25) {
-        scrollIndicator.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
-        scrollIndicator.classList.add('pointer-events-auto');
-    }
+    showMainPage(fromHistory);
 }
 
 export function showMainPage(fromHistory = false) {
@@ -372,6 +382,54 @@ export function showExamTimerPage(fromHistory = false) {
     closeGlobalNavDrawer();
 }
 
+export function showExamScoresPage(fromHistory = false) {
+    hideAllPages();
+    const scoresEl = document.getElementById('exam-scores-fullscreen-view');
+    if (scoresEl) {
+        scoresEl.classList.remove('hidden');
+        scoresEl.classList.add('flex');
+    }
+    if (!fromHistory) pushPageState({ page: 'scores' }, '#scores');
+    if (window.renderExamScoresView) {
+        window.renderExamScoresView();
+    }
+    restoreScroll('exam-scores-fullscreen-view');
+    updateMobileNavVisibility('scores');
+    closeGlobalNavDrawer();
+}
+
+export function showManageClassPage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('manage-class-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'classes' }, '#classes');
+    renderClassList();
+    restoreScroll('manage-class-page');
+    updateMobileNavVisibility('classes');
+    closeGlobalNavDrawer();
+}
+
+export function showQuickAuthPage(fromHistory = false) {
+    hideAllPages();
+    const pageEl = document.getElementById('quick-auth-page');
+    if (pageEl) pageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'auth' }, '#auth');
+    if (window.initQuickAuthPageStandalone) {
+        window.initQuickAuthPageStandalone();
+    }
+    restoreScroll('quick-auth-page');
+    updateMobileNavVisibility('auth');
+    closeGlobalNavDrawer();
+}
+
+if (typeof window !== 'undefined') {
+    window.showMainPage = showMainPage;
+    window.showContactBookPage = showContactBookPage;
+    window.showExamScoresPage = showExamScoresPage;
+    window.showManageClassPage = showManageClassPage;
+    window.showQuickAuthPage = showQuickAuthPage;
+}
+
 export function openGlobalNavDrawer() {
     const drawer = document.getElementById('global-nav-drawer');
     const backdrop = document.getElementById('global-nav-drawer-backdrop');
@@ -476,6 +534,7 @@ export function initGlobalNavDrawer() {
     const logoutBtn = document.getElementById('drawer-logout-btn');
 
     if (burgerBtn) {
+        burgerBtn.classList.remove('hidden');
         burgerBtn.onclick = (e) => {
             if (e) {
                 e.preventDefault();
@@ -568,6 +627,36 @@ export function initGlobalNavDrawer() {
     });
     document.getElementById('drawer-nav-student-stats')?.addEventListener('click', () => {
         navigateFromDrawer(() => showStudentDetailsPage());
+    });
+    document.getElementById('drawer-nav-scores')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showExamScoresPage());
+    });
+    document.getElementById('drawer-nav-classes')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showManageClassPage());
+    });
+    document.getElementById('drawer-nav-auth')?.addEventListener('click', () => {
+        navigateFromDrawer(() => showQuickAuthPage());
+    });
+    document.getElementById('drawer-changelog-btn')?.addEventListener('click', () => {
+        closeGlobalNavDrawer();
+        openModal(document.getElementById('changelog-modal'));
+    });
+
+    // 手機端底部常態導航欄 (Bottom Tab Bar) 事件綁定
+    document.getElementById('mobile-nav-homework')?.addEventListener('click', () => {
+        showMainPage();
+    });
+    document.getElementById('mobile-nav-contact')?.addEventListener('click', () => {
+        showContactBookPage();
+    });
+    document.getElementById('mobile-nav-scores')?.addEventListener('click', () => {
+        showExamScoresPage();
+    });
+    document.getElementById('mobile-nav-classes')?.addEventListener('click', () => {
+        showManageClassPage();
+    });
+    document.getElementById('mobile-nav-menu')?.addEventListener('click', () => {
+        toggleGlobalNavDrawer();
     });
 
     // 設定與登出

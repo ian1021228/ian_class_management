@@ -981,3 +981,44 @@ export function setupQrLoginEvents() {
         if (confirmModal) closeModal(confirmModal);
     });
 }
+
+/**
+ * 初始化獨立全螢幕快速授權中心頁面 (Standalone Quick Auth Page)
+ */
+export async function initQuickAuthPageStandalone() {
+    const scanBtn = document.getElementById('quick-auth-page-start-scan-btn');
+    const genCodeBtn = document.getElementById('quick-auth-page-gen-code-btn');
+    const pageCodeDisplay = document.getElementById('quick-auth-page-code-display');
+
+    if (scanBtn && !scanBtn.dataset.bound) {
+        scanBtn.dataset.bound = 'true';
+        scanBtn.addEventListener('click', () => {
+            openPhoneQrScannerModal();
+        });
+    }
+
+    const refreshCode = async () => {
+        if (!state.currentUser) {
+            if (pageCodeDisplay) pageCodeDisplay.textContent = '請先登入';
+            return;
+        }
+        await generatePhoneOtpCode();
+        const codeDisplay = document.getElementById('otp-phone-display-code');
+        if (codeDisplay && pageCodeDisplay) {
+            pageCodeDisplay.textContent = codeDisplay.textContent;
+        }
+    };
+
+    if (genCodeBtn && !genCodeBtn.dataset.bound) {
+        genCodeBtn.dataset.bound = 'true';
+        genCodeBtn.addEventListener('click', () => {
+            refreshCode();
+        });
+    }
+
+    refreshCode();
+}
+
+if (typeof window !== 'undefined') {
+    window.initQuickAuthPageStandalone = initQuickAuthPageStandalone;
+}

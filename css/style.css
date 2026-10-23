@@ -1,20 +1,11 @@
-/* 首頁與相關彈窗專用：圓潤可愛字體 (排除圖示 i 與 Font Awesome) */
-#portal-page,
-#portal-page *:not(i):not([class*="fa-"]):not(.fa):not(.fa-solid):not(.fa-regular):not(.fa-brands),
-#portal-auth-modal,
-#portal-auth-modal *:not(i):not([class*="fa-"]):not(.fa):not(.fa-solid):not(.fa-regular):not(.fa-brands),
-#author-feedback-modal,
-#author-feedback-modal *:not(i):not([class*="fa-"]):not(.fa):not(.fa-solid):not(.fa-regular):not(.fa-brands) {
-    font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', 'Nunito', 'Varela Round', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Maru Gothic ProN", "Yu Gothic UI", "Microsoft JhengHei", sans-serif !important;
+/* 全站統一：溫暖童趣手繪繪本風格圓潤字體 (Zen Maru Gothic + Rounded M Plus) */
+body,
+body *:not(i):not([class*="fa-"]):not(.fa):not(.fa-solid):not(.fa-regular):not(.fa-brands),
+input, select, textarea, button {
+    font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', 'Nunito', 'Quicksand', 'Noto Sans TC', system-ui, -apple-system, sans-serif !important;
 }
 
 /* 確保 Font Awesome 向量圖標字體優先級最高，杜絕圖示顯示為多條橫線 (Missing Glyph) */
-#portal-page i,
-#portal-page [class*="fa-"],
-#portal-auth-modal i,
-#portal-auth-modal [class*="fa-"],
-#author-feedback-modal i,
-#author-feedback-modal [class*="fa-"],
 i.fa-solid, i.fas, .fa-solid, .fas,
 i.fa-regular, i.far, .fa-regular, .far,
 i.fa-brands, i.fab, .fa-brands, .fab,
@@ -35,7 +26,6 @@ i.fa-regular, i.far, .fa-regular, .far {
 
 /* 首頁捲動極速流暢優化 (Scroll Performance Boost) */
 .feature-card-optimized {
-    /* 使用乾淨的硬體渲染與自適應繪製，杜絕 content-visibility 重複計算導致的滾動卡頓 */
     will-change: auto;
     transform: translateZ(0);
 }
@@ -58,18 +48,18 @@ i.fa-regular, i.far, .fa-regular, .far {
     animation: bounceBlinkArrow 1.3s ease-in-out infinite;
 }
 
-/* 縮小所有物件 20% (由預設 100% 縮小至 80%) */
+/* 溫暖童趣手繪繪本風格 - 全域色調與質感 */
 html { scroll-behavior: smooth; }
 body {
-    font-family: 'Inter', 'Noto Sans TC', sans-serif;
     padding-bottom: 40px;
-    background-color: #f6f1e8; /* 米色系高雅底色 */
+    background-color: #FDFBF7; /* 溫暖奶油米黃底色 */
     background-image: 
-        radial-gradient(circle at 15% 25%, rgba(217, 119, 6, 0.04), transparent 35%),
-        radial-gradient(circle at 85% 15%, rgba(180, 83, 9, 0.035), transparent 30%),
-        radial-gradient(circle at 50% 85%, rgba(245, 158, 11, 0.03), transparent 35%);
+        radial-gradient(circle at 12% 18%, rgba(232, 168, 88, 0.07), transparent 42%),
+        radial-gradient(circle at 88% 14%, rgba(140, 109, 88, 0.06), transparent 38%),
+        radial-gradient(circle at 50% 85%, rgba(127, 168, 146, 0.05), transparent 42%);
     min-height: 100vh;
     position: relative;
+    color: #3D352E; /* 柔和莫蘭迪深木炭，替代生硬純黑 */
 }
 @media screen and (max-width: 768px) {
     input, select, textarea { font-size: 16px !important; }
@@ -95,26 +85,27 @@ body {
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; transition: background 0.3s ease; border: 2px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-thumb:hover { background-color: rgba(99, 102, 241, 0.5); }
+::-webkit-scrollbar-thumb { background: rgba(180, 150, 120, 0.28); border-radius: 9999px; transition: background 0.3s ease; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(217, 119, 6, 0.45); }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-::selection { background: rgba(99, 102, 241, 0.25); color: #1e1b4b; }
+::selection { background: rgba(232, 168, 88, 0.28); color: #3D352E; }
 
+/* 溫暖繪本手感卡片 (Storybook Warm Cards) */
 .glass-card {
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(228, 220, 207, 0.85);
-    box-shadow: 0 4px 16px -2px rgba(139, 90, 43, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.02);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    background: rgba(255, 253, 249, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(235, 222, 206, 0.9);
+    box-shadow: 0 8px 24px -4px rgba(180, 140, 100, 0.08), 0 2px 6px -1px rgba(120, 90, 60, 0.04);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 .glass-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px -4px rgba(139, 90, 43, 0.09);
-    border-color: rgba(217, 180, 140, 0.85);
+    box-shadow: 0 14px 28px -6px rgba(180, 140, 100, 0.13), 0 4px 10px -2px rgba(120, 90, 60, 0.05);
+    border-color: rgba(217, 185, 150, 0.95);
 }
 
 /* Dark Mode Overrides */
@@ -222,6 +213,7 @@ html.dark .modal-content, html.dark .confirm-modal-content { background-color: #
     #homework-list.dual-screen-active {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
+}
 /* 點收模式專屬 FontAwesome Pro Duotone 向量圖標渲染支援 */
 .fa-hand-back-point-up, [class*="fa-hand-back-point-up"] {
     display: inline-block;

@@ -136,6 +136,10 @@ export function renderClassList() {
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span class="text-[11px] hidden sm:inline">改名</span>
                     </button>
+                    <button type="button" data-class-id="${c.id}" class="open-class-roster-btn px-2.5 py-1 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl transition-colors font-bold flex items-center gap-1.5 shrink-0 border border-indigo-200/80 shadow-2xs cursor-pointer active:scale-95" title="設定座號或學生姓名名冊雙預覽">
+                        <i class="fa-solid fa-users-gear text-indigo-600"></i>
+                        <span class="text-[11px]">名單設定</span>
+                    </button>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus-within:border-indigo-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">

@@ -247,6 +247,10 @@ export function generateRandomAccessCode() {
 
 export function openModal(modal) {
     if (!modal) return;
+    if (modal.id === 'manage-classes-modal' && window.showManageClassPage) {
+        window.showManageClassPage();
+        return;
+    }
     modal.classList.remove('hidden', 'opacity-0');
     modal.classList.add('flex', 'opacity-100');
     const content = modal.querySelector('.modal-content, .confirm-modal-content');
@@ -429,44 +433,81 @@ window.showNamePromptModal = showNamePromptModal;
 window.safeCopyToClipboard = safeCopyToClipboard;
 
 /**
- * 檢查當前是否處於真實 OS 全螢幕
+ * 檢查當前是否處於全螢幕狀態（支援原生 Fullscreen API 與沉浸全螢幕樣式）
  */
 export function isAppFullscreen() {
     return Boolean(
         document.fullscreenElement ||
         document.webkitFullscreenElement ||
         document.mozFullScreenElement ||
-        document.msFullscreenElement
+        document.msFullscreenElement ||
+        document.documentElement.classList.contains('app-fullscreen-active')
     );
 }
 
 /**
- * 切換真實 OS 全螢幕 (呼叫瀏覽器原生 Fullscreen API)
+ * 切換全螢幕（呼叫瀏覽器原生 Fullscreen API，並具備沉浸全景備援）
  */
 export function toggleAppFullscreen() {
-    try {
-        if (!isAppFullscreen()) {
-            const el = document.documentElement;
-            const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-            if (rfs) {
-                const p = rfs.call(el);
-                if (p && p.catch) {
-                    p.catch(err => {
-                        console.warn('OS Fullscreen toggle error:', err);
-                        showToast('請先與頁面點擊互動後再切換全螢幕，或按鍵盤 F11', 'info');
+    const isCurrentlyFs = isAppFullscreen();
+    const docEl = document.documentElement;
+
+    if (!isCurrentlyFs) {
+        // 進入全螢幕
+        docEl.classList.add('app-fullscreen-active');
+        const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+        if (rfs) {
+            try {
+                const res = rfs.call(docEl);
+                if (res && typeof res.then === 'function') {
+                    res.then(() => {
+                        window.updateAllFullscreenUI?.();
+                    }).catch(err => {
+                        console.warn('Native Fullscreen request rejected, using CSS Zen Fullscreen fallback:', err);
+                        window.updateAllFullscreenUI?.();
                     });
                 }
-            }
-        } else {
-            const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-            if (efs) {
-                efs.call(document).catch(() => {});
+            } catch (err) {
+                console.warn('Native Fullscreen throw, using CSS Zen Fullscreen fallback:', err);
             }
         }
-    } catch (e) {
-        console.error('Fullscreen API failed:', e);
+    } else {
+        // 退出全螢幕
+        docEl.classList.remove('app-fullscreen-active');
+        const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        const hasNativeFs = Boolean(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+        if (efs && hasNativeFs) {
+            try {
+                const res = efs.call(document);
+                if (res && typeof res.catch === 'function') {
+                    res.catch(() => {});
+                }
+            } catch (err) {}
+        }
     }
+
+    setTimeout(() => {
+        window.updateAllFullscreenUI?.();
+    }, 120);
 }
+
+// 註冊全域 F11 鍵盤快捷鍵（捕獲階段確保優先攔截並觸發全螢幕切換）
+if (typeof window !== 'undefined' && !window.__f11ListenerAttached) {
+    window.__f11ListenerAttached = true;
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'F11' || e.keyCode === 122) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleAppFullscreen();
+        }
+    }, true);
+}
+
 window.toggleAppFullscreen = toggleAppFullscreen;
 window.isAppFullscreen = isAppFullscreen;
 

@@ -283,11 +283,14 @@ async function init() {
 
     initPortalScrollIndicator();
 
-    // 首頁四大核心功能按鈕直連全畫面
+    // 首頁核心功能按鈕直連全畫面
     document.getElementById('open-attendance-hub-btn')?.addEventListener('click', () => showAttendancePage());
     document.getElementById('open-draw-points-modal-btn')?.addEventListener('click', () => showDrawPointsPage());
     document.getElementById('open-classroom-studio-btn')?.addEventListener('click', () => showClassroomStudioPage());
     document.getElementById('open-exam-timer-btn')?.addEventListener('click', () => showExamTimerPage());
+    document.getElementById('open-contact-book-quick-btn')?.addEventListener('click', () => showContactBookPage());
+    document.getElementById('open-student-stats-quick-btn')?.addEventListener('click', () => showStudentDetailsPage());
+    document.getElementById('main-hero-changelog-btn')?.addEventListener('click', () => openModal(document.getElementById('changelog-modal')));
 
     // 手機版快捷抽屜直連全畫面
     document.getElementById('mobile-sheet-attendance-btn')?.addEventListener('click', () => {
@@ -311,45 +314,30 @@ async function init() {
         startRealtimeCloudSync();
     }
 
-    // 6. 頁面導航初始化
-    const hasPassedPortalInSession = sessionStorage.getItem('has_passed_portal_in_session') === 'true';
-    if (!hasPassedPortalInSession) {
-        showPortalPage(true);
-        return;
-    }
-
-    const explicitAppSubPages = [
-        '#main', '#detail', '#student-details', '#contact-book', '#homework-types',
-        '#attendance', '#draw-points', '#classroom-studio', '#exam-timer'
-    ];
-    if (!window.location.hash || window.location.hash === '#portal' || !explicitAppSubPages.includes(window.location.hash)) {
-        showPortalPage(true);
-        return;
-    }
-    
-    if (window.location.hash === '#main') {
+    // 6. 頁面導航初始化：沉浸式純全景工作台切換模式（進站直接進入沉浸式功能工作台）
+    sessionStorage.setItem('has_passed_portal_in_session', 'true');
+    const hash = window.location.hash;
+    if (hash === '#attendance') {
+        showAttendancePage(true);
+    } else if (hash === '#draw-points') {
+        showDrawPointsPage(true);
+    } else if (hash === '#classroom-studio') {
+        showClassroomStudioPage(true);
+    } else if (hash === '#exam-timer') {
+        showExamTimerPage(true);
+    } else if (hash === '#contact-book') {
+        showContactBookPage(true);
+    } else if (hash === '#student-details') {
+        showStudentDetailsPage(true);
+    } else if (hash === '#homework-types') {
+        showHomeworkTypesPage(true);
+    } else {
         applyCheckMode(localStorage.getItem('checkMode') || 'manual');
         pushPageState({ page: 'main' }, '#main'); 
         showMainPage(true);
-        if (state.appData.classes.length === 0) openModal(document.getElementById('manage-classes-modal'));
-        return;
-    }
-
-    if (window.location.hash === '#attendance') {
-        showAttendancePage(true);
-        return;
-    }
-    if (window.location.hash === '#draw-points') {
-        showDrawPointsPage(true);
-        return;
-    }
-    if (window.location.hash === '#classroom-studio') {
-        showClassroomStudioPage(true);
-        return;
-    }
-    if (window.location.hash === '#exam-timer') {
-        showExamTimerPage(true);
-        return;
+        if (state.appData.classes.length === 0) {
+            openModal(document.getElementById('manage-classes-modal'));
+        }
     }
 }
 

@@ -7,6 +7,8 @@ import { globalAppId } from './constants.js';
 import { showToast, showConfirmModal, openModal, closeModal, safeCopyToClipboard } from './utils.js';
 import { fbDb, doc, getDoc, setDoc, collection, query, where, onSnapshot, syncClassExamsToCloud, syncDataToCloud } from './firebase.js';
 import { saveData } from './storage.js';
+import { parseSmartRosterText } from './modules/classWizard.js';
+import { renderClassList, renderHomeworkList } from './render.js';
 
 // ==========================================
 // 【模組功能開關】成績系統是否啟用 (已全面啟用)
@@ -1519,23 +1521,172 @@ export function setupExamScoresEvents() {
     executeExportScores();
   });
 
-  // 初次/快速修改班級最後座號確認按鈕
-  document.getElementById('btn-save-initial-max-seat')?.addEventListener('click', async () => {
-    const curClass = getCurrentClass();
-    if (!curClass) return;
-    const input = document.getElementById('initial-max-seat-input');
+  // ==========================================
+  // 雙模式班級名單設定彈窗邏輯 (Dual-Mode Roster Setup)
+  // ==========================================
+  let currentRosterMode = 'seat'; // 'seat' | 'name'
+
+  const updateRosterSeatPreview = () => {
+    const maxInput = document.getElementById('initial-max-seat-input');
     const skippedInput = document.getElementById('initial-skipped-seats-input');
-    const val = parseInt(input?.value, 10);
-    if (!val || val < 1 || val > 100) {
-      showToast('請輸入 1 至 100 之間的有效座號！', 'warning');
+    const statsEl = document.getElementById('roster-seat-preview-stats');
+    const chipsEl = document.getElementById('roster-seat-preview-chips');
+    if (!maxInput || !chipsEl) return;
+
+    const maxVal = Math.max(1, Math.min(100, parseInt(maxInput.value, 10) || 30));
+    const skippedSet = new Set(parseSeatsInput(skippedInput ? skippedInput.value : '', maxVal));
+    const validSeats = [];
+    const skippedList = [];
+
+    for (let i = 1; i <= maxVal; i++) {
+      if (skippedSet.has(i)) {
+        skippedList.push(i);
+      } else {
+        validSeats.push(i);
+      }
+    }
+
+    if (statsEl) {
+      statsEl.textContent = `有效人數：${validSeats.length} 人（1~${maxVal} 號${skippedList.length > 0 ? `，排除缺號：${skippedList.join(', ')} 號` : '，無缺號'}）`;
+    }
+
+    chipsEl.innerHTML = '';
+    for (let i = 1; i <= maxVal; i++) {
+      const chip = document.createElement('span');
+      if (skippedSet.has(i)) {
+        chip.className = 'px-2 py-0.5 rounded-lg bg-rose-50 text-rose-500 line-through text-xs font-bold border border-rose-200/70 select-none';
+        chip.title = `${i} 號（缺號跳號）`;
+        chip.textContent = `${i} ✕`;
+      } else {
+        chip.className = 'px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200/70 select-none';
+        chip.textContent = `${i} 號`;
+      }
+      chipsEl.appendChild(chip);
+    }
+  };
+
+  const updateRosterNamePreview = () => {
+    const textarea = document.getElementById('roster-names-textarea');
+    const previewBox = document.getElementById('roster-names-preview-box');
+    if (!textarea || !previewBox) return;
+
+    const raw = textarea.value.trim();
+    if (!raw) {
+      previewBox.innerHTML = '<span class="text-slate-400 text-xs">貼上姓名後將即時預覽解析出的座號與姓名...</span>';
       return;
     }
-    const skippedVal = skippedInput ? skippedInput.value.trim() : '';
-    await updateClassMaxSeat(curClass.id, val, skippedVal);
-    const countInput = document.getElementById('student-count');
-    if (countInput) countInput.value = val;
-    closeModal(document.getElementById('initial-max-seat-modal'));
-    showToast(`已成功設定班級最後座號為 ${val} 號與缺號設定，並同步套用至全班作業！`, 'success');
+
+    const parsed = parseSmartRosterText(raw);
+    const badges = Object.entries(parsed.studentNames)
+      .slice(0, 30)
+      .map(([seat, name]) => `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-xs font-bold"><strong class="font-mono text-indigo-900">${seat}號</strong> ${name}</span>`)
+      .join('');
+    const moreCount = Math.max(0, parsed.count - 30);
+    const skippedText = parsed.skippedSeats.length > 0 ? `（自動標記缺號：${parsed.skippedSeats.join(', ')} 號）` : '（無跳號）';
+
+    previewBox.innerHTML = `
+      <div class="flex items-center justify-between text-xs font-black text-emerald-700 mb-2">
+        <span><i class="fa-solid fa-circle-check mr-1"></i>已辨識 ${parsed.count} 位學生・座號上限 ${parsed.maxSeat} 號 ${skippedText}</span>
+      </div>
+      <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-1">
+        ${badges}
+        ${moreCount > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold">+ 其餘 ${moreCount} 位</span>` : ''}
+      </div>
+    `;
+  };
+
+  const switchRosterMode = (mode) => {
+    currentRosterMode = mode;
+    const tabSeat = document.getElementById('roster-mode-tab-seat');
+    const tabName = document.getElementById('roster-mode-tab-name');
+    const containerSeat = document.getElementById('roster-seat-mode-container');
+    const containerName = document.getElementById('roster-name-mode-container');
+
+    if (mode === 'seat') {
+      if (tabSeat) tabSeat.className = 'flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all bg-white text-indigo-700 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabName) tabName.className = 'flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer';
+      if (containerSeat) containerSeat.classList.remove('hidden');
+      if (containerName) containerName.classList.add('hidden');
+      updateRosterSeatPreview();
+    } else {
+      if (tabName) tabName.className = 'flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all bg-white text-indigo-700 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabSeat) tabSeat.className = 'flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer';
+      if (containerSeat) containerSeat.classList.add('hidden');
+      if (containerName) containerName.classList.remove('hidden');
+      updateRosterNamePreview();
+    }
+  };
+
+  // 模式 Tab 切換監聽
+  document.getElementById('roster-mode-tab-seat')?.addEventListener('click', () => switchRosterMode('seat'));
+  document.getElementById('roster-mode-tab-name')?.addEventListener('click', () => switchRosterMode('name'));
+
+  // 座號模式雙輸入框即時預覽監聽
+  document.getElementById('initial-max-seat-input')?.addEventListener('input', updateRosterSeatPreview);
+  document.getElementById('initial-skipped-seats-input')?.addEventListener('input', updateRosterSeatPreview);
+
+  // 名字模式輸入即時預覽監聽
+  document.getElementById('roster-names-textarea')?.addEventListener('input', updateRosterNamePreview);
+
+  // 帶入範例名單按鈕
+  document.getElementById('roster-names-sample-btn')?.addEventListener('click', () => {
+    const textarea = document.getElementById('roster-names-textarea');
+    if (textarea) {
+      textarea.value = [
+        '1 王品妍', '2 林宥廷', '3 張語恩', '4 陳柏翰', '5 劉子睿',
+        '6 黃品潔', '7 吳承恩', '8 蔡依庭', '9 許哲瑋', '10 鄭宇軒',
+        '11 謝采潔', '12 郭宥均', '13 洪子晴', '14 邱翊誠', '15 曾品希'
+      ].join('\n');
+      updateRosterNamePreview();
+      showToast('已帶入範例學生名單，可隨時修改或點擊確認儲存！', 'info');
+    }
+  });
+
+  // 初次/快速修改班級名單確認按鈕
+  document.getElementById('btn-save-initial-max-seat')?.addEventListener('click', async () => {
+    const modal = document.getElementById('initial-max-seat-modal');
+    const targetClassId = modal?.dataset.targetClassId || state.currentClassId;
+    const targetClass = (state.appData?.classes || []).find(c => c.id === targetClassId) || getCurrentClass();
+    if (!targetClass) {
+      showToast('找不到目標班級資料！', 'error');
+      return;
+    }
+
+    if (currentRosterMode === 'seat') {
+      const input = document.getElementById('initial-max-seat-input');
+      const skippedInput = document.getElementById('initial-skipped-seats-input');
+      const val = parseInt(input?.value, 10);
+      if (!val || val < 1 || val > 100) {
+        showToast('請輸入 1 至 100 之間的有效最後座號！', 'warning');
+        return;
+      }
+      const skippedVal = skippedInput ? skippedInput.value.trim() : '';
+      await updateClassMaxSeat(targetClass.id, val, skippedVal);
+      saveData();
+      renderClassList();
+      renderHomeworkList();
+      closeModal(modal);
+      showToast(`已成功設定【${targetClass.name}】座號上限為 ${val} 號與缺號設定！`, 'success');
+    } else {
+      const textarea = document.getElementById('roster-names-textarea');
+      const raw = textarea ? textarea.value.trim() : '';
+      if (!raw) {
+        showToast('請在文字框中貼上學生名冊！', 'warning');
+        return;
+      }
+      const parsed = parseSmartRosterText(raw);
+      if (parsed.count === 0) {
+        showToast('未能辨識出學生名單，請確認格式（例如：1 王小明 或 一行一個姓名）！', 'warning');
+        return;
+      }
+      targetClass.studentNames = parsed.studentNames;
+      await updateClassMaxSeat(targetClass.id, parsed.maxSeat, parsed.skippedSeats);
+      saveData();
+      renderClassList();
+      renderHomeworkList();
+      closeModal(modal);
+      showToast(`已成功儲存【${targetClass.name}】學生名單（共 ${parsed.count} 位學生）！`, 'success');
+    }
   });
 
   // 關閉最後座號設定彈窗
@@ -1543,29 +1694,53 @@ export function setupExamScoresEvents() {
     closeModal(document.getElementById('initial-max-seat-modal'));
   });
 
-  // 新增作業彈窗中最後座號後方的 [修改] 紫色小字按鈕（使用站內自訂 Modal）
-  document.getElementById('btn-quick-edit-max-seat')?.addEventListener('click', () => {
-    const curClass = getCurrentClass();
-    if (!curClass) return;
-    const currentMax = curClass.lastMaxSeat || 30;
+  // 開啟完整名單設定彈窗函式
+  window.openClassRosterModal = (classId = null) => {
+    const targetClass = classId ? (state.appData?.classes || []).find(c => c.id === classId) : getCurrentClass();
+    if (!targetClass) {
+      showToast('請先建立或選擇班級！', 'warning');
+      return;
+    }
+
     const modal = document.getElementById('initial-max-seat-modal');
     if (!modal) return;
+    modal.dataset.targetClassId = targetClass.id;
 
     const titleEl = document.getElementById('max-seat-modal-title');
-    const descEl = document.getElementById('max-seat-modal-desc');
+    const badgeEl = document.getElementById('max-seat-modal-class-badge');
     const inputEl = document.getElementById('initial-max-seat-input');
     const skippedInputEl = document.getElementById('initial-skipped-seats-input');
-    const closeBtn = document.getElementById('btn-close-initial-max-seat');
+    const textareaEl = document.getElementById('roster-names-textarea');
 
-    if (titleEl) titleEl.textContent = `修改【${curClass.name}】最後座號與缺號`;
-    if (descEl) descEl.textContent = '請輸入最新的最後座號與缺號座號。修改後，全班現有作業與預設座號將同步套用！';
-    if (inputEl) inputEl.value = currentMax;
+    if (titleEl) titleEl.textContent = `班級名單設定`;
+    if (badgeEl) badgeEl.textContent = `目前班級：${targetClass.name}`;
+    if (inputEl) inputEl.value = targetClass.lastMaxSeat || 30;
     if (skippedInputEl) {
-      skippedInputEl.value = Array.isArray(curClass.skippedSeats) ? curClass.skippedSeats.join(', ') : (curClass.lastMissingSeats || '');
+      skippedInputEl.value = Array.isArray(targetClass.skippedSeats) ? targetClass.skippedSeats.join(', ') : (targetClass.lastMissingSeats || '');
     }
-    if (closeBtn) closeBtn.classList.remove('hidden');
+
+    if (targetClass.studentNames && Object.keys(targetClass.studentNames).length > 0) {
+      if (textareaEl) {
+        textareaEl.value = Object.keys(targetClass.studentNames)
+          .sort((a, b) => Number(a) - Number(b))
+          .map(seat => `${seat} ${targetClass.studentNames[seat]}`)
+          .join('\n');
+      }
+      switchRosterMode('name');
+    } else {
+      if (textareaEl) textareaEl.value = '';
+      switchRosterMode('seat');
+    }
 
     openModal(modal);
+  };
+
+  // 新增作業彈窗中最後座號後方的 [修改] 紫色小字按鈕
+  document.getElementById('btn-quick-edit-max-seat')?.addEventListener('click', () => {
+    const curClass = getCurrentClass();
+    if (curClass && window.openClassRosterModal) {
+      window.openClassRosterModal(curClass.id);
+    }
   });
 }
 

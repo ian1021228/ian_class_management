@@ -2590,6 +2590,16 @@ export function setupButtonEvents() {
                 return;
             }
 
+            // 班級名單設定按鈕（座號模式 / 名字模式雙預覽）
+            const rosterBtn = e.target.closest('.open-class-roster-btn');
+            if (rosterBtn) {
+                e.stopPropagation();
+                if (window.openClassRosterModal) {
+                    window.openClassRosterModal(rosterBtn.dataset.classId);
+                }
+                return;
+            }
+
             // 班級改名按鈕或點擊班級名稱觸發 inline 編輯
             const renameBtn = e.target.closest('.rename-class-btn');
             const nameLabel = e.target.closest('.class-name-text');
