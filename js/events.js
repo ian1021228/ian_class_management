@@ -2,7 +2,7 @@
  * 班級經營系統 3.0 - DOM 事件監聽與交互管理
  */
 
-import { state } from './state.js?v=5.4.0';
+import { state } from './state.js?v=5.4.1';
 
 import {
     DEFAULT_TYPES,
@@ -10,7 +10,7 @@ import {
     globalAppId,
     PARENT_DASHBOARD_URL,
     STUDENT_DASHBOARD_URL
-} from './constants.js?v=5.4.0';
+} from './constants.js?v=5.4.1';
 
 import {
     generateId,
@@ -31,7 +31,7 @@ import {
     bindClick,
     bindSubmit,
     bindChange
-} from './utils.js?v=5.4.0';
+} from './utils.js?v=5.4.1';
 
 import {
     fbAuth,
@@ -60,7 +60,7 @@ import {
     stopRealtimeCloudSync,
     deleteMyAccount,
     syncClassStudentPinsToCloud
-} from './firebase.js?v=5.4.0';
+} from './firebase.js?v=5.4.1';
 
 import {
     saveData,
@@ -72,7 +72,7 @@ import {
     flushPendingSave,
     getUserStorageKey,
     loadLocalDataForUser
-} from './storage.js?v=5.4.0';
+} from './storage.js?v=5.4.1';
 
 import {
     getHomeworkType,
@@ -91,7 +91,7 @@ import {
     updatePortalUI,
     isStudentCompleted,
     renderAllDoneList,
-    } from './render.js?v=5.4.0';
+    } from './render.js?v=5.4.1';
 
 import {
     applyCheckMode,
@@ -112,16 +112,16 @@ import {
     openCopyClassModal,
     showWelcomeStep2,
     fullRender
-} from './navigation.js?v=5.4.0';
+} from './navigation.js?v=5.4.1';
 
 import {
     setupExamScoresEvents,
     updateClassMaxSeat,
     checkInitialMaxSeatSetup
-} from './examScores.js?v=5.4.0';
+} from './examScores.js?v=5.4.1';
 
-import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.4.0';
-import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js?v=5.4.0';
+import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.4.1';
+import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js?v=5.4.1';
 
 export function setupButtonEvents() {
     setupExamScoresEvents();

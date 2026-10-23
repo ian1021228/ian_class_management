@@ -3,7 +3,7 @@ import { globalAppId } from './constants.js';
 import { state } from './state.js';
 import { safeClone, safeStringify, sanitizeAppData, fixDates, showToast, showAlertModal, openModal, closeModal } from './utils.js';
 import { updateDataManagementUI, updatePortalUI } from './render.js';
-import { proceedIntoSystem } from './navigation.js?v=5.4.0';
+import { proceedIntoSystem } from './navigation.js?v=5.4.1';
 import { startRealtimeCloudSync, loadDataFromCloud } from './firebase.js';
 import { getUserStorageKey, loadLocalDataForUser } from './storage.js';
 

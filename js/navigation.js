@@ -1,6 +1,6 @@
-import { state } from './state.js?v=5.4.0';
-import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js?v=5.4.0';
-import { saveData, checkAndCleanupStorage } from './storage.js?v=5.4.0';
+import { state } from './state.js?v=5.4.1';
+import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js?v=5.4.1';
+import { saveData, checkAndCleanupStorage } from './storage.js?v=5.4.1';
 import { 
     renderClassSelector, 
     renderClassList, 
@@ -14,9 +14,9 @@ import {
     updatePortalUI, 
     updateGuestHomeBtnVisibility,
     isStudentCompleted 
-} from './render.js?v=5.4.0';
-import { checkInitialMaxSeatSetup } from './examScores.js?v=5.4.0';
-import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js?v=5.4.0';
+} from './render.js?v=5.4.1';
+import { checkInitialMaxSeatSetup } from './examScores.js?v=5.4.1';
+import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js?v=5.4.1';
 
 export function applyCheckMode(mode) {
     if (!mode || (mode !== 'manual' && mode !== 'scan')) {
@@ -495,8 +495,14 @@ if (typeof window !== 'undefined') {
     window.showAttendancePage = showAttendancePage;
     window.showClassroomStudioPage = showClassroomStudioPage;
     window.showExamTimerPage = showExamTimerPage;
+    window.showHomeworkTypesPage = showHomeworkTypesPage;
+    window.showStudentDetailsPage = showStudentDetailsPage;
+    window.applyCheckMode = applyCheckMode;
     window.proceedIntoSystem = proceedIntoSystem;
     window.openPortalAuthModal = openPortalAuthModal;
+    window.openGlobalNavDrawer = openGlobalNavDrawer;
+    window.closeGlobalNavDrawer = closeGlobalNavDrawer;
+    window.toggleGlobalNavDrawer = toggleGlobalNavDrawer;
 }
 
 export function openGlobalNavDrawer() {

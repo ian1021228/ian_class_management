@@ -461,10 +461,6 @@ function renderSeatingView(currentClass) {
         podiumBottom?.classList.add('flex');
     }
 
-    // 只顯示座號核取方塊
-    const seatOnlyCheckbox = document.getElementById('studio-seat-only-checkbox');
-    if (seatOnlyCheckbox) seatOnlyCheckbox.checked = onlySeatNumber;
-
     // 停用座位核取方塊
     const disableSeatCheckbox = document.getElementById('studio-disable-seat-mode-checkbox');
     if (disableSeatCheckbox) disableSeatCheckbox.checked = disableSeatMode;
@@ -887,12 +883,6 @@ export function initClassroomStudio() {
 
     // 講台位置切換 (講台在上方 ⇄ 講台在下方)
     document.getElementById('studio-podium-toggle-btn')?.addEventListener('click', togglePodiumPosition);
-
-    // 只顯示座號
-    document.getElementById('studio-seat-only-checkbox')?.addEventListener('change', (e) => {
-        onlySeatNumber = e.target.checked;
-        renderClassroomStudio();
-    });
 
     // 停用座位模式
     document.getElementById('studio-disable-seat-mode-checkbox')?.addEventListener('change', (e) => {
