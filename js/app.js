@@ -2,13 +2,13 @@
  * 班級經營系統 3.0 - 核心主程式入口
  */
 
-import { state } from './state.js';
+import { state } from './state.js?v=5.3.2';
 
 import {
     DEFAULT_TYPES,
     STATUS_COLORS,
     globalAppId
-} from './constants.js';
+} from './constants.js?v=5.3.2';
 
 import {
     generateId,
@@ -25,19 +25,19 @@ import {
     safeCopyToClipboard,
     openModal,
     closeModal
-} from './utils.js';
+} from './utils.js?v=5.3.2';
 
 import {
     fbAuth,
     fbDb,
     isGoogleAdmin
-} from './firebase.js';
+} from './firebase.js?v=5.3.2';
 
 import {
     saveData,
     getFileHandle,
     syncFromFileHandle
-} from './storage.js';
+} from './storage.js?v=5.3.2';
 
 import {
     getHomeworkType,
@@ -54,7 +54,7 @@ import {
     updateDataManagementUI,
     updatePortalUI,
     reRenderCurrentPage
-} from './render.js';
+} from './render.js?v=5.3.2';
 
 import {
     applyCheckMode,
@@ -78,11 +78,11 @@ import {
     proceedIntoSystem,
     promptSystemUsageAndNavigate,
     fullRender
-} from './navigation.js';
+} from './navigation.js?v=5.3.2';
 
-import { setupButtonEvents } from './events.js';
-import { ICONS, getSvgIcon } from './icons.js';
-import { startRealtimeCloudSync, stopRealtimeCloudSync } from './firebase.js';
+import { setupButtonEvents } from './events.js?v=5.3.2';
+import { ICONS, getSvgIcon } from './icons.js?v=5.3.2';
+import { startRealtimeCloudSync, stopRealtimeCloudSync } from './firebase.js?v=5.3.2';
 import {
     setupQrLoginEvents,
     checkUrlForQrLogin,
@@ -90,15 +90,15 @@ import {
     stopDeviceQrLoginSession,
     openPhoneQrScannerModal,
     closePhoneQrScannerModal
-} from './qrLogin.js';
+} from './qrLogin.js?v=5.3.2';
 
-import { initClassWizard } from './modules/classWizard.js';
-import { initAttendanceHub } from './modules/attendanceHub.js';
-import { initSmartBoard } from './modules/smartBoard.js';
-import { initArenaDrawAndPoints } from './modules/arenaDrawAndPoints.js';
-import { initClassroomStudio } from './modules/classroomStudio.js';
-import { initExamTimer } from './modules/examTimer.js';
-import { initDynamicIsland, refreshDynamicIsland } from './modules/dynamicIsland.js';
+import { initClassWizard } from './modules/classWizard.js?v=5.3.2';
+import { initAttendanceHub } from './modules/attendanceHub.js?v=5.3.2';
+import { initSmartBoard } from './modules/smartBoard.js?v=5.3.2';
+import { initArenaDrawAndPoints } from './modules/arenaDrawAndPoints.js?v=5.3.2';
+import { initClassroomStudio } from './modules/classroomStudio.js?v=5.3.2';
+import { initExamTimer } from './modules/examTimer.js?v=5.3.2';
+import { initDynamicIsland, refreshDynamicIsland } from './modules/dynamicIsland.js?v=5.3.2';
 
 // 將核心全域輔助函式掛載至 window，確保相容性與無縫呼叫
 window.showToast = showToast;

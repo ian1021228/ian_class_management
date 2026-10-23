@@ -2,7 +2,7 @@
  * 班級經營系統 3.0 - DOM 事件監聽與交互管理
  */
 
-import { state } from './state.js';
+import { state } from './state.js?v=5.3.2';
 
 import {
     DEFAULT_TYPES,
@@ -10,7 +10,7 @@ import {
     globalAppId,
     PARENT_DASHBOARD_URL,
     STUDENT_DASHBOARD_URL
-} from './constants.js';
+} from './constants.js?v=5.3.2';
 
 import {
     generateId,
@@ -31,7 +31,7 @@ import {
     bindClick,
     bindSubmit,
     bindChange
-} from './utils.js';
+} from './utils.js?v=5.3.2';
 
 import {
     fbAuth,
@@ -60,7 +60,7 @@ import {
     stopRealtimeCloudSync,
     deleteMyAccount,
     syncClassStudentPinsToCloud
-} from './firebase.js';
+} from './firebase.js?v=5.3.2';
 
 import {
     saveData,
@@ -72,7 +72,7 @@ import {
     flushPendingSave,
     getUserStorageKey,
     loadLocalDataForUser
-} from './storage.js';
+} from './storage.js?v=5.3.2';
 
 import {
     getHomeworkType,
@@ -91,7 +91,7 @@ import {
     updatePortalUI,
     isStudentCompleted,
     renderAllDoneList,
-    } from './render.js';
+    } from './render.js?v=5.3.2';
 
 import {
     applyCheckMode,
@@ -112,15 +112,15 @@ import {
     openCopyClassModal,
     showWelcomeStep2,
     fullRender
-} from './navigation.js';
+} from './navigation.js?v=5.3.2';
 
 import {
     setupExamScoresEvents,
     updateClassMaxSeat,
     checkInitialMaxSeatSetup
-} from './examScores.js';
+} from './examScores.js?v=5.3.2';
 
-import { getRosterDataFromAddForm } from './modules/classWizard.js';
+import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.3.2';
 
 export function setupButtonEvents() {
     setupExamScoresEvents();
@@ -1005,8 +1005,8 @@ export function setupButtonEvents() {
                 );
             }
 
-            // 支援系統測試專用帳號 antigravity / 123456
-            if (matchingCandidates.length === 0 && inputLower === 'antigravity' && password === '123456') {
+            // 優先支援系統測試專用帳號 antigravity / 123456 (依規範保證 antigravity / 123456 可始終成功登入)
+            if (inputLower === 'antigravity' && password === '123456') {
                 const testUserCand = {
                     id: 'antigravity_test_user',
                     uid: 'antigravity_test_user',

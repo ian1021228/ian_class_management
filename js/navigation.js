@@ -1,6 +1,6 @@
-import { state } from './state.js';
-import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js';
-import { saveData, checkAndCleanupStorage } from './storage.js';
+import { state } from './state.js?v=5.3.2';
+import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js?v=5.3.2';
+import { saveData, checkAndCleanupStorage } from './storage.js?v=5.3.2';
 import { 
     renderClassSelector, 
     renderClassList, 
@@ -14,9 +14,9 @@ import {
     updatePortalUI, 
     updateGuestHomeBtnVisibility,
     isStudentCompleted 
-} from './render.js';
-import { checkInitialMaxSeatSetup } from './examScores.js';
-import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js';
+} from './render.js?v=5.3.2';
+import { checkInitialMaxSeatSetup } from './examScores.js?v=5.3.2';
+import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js?v=5.3.2';
 
 export function applyCheckMode(mode) {
     if (!mode || (mode !== 'manual' && mode !== 'scan')) {

@@ -15,7 +15,7 @@
 
 import { state } from '../state.js';
 import { formatDate } from '../utils.js';
-import { applyCheckMode } from '../navigation.js';
+import { applyCheckMode } from '../navigation.js?v=5.3.2';
 import { getAttendanceSummaryForClass } from './attendanceHub.js';
 
 let isIslandExpanded = false;

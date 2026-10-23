@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ian-class-mgmt-v5.3.1';
+const CACHE_NAME = 'ian-class-mgmt-v5.3.2';
 const urlsToCache = [
   './index.html',
   './parent.html',
@@ -61,9 +61,18 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return Promise.allSettled(
-        urlsToCache.map(url => cache.add(url).catch(e => console.warn('快取失敗:', url, e)))
+    caches.open(CACHE_NAME).then(async cache => {
+      await Promise.allSettled(
+        urlsToCache.map(async url => {
+          try {
+            const res = await fetch(url, { cache: 'reload' });
+            if (res && res.status === 200) {
+              await cache.put(url, res);
+            }
+          } catch (e) {
+            console.warn('快取失敗:', url, e);
+          }
+        })
       );
     })
   );
@@ -90,9 +99,9 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  // 網路優先策略 (Network First, Cache Fallback)，確保最新代碼即時生效
+  // 網路優先策略 (Network First, Cache Fallback)，使用 { cache: 'no-cache' } 始終向伺服器驗證最新代碼
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-cache' })
       .then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const resClone = networkResponse.clone();

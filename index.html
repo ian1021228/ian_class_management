@@ -30,16 +30,37 @@
     <link rel="stylesheet" href="css/aurora-theme.css">
 
     <script>
+        // 自愈防護：若瀏覽器因舊快取衝突導致模組 SyntaxError，自動徹底清除 ServiceWorker 與 CacheStorage 並重新整理
+        window.addEventListener('error', function(e) {
+            if (e && e.message && (e.message.includes('does not provide an export named') || e.message.includes('Failed to fetch dynamically imported module'))) {
+                console.warn('檢測到瀏覽器模組快取衝突，自動執行深度重置並重載最新版本...', e.message);
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(regs => {
+                        for (let reg of regs) reg.unregister();
+                    });
+                }
+                if ('caches' in window) {
+                    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    window.location.reload();
+                }
+            }
+        });
+
         if ('serviceWorker' in navigator) {
             let refreshing = false;
+            let hadController = Boolean(navigator.serviceWorker.controller);
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
+                if (hadController && !refreshing) {
                     refreshing = true;
-                    console.log('偵測到核心更新，已自動更新至最新版本');
+                    console.log('偵測到核心更新，已自動刷新載入最新版本');
+                    window.location.reload();
                 }
             });
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js?v=5.3.2')
                     .then(reg => {
                         reg.update();
                         console.log('系統離線防護已啟動:', reg.scope);
@@ -4667,11 +4688,36 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
-                    <!-- v5.3.1 課堂全景總覽與抽籤加扣分獨立升級版 (Classroom Overview & Fair Lottery Dedicated Edition) -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-amber-50/50 border-2 border-indigo-600 shadow-lg relative">
+                    <!-- v5.3.2 快取自動修復與模組同步升級版 (Cache Auto-Purge & Module Sync Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/95 via-teal-50/70 to-amber-50/50 border-2 border-emerald-600 shadow-lg relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.3.1 課堂全景總覽與抽籤加扣分獨立版</span>
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.3.2 快取自動修復與版本同步版</span>
+                                <span class="text-xs font-bold text-emerald-950">深層模組快取穿透・ServiceWorker 自動換版刷新・用戶端語法衝突自愈防護</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-emerald-800">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>模組深層版本穿透（Cache Busting）</b>：全站 JavaScript ES 模組內部靜態 import 全面附加版本雜湊參數（?v=5.3.2），強制瀏覽器與快取層即時同步最新 navigation.js 匯出定義，徹底解決舊版快取衝突問題。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>ServiceWorker 自動激活與即時刷新</b>：升級快取體系至 ian-class-mgmt-v5.3.2，安裝時以 reload 模式強制自伺服器抓取最新資源；監聽 controllerchange 於新核心就緒時自動重載頁面，徹底免除手動清除快取困擾。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>全域模組語法衝突自愈機制</b>：新增 window 全域錯誤攔截器，若偵測到瀏覽器拋出舊模組未匯出函式之 SyntaxError，自動深度清除本機快取與註銷舊 Worker，即刻重載復原。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.3.1 課堂全景總覽與抽籤加扣分獨立升級版 (Classroom Overview & Fair Lottery Dedicated Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-amber-50/50 border border-indigo-300 shadow-sm relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">v5.3.1 課堂全景總覽與抽籤加扣分獨立版</span>
                                 <span class="text-xs font-bold text-indigo-950">課堂總覽獨立置頂・作業點收頁面還原・課堂抽籤點擊籤筒直接抽籤・抽籤與加扣分獨立雙頁面・全站 FontAwesome SVG 圖標</span>
                             </div>
                             <span class="text-xs font-mono font-bold text-indigo-800">2026-10-23</span>
@@ -5890,7 +5936,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.3.1"></script>
+<script type="module" src="js/app.js?v=5.3.2"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->
