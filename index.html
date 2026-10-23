@@ -737,7 +737,7 @@
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>全站品牌全面更名 PalClass</b>：全方位統一系統品牌與三端視覺，置入 3D 暖心協作與榮譽獎盃插畫，質感大幅躍升。</span></li>
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>作業方格狀態切換與種類管理加固</b>：精確綁定狀態文字，徹底根治文字被覆蓋與狀態變更失效問題，新增自訂種類與工作台入口 100% 正常常駐。</span></li>
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>學生詳情無跳號全名單與全勤徽章</b>：個人詳情完整呈現全班學生（杜絕 7 號等全勤學生跳號遺失），展示「全部繳齊 · 全勤」榮譽徽章與名單篩選。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂工坊座位表與考試計時進化</b>：座位點選顯示紅色「移至待安排」按鈕，手動分組彈窗隨選即調，考試計時防呆連動與空檔/考畢大看板。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂工坊座位表與小組組數自訂</b>：手動設定組員彈窗全面支援自訂組數（2 ~ 16 組快速切換、Stepper 增減、一鍵新增小組、自訂組名與防呆刪除）；座位點選支援紅色「移至待安排」按鈕，考試計時防呆連動與空檔/考畢大看板。</span></li>
                             </ul>
                         </div>
 
@@ -4772,7 +4772,11 @@
                             </li>
                             <li class="flex items-start gap-2">
                                 <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
-                                <span><b>課堂工坊座位表與分組靈活配置</b>：選中座位中央顯示醒目紅色「移至待安排」按鈕，一鍵移回待安排名單；提供「手動設定小組成員」專屬彈窗，支援學生搜尋、本組/他組標籤與組員即時配置。</span>
+                                <span><b>課堂工坊手動分組組數自訂與增減改名</b>：手動設定組員彈窗全面支援自訂組數，可透過下拉選單切換 2 ~ 16 組或使用「-」/「+」Stepper 增減、一鍵「新增小組」、自訂修改各組組名，並具備成員保護確認的「刪除本組」功能，組員即時移回未分組，零資料遺失。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>課堂工坊座位表一鍵移至待安排</b>：選中座位中央顯示醒目紅色「移至待安排」按鈕，一鍵移回待安排名單；座位表與分組名單支援雙向同步連動。</span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
@@ -6563,9 +6567,59 @@
                 </button>
             </div>
 
+            <!-- 小組組數設定列 (支援 2 ~ 16 組快速增減、直接切換與自訂) -->
+            <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs shrink-0 font-black shadow-2xs">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </span>
+                    <div>
+                        <span class="block text-xs font-black text-stone-800">小組組數設定</span>
+                        <p class="text-[11px] text-stone-500 font-medium">彈性增減或直接設定小組組數（2 ~ 16 組）</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <!-- 減少一組按鈕 -->
+                    <button type="button" id="studio-group-count-dec-btn" class="w-8 h-8 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-black text-xs shadow-2xs active:scale-95 transition-all cursor-pointer" title="減少一組">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <!-- 組數選擇器 -->
+                    <select id="studio-group-count-select" class="px-2.5 py-1.5 rounded-xl border border-amber-300 bg-white font-black text-xs text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer shadow-2xs">
+                        <option value="2">2 組</option>
+                        <option value="3">3 組</option>
+                        <option value="4">4 組</option>
+                        <option value="5">5 組</option>
+                        <option value="6">6 組</option>
+                        <option value="7">7 組</option>
+                        <option value="8">8 組</option>
+                        <option value="9">9 組</option>
+                        <option value="10">10 組</option>
+                        <option value="11">11 組</option>
+                        <option value="12">12 組</option>
+                        <option value="13">13 組</option>
+                        <option value="14">14 組</option>
+                        <option value="15">15 組</option>
+                        <option value="16">16 組</option>
+                    </select>
+                    <!-- 增加一組按鈕 -->
+                    <button type="button" id="studio-group-count-inc-btn" class="w-8 h-8 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 flex items-center justify-center font-black text-xs shadow-2xs active:scale-95 transition-all cursor-pointer" title="增加一組">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <!-- 快速新增一組按鈕 -->
+                    <button type="button" id="studio-add-one-group-btn" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer ml-1">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>新增小組</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- 目標小組切換 Tabs -->
             <div class="space-y-1.5">
-                <label class="block text-xs font-black text-stone-700">選擇要編輯的小組：</label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-black text-stone-700">選擇要編輯的小組：</label>
+                    <span id="studio-manual-group-total-label" class="text-[11px] font-bold text-stone-500">共 6 組</span>
+                </div>
                 <div id="studio-manual-group-tabs" class="flex flex-wrap gap-2">
                     <!-- 由 JS 動態生成組別按鈕 (例如：第 1 組、第 2 組...) -->
                 </div>
@@ -6574,10 +6628,17 @@
             <!-- 學生名單選擇網格 -->
             <div class="space-y-2">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span class="text-xs font-black text-stone-700 flex items-center gap-1.5">
-                        <i class="fa-solid fa-user-group text-amber-600"></i>
-                        <span id="studio-manual-group-current-label">當前正在編輯：第 1 組</span>
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-stone-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-group text-amber-600"></i>
+                            <span id="studio-manual-group-current-label">當前正在編輯：第 1 組</span>
+                        </span>
+                        <!-- 重新命名組名按鈕 -->
+                        <button type="button" id="studio-manual-group-rename-btn" class="text-[11px] text-amber-800 hover:text-amber-950 font-bold bg-amber-100/70 hover:bg-amber-200/80 px-2 py-0.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer" title="自訂當前小組名稱">
+                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                            <span>改名</span>
+                        </button>
+                    </div>
                     <span id="studio-manual-group-stats" class="text-xs font-bold text-stone-500">本組共 0 人 · 未分組 0 人</span>
                 </div>
 
@@ -6594,10 +6655,16 @@
 
             <!-- 底部動作按鈕 -->
             <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
-                <button type="button" id="studio-manual-group-clear-current-btn" class="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-stone-600 text-xs font-black transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5">
-                    <i class="fa-solid fa-trash-can"></i>
-                    <span>清空本組</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="studio-manual-group-clear-current-btn" class="px-3.5 py-2 rounded-xl border border-stone-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-stone-600 text-xs font-black transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                        <span>清空本組</span>
+                    </button>
+                    <button type="button" id="studio-manual-group-delete-current-btn" class="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-700 text-xs font-black transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5" title="刪除當前小組（成員將變更為未分組）">
+                        <i class="fa-solid fa-trash-arrow-up text-xs"></i>
+                        <span>刪除本組</span>
+                    </button>
+                </div>
                 <div class="flex items-center gap-2">
                     <button type="button" id="studio-manual-group-cancel-btn" class="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-bold transition-colors cursor-pointer active:scale-95">
                         取消

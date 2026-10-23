@@ -912,6 +912,143 @@ export function openManualGroupModal(targetGid = null) {
     renderManualGroupModalContent();
 }
 
+/**
+ * 依目標組數調整小組配置（支援 2 ~ 16 組）
+ */
+export function setManualGroupCount(targetCount) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    let groups = currentClass.groupsConfig.groups;
+    if (!Array.isArray(groups)) groups = [];
+    const count = Math.max(2, Math.min(16, parseInt(targetCount, 10) || 6));
+
+    if (count === groups.length) return;
+
+    if (count > groups.length) {
+        const diff = count - groups.length;
+        for (let i = 0; i < diff; i++) {
+            const nextIdx = groups.length + 1;
+            const newGid = `group_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+            groups.push({
+                id: newGid,
+                name: `第 ${nextIdx} 組`,
+                seats: []
+            });
+        }
+        currentClass.groupsConfig.groups = groups;
+        currentClass.groupsConfig.groupCount = groups.length;
+        renderManualGroupModalContent();
+        showToast(`已將小組組數調整為 ${groups.length} 組`, 'info');
+    } else {
+        const removingGroups = groups.slice(count);
+        const totalMembers = removingGroups.reduce((acc, g) => acc + (g.seats ? g.seats.length : 0), 0);
+        if (totalMembers > 0) {
+            const confirmed = confirm(`縮減為 ${count} 組將會移除後續 ${groups.length - count} 個小組，組內共 ${totalMembers} 名成員將移回「未分組」，是否確定？`);
+            if (!confirmed) {
+                renderManualGroupModalContent();
+                return;
+            }
+        }
+        groups = groups.slice(0, count);
+        currentClass.groupsConfig.groups = groups;
+        currentClass.groupsConfig.groupCount = groups.length;
+
+        if (!groups.some(g => g.id === currentEditingGroupId)) {
+            currentEditingGroupId = groups[0] ? groups[0].id : null;
+        }
+
+        renderManualGroupModalContent();
+        showToast(`已將小組組數縮減為 ${groups.length} 組`, 'info');
+    }
+}
+
+/**
+ * 快速新增一個小組
+ */
+export function addOneManualGroup() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    let groups = currentClass.groupsConfig.groups;
+    if (!Array.isArray(groups)) groups = [];
+
+    if (groups.length >= 16) {
+        showToast('小組組數已達上限（最多 16 組）', 'warning');
+        return;
+    }
+
+    const nextIdx = groups.length + 1;
+    const newGid = `group_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newGroup = {
+        id: newGid,
+        name: `第 ${nextIdx} 組`,
+        seats: []
+    };
+    groups.push(newGroup);
+    currentClass.groupsConfig.groups = groups;
+    currentClass.groupsConfig.groupCount = groups.length;
+    currentEditingGroupId = newGroup.id;
+
+    renderManualGroupModalContent();
+    showToast(`已成功新增【${newGroup.name}】`, 'success');
+}
+
+/**
+ * 刪除目前正在編輯的小組
+ */
+export function deleteCurrentManualGroup() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    let groups = currentClass.groupsConfig.groups;
+    if (!Array.isArray(groups) || groups.length <= 2) {
+        showToast('至少需保留 2 個小組，無法再刪除', 'warning');
+        return;
+    }
+
+    const curIdx = groups.findIndex(g => g.id === currentEditingGroupId);
+    if (curIdx === -1) return;
+    const curGroup = groups[curIdx];
+
+    if (curGroup.seats && curGroup.seats.length > 0) {
+        const confirmed = confirm(`確定要刪除【${curGroup.name}】嗎？組內 ${curGroup.seats.length} 名成員將移回「未分組」。`);
+        if (!confirmed) return;
+    }
+
+    groups.splice(curIdx, 1);
+    currentClass.groupsConfig.groups = groups;
+    currentClass.groupsConfig.groupCount = groups.length;
+
+    const nextGroup = groups[Math.min(curIdx, groups.length - 1)];
+    currentEditingGroupId = nextGroup ? nextGroup.id : null;
+
+    renderManualGroupModalContent();
+    showToast(`已刪除【${curGroup.name}】`, 'info');
+}
+
+/**
+ * 自訂當前小組名稱
+ */
+export function renameCurrentManualGroup() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+
+    const groups = currentClass.groupsConfig?.groups || [];
+    const curGroup = groups.find(g => g.id === currentEditingGroupId);
+    if (!curGroup) return;
+
+    const newName = prompt('請輸入小組新名稱：', curGroup.name);
+    if (newName && newName.trim() && newName.trim() !== curGroup.name) {
+        curGroup.name = newName.trim();
+        renderManualGroupModalContent();
+        showToast(`已將小組名稱更名為【${curGroup.name}】`, 'success');
+    }
+}
+
 function renderManualGroupModalContent() {
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass || !currentClass.groupsConfig) return;
@@ -920,6 +1057,56 @@ function renderManualGroupModalContent() {
     const curGroup = groups.find(g => g.id === currentEditingGroupId) || groups[0];
     if (!curGroup) return;
     currentEditingGroupId = curGroup.id;
+
+    // 0. 同步組數選擇器與狀態
+    const groupCountSelect = document.getElementById('studio-group-count-select');
+    if (groupCountSelect) {
+        const exists = Array.from(groupCountSelect.options).some(opt => opt.value === String(groups.length));
+        if (!exists && groups.length >= 2 && groups.length <= 16) {
+            const opt = document.createElement('option');
+            opt.value = String(groups.length);
+            opt.textContent = `${groups.length} 組`;
+            groupCountSelect.appendChild(opt);
+        }
+        groupCountSelect.value = String(groups.length);
+    }
+
+    const totalLabel = document.getElementById('studio-manual-group-total-label');
+    if (totalLabel) {
+        totalLabel.textContent = `共 ${groups.length} 組`;
+    }
+
+    const decBtn = document.getElementById('studio-group-count-dec-btn');
+    if (decBtn) {
+        const isMin = groups.length <= 2;
+        decBtn.disabled = isMin;
+        decBtn.classList.toggle('opacity-40', isMin);
+        decBtn.classList.toggle('cursor-not-allowed', isMin);
+    }
+
+    const incBtn = document.getElementById('studio-group-count-inc-btn');
+    if (incBtn) {
+        const isMax = groups.length >= 16;
+        incBtn.disabled = isMax;
+        incBtn.classList.toggle('opacity-40', isMax);
+        incBtn.classList.toggle('cursor-not-allowed', isMax);
+    }
+
+    const addOneBtn = document.getElementById('studio-add-one-group-btn');
+    if (addOneBtn) {
+        const isMax = groups.length >= 16;
+        addOneBtn.disabled = isMax;
+        addOneBtn.classList.toggle('opacity-40', isMax);
+        addOneBtn.classList.toggle('cursor-not-allowed', isMax);
+    }
+
+    const delCurrentBtn = document.getElementById('studio-manual-group-delete-current-btn');
+    if (delCurrentBtn) {
+        const isMin = groups.length <= 2;
+        delCurrentBtn.disabled = isMin;
+        delCurrentBtn.classList.toggle('opacity-40', isMin);
+        delCurrentBtn.classList.toggle('cursor-not-allowed', isMin);
+    }
 
     // 1. 渲染小組切換 Tabs
     const tabsContainer = document.getElementById('studio-manual-group-tabs');
@@ -1225,6 +1412,32 @@ export function initClassroomStudio() {
             }
         }
     });
+    document.getElementById('studio-manual-group-delete-current-btn')?.addEventListener('click', () => {
+        deleteCurrentManualGroup();
+    });
+    document.getElementById('studio-manual-group-rename-btn')?.addEventListener('click', () => {
+        renameCurrentManualGroup();
+    });
+    document.getElementById('studio-group-count-select')?.addEventListener('change', (e) => {
+        setManualGroupCount(parseInt(e.target.value, 10));
+    });
+    document.getElementById('studio-group-count-dec-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const curCount = currentClass?.groupsConfig?.groups?.length || 6;
+        if (curCount > 2) {
+            setManualGroupCount(curCount - 1);
+        }
+    });
+    document.getElementById('studio-group-count-inc-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const curCount = currentClass?.groupsConfig?.groups?.length || 6;
+        if (curCount < 16) {
+            setManualGroupCount(curCount + 1);
+        }
+    });
+    document.getElementById('studio-add-one-group-btn')?.addEventListener('click', () => {
+        addOneManualGroup();
+    });
     document.getElementById('studio-manual-group-search')?.addEventListener('input', () => {
         renderManualGroupModalContent();
     });
@@ -1243,3 +1456,7 @@ export function initClassroomStudio() {
 window.renderClassroomStudio = renderClassroomStudio;
 window.resetAllGroupScores = resetAllGroupScores;
 window.openManualGroupModal = openManualGroupModal;
+window.setManualGroupCount = setManualGroupCount;
+window.addOneManualGroup = addOneManualGroup;
+window.deleteCurrentManualGroup = deleteCurrentManualGroup;
+window.renameCurrentManualGroup = renameCurrentManualGroup;
