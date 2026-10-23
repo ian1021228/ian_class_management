@@ -84,6 +84,14 @@ import {
     closePhoneQrScannerModal
 } from './qrLogin.js';
 
+import { initClassWizard } from './modules/classWizard.js';
+import { initAttendanceHub } from './modules/attendanceHub.js';
+import { initSmartBoard } from './modules/smartBoard.js';
+import { initArenaDrawAndPoints } from './modules/arenaDrawAndPoints.js';
+import { initClassroomStudio } from './modules/classroomStudio.js';
+import { initExamTimer } from './modules/examTimer.js';
+import { initDynamicIsland, refreshDynamicIsland } from './modules/dynamicIsland.js';
+
 // 將核心全域輔助函式掛載至 window，確保相容性與無縫呼叫
 window.showToast = showToast;
 window.showAlertModal = showAlertModal;
@@ -102,6 +110,7 @@ window.startDeviceQrLoginSession = startDeviceQrLoginSession;
 window.stopDeviceQrLoginSession = stopDeviceQrLoginSession;
 window.openPhoneQrScannerModal = openPhoneQrScannerModal;
 window.closePhoneQrScannerModal = closePhoneQrScannerModal;
+window.refreshDynamicIsland = refreshDynamicIsland;
 
 // 滾動提示指示器
 let portalScrollDismissed = false;
@@ -222,6 +231,20 @@ async function init() {
     setupButtonEvents(); 
     setupQrLoginEvents();
     checkUrlForQrLogin();
+
+    // 初始化極光校園 7 大核心模組
+    try {
+        initClassWizard();
+        initAttendanceHub();
+        initSmartBoard();
+        initArenaDrawAndPoints();
+        initClassroomStudio();
+        initExamTimer();
+        initDynamicIsland();
+    } catch (err) {
+        console.warn('Aurora modules init error:', err);
+    }
+
     updateDataManagementUI();
     document.getElementById('loading-page')?.classList.add('hidden');
 

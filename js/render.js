@@ -2,6 +2,9 @@ import { state } from './state.js';
 import { DEFAULT_TYPES } from './constants.js';
 import { formatDate, safeStringify, showToast, showConfirmModal, closeModal } from './utils.js';
 import { fbDb, fbAuth, isGoogleAdmin, isGoogleAuthUser } from './firebase.js';
+import { renderEnhancedBlackboard } from './modules/smartBoard.js';
+import { getStudentNameOnly } from './modules/classWizard.js';
+import { getStudentAttendanceForDate } from './modules/attendanceHub.js';
 
 export function getHomeworkType(typeId) { 
     return state.appData.homeworkTypes.find(t => t.id === typeId) || state.appData.homeworkTypes.find(t => t.id === 'default') || DEFAULT_TYPES[0]; 
@@ -79,11 +82,14 @@ export function renderClassSelector() {
     const classSelector = document.getElementById('class-selector'); 
     if (!classSelector) return; 
     classSelector.innerHTML = '';
+    const heroPill = document.getElementById('hero-banner-class-pill');
     if (state.appData.classes.length === 0) {
         const option = document.createElement('option'); 
         option.textContent = '請先建立班級'; 
         classSelector.appendChild(option); 
         classSelector.disabled = true;
+        if (heroPill) heroPill.textContent = '尚未建立班級';
+        if (window.refreshDynamicIsland) window.refreshDynamicIsland();
         return;
     }
     classSelector.disabled = false;
@@ -94,6 +100,9 @@ export function renderClassSelector() {
         if (c.id === state.currentClassId) option.selected = true; 
         classSelector.appendChild(option); 
     });
+    const curCls = state.appData.classes.find(c => c.id === state.currentClassId) || state.appData.classes[0];
+    if (heroPill && curCls) heroPill.textContent = curCls.name;
+    if (window.refreshDynamicIsland) window.refreshDynamicIsland();
 }
 
 export function renderClassList() {
@@ -102,7 +111,15 @@ export function renderClassList() {
     classListDiv.innerHTML = '';
     
     if (state.appData.classes.length === 0) {
-        classListDiv.innerHTML = '<div class="text-center py-6 text-slate-400 font-medium text-xs">目前尚未建立任何班級</div>';
+        classListDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-6 px-4 text-center">
+                <div class="w-20 h-20 rounded-2xl overflow-hidden mb-2.5 shadow-sm border border-slate-200 bg-amber-50">
+                    <img src="assets/images/empty_no_classes.jpg" alt="尚無班級" class="w-full h-full object-cover">
+                </div>
+                <span class="text-slate-500 font-black text-xs">目前尚未建立任何班級</span>
+                <span class="text-[11px] text-slate-400 font-medium mt-0.5">請在上發表單輸入班級名稱或貼上名冊開始使用</span>
+            </div>
+        `;
         return;
     }
 
@@ -224,7 +241,15 @@ export function renderHomeworkList() {
 
     homeworkList.innerHTML = '';
     if (filteredHomeworks.length === 0) {
-        homeworkList.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-16 px-4"><div class="w-20 h-20 bg-gradient-to-tr from-indigo-50 to-rose-50 rounded-3xl flex items-center justify-center mb-4 border border-white/60 shadow-lg shadow-indigo-500/10 animate-[bounce_3s_infinite]"><svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div><p class="text-center text-slate-400 font-semibold tracking-wide text-xs">目前的班級沒有點收項目，請點擊右上角「新增作業」按鈕</p></div>`;
+        homeworkList.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-10 px-4 text-center">
+                <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden mb-3.5 shadow-md border-2 border-white/80 bg-amber-50">
+                    <img src="assets/images/empty_homework_done.jpg" alt="目前沒有點收項目" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-base font-black text-slate-800">目前沒有需要點收的作業</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 max-w-sm">今日作業全數完成或尚未新增，點擊右上角「新增作業」即可開始點收</p>
+            </div>
+        `;
     } else {
         filteredHomeworks.forEach(hw => {
             const typeId = hw.typeId || 'default'; 
@@ -344,6 +369,7 @@ export function renderStudentGrid(homeworkId) {
         else if (typeConfig.statuses.length > 1) scanSelect.value = typeConfig.statuses[1].key;
     }
 
+    const curCls = state.appData.classes.find(c => c.id === state.currentClassId);
     (hw.students || []).forEach(student => {
         let statusInfo = typeConfig.statuses.find(s => s.key === student.status);
         if (!statusInfo) { 
@@ -353,13 +379,25 @@ export function renderStudentGrid(homeworkId) {
         const studentBtn = document.createElement('button');
         const ringColor = (statusInfo.color || '').replace('bg-', 'ring-').replace('-500', '-200').replace('-400', '-200');
         studentBtn.id = `btn-seat-${student.seat}`;
-        studentBtn.className = `disable-on-admin-view student-btn rounded-2xl shadow-sm text-center transition-all duration-300 transform hover:scale-[1.05] active:scale-90 ${statusInfo.color} ${statusInfo.textColor} flex flex-col items-center justify-center border-2 border-transparent aspect-square overflow-hidden cursor-pointer w-full h-full ring-4 ring-offset-1 ring-transparent hover:${ringColor} focus:outline-none focus:${ringColor}`;
+        studentBtn.className = `disable-on-admin-view student-btn relative rounded-2xl shadow-sm text-center transition-all duration-300 transform hover:scale-[1.05] active:scale-90 ${statusInfo.color} ${statusInfo.textColor} flex flex-col items-center justify-center border-2 border-transparent aspect-square overflow-hidden cursor-pointer w-full h-full ring-4 ring-offset-1 ring-transparent hover:${ringColor} focus:outline-none focus:${ringColor}`;
         studentBtn.dataset.seat = student.seat;
         const fontSizeNum = Math.max(12, bestBoxSize * 0.35); 
         const fontSizeText = Math.max(9, bestBoxSize * 0.15); 
+        const sName = getStudentNameOnly(curCls, student.seat);
+        const attRec = getStudentAttendanceForDate(state.currentClassId, student.seat);
+        let attBadgeHtml = '';
+        if (attRec?.status === 'leave') {
+            attBadgeHtml = `<span class="absolute top-1 right-1 text-[8px] bg-sky-500 text-white font-black px-1 rounded shadow-xs leading-tight">請假</span>`;
+        } else if (attRec?.status === 'absent') {
+            attBadgeHtml = `<span class="absolute top-1 right-1 text-[8px] bg-rose-500 text-white font-black px-1 rounded shadow-xs leading-tight">缺席</span>`;
+        } else if (attRec?.status === 'late') {
+            attBadgeHtml = `<span class="absolute top-1 right-1 text-[8px] bg-amber-500 text-white font-black px-1 rounded shadow-xs leading-tight">遲到</span>`;
+        }
+
         studentBtn.innerHTML = `
+            ${attBadgeHtml}
             <span class="font-black leading-none tracking-tighter select-none" style="font-size: ${fontSizeNum}px; pointer-events: none;">${student.seat}</span>
-            <span class="font-bold leading-tight mt-1 opacity-90 truncate w-full px-1 select-none" style="font-size: ${fontSizeText}px; pointer-events: none;">${statusInfo.text}</span>
+            <span class="font-bold leading-tight mt-1 opacity-90 truncate w-full px-1 select-none" style="font-size: ${fontSizeText}px; pointer-events: none;">${sName ? `${sName} · ${statusInfo.text}` : statusInfo.text}</span>
         `;
         studentGrid.appendChild(studentBtn);
     });
@@ -483,43 +521,7 @@ export function renderHomeworkTypesPage() {
 }
 
 export function renderContactBookItems() {
-    const blackboard = document.getElementById('blackboard-content'); 
-    if (!blackboard) return;
-    blackboard.innerHTML = ''; 
-    blackboard.style.fontSize = `${state.blackboardFontSize}rem`; 
-    blackboard.style.lineHeight = `${state.blackboardLineHeight}`;
-    
-    if (!state.currentClassId) return;
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-    const dateDisplay = document.getElementById('contact-book-date'); 
-    if (dateDisplay) dateDisplay.textContent = formatDate(state.selectedDate);
-    const dateString = formatDate(state.selectedDate, 'YYYY-MM-DD'); 
-    const items = currentClass?.contactBook?.[dateString] || [];
-
-    if (items.length === 0) { 
-        blackboard.innerHTML = `<p class="text-white/20 italic text-center mt-10 text-sm select-none" style="font-family: sans-serif;">今日無記事。在下方輸入...</p>`; 
-        return; 
-    }
-
-    items.forEach((item, index) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'flex items-start justify-between group p-3 rounded-2xl hover:bg-white/5 transition-all border border-transparent hover:border-white/10';
-        
-        const isFirst = index === 0;
-        const isLast = index === items.length - 1;
-
-        itemEl.innerHTML = `
-            <div class="flex-grow pt-0.5"><span class="mr-2 font-bold opacity-60">${index + 1}.</span><span class="whitespace-pre-wrap">${item}</span></div>
-            <div class="flex gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all ml-3 flex-shrink-0 bg-slate-900/60 backdrop-blur-md rounded-xl p-1 border border-white/10 shadow-xl">
-                <button class="move-up-contact-btn hide-on-admin-view w-7 h-7 flex items-center justify-center rounded-lg ${isFirst ? 'bg-white/5 text-white/20 cursor-not-allowed opacity-30' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white cursor-pointer active:scale-90'} transition-all font-bold text-xs" data-index="${index}" ${isFirst ? 'disabled' : ''} title="向上移動"><i class="fa-solid fa-arrow-up text-xs"></i></button>
-                <button class="move-down-contact-btn hide-on-admin-view w-7 h-7 flex items-center justify-center rounded-lg ${isLast ? 'bg-white/5 text-white/20 cursor-not-allowed opacity-30' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500 hover:text-white cursor-pointer active:scale-90'} transition-all font-bold text-xs" data-index="${index}" ${isLast ? 'disabled' : ''} title="向下移動"><i class="fa-solid fa-arrow-down text-xs"></i></button>
-                <button class="to-hw-btn hide-on-admin-view w-7 h-7 flex items-center justify-center rounded-lg bg-teal-500/20 text-teal-300 hover:bg-teal-500 hover:text-white transition-all font-bold text-sm cursor-pointer" data-index="${index}" title="轉為作業"><i class="fa-solid fa-book text-xs"></i></button>
-                <button class="edit-contact-btn hide-on-admin-view w-7 h-7 flex items-center justify-center rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white transition-all font-bold text-sm cursor-pointer" data-index="${index}" title="編輯內文"><i class="fa-solid fa-pen text-xs"></i></button>
-                <button class="delete-contact-item-btn w-7 h-7 flex items-center justify-center rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-all font-bold text-base leading-none cursor-pointer" data-index="${index}" title="擦除">&times;</button>
-            </div>
-        `;
-        blackboard.appendChild(itemEl);
-    });
+    renderEnhancedBlackboard();
 }
 
 export function renderCalendar() {

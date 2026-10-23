@@ -100,11 +100,23 @@ export function sanitizeAppData(data) {
             accessCode: typeof c.accessCode === 'string' ? c.accessCode.trim() : (typeof c.accessCode === 'number' ? String(c.accessCode) : ''),
             lastMaxSeat: typeof c.lastMaxSeat === 'number' ? c.lastMaxSeat : (parseInt(c.lastMaxSeat, 10) || 30),
             lastMissingSeats: typeof c.lastMissingSeats === 'string' ? c.lastMissingSeats : '',
+            skippedSeats: Array.isArray(c.skippedSeats) ? c.skippedSeats : [],
             studentBarcodes: cleanBarcodes,
             contactBook: cleanContact,
             studentPins: c.studentPins && typeof c.studentPins === 'object' ? c.studentPins : {},
             exams: Array.isArray(c.exams) ? c.exams : [],
-            hasConfiguredMaxSeat: Boolean(c.hasConfiguredMaxSeat)
+            hasConfiguredMaxSeat: Boolean(c.hasConfiguredMaxSeat),
+            studentNames: c.studentNames && typeof c.studentNames === 'object' ? c.studentNames : {},
+            attendanceRecords: c.attendanceRecords && typeof c.attendanceRecords === 'object' ? c.attendanceRecords : {},
+            attendanceSettings: c.attendanceSettings && typeof c.attendanceSettings === 'object' ? c.attendanceSettings : { lateTime: '07:50', earlyBirdBonus: true },
+            pointsBySeat: c.pointsBySeat && typeof c.pointsBySeat === 'object' ? c.pointsBySeat : {},
+            pointsHistory: Array.isArray(c.pointsHistory) ? c.pointsHistory.slice(0, 200) : [],
+            drawPoolState: c.drawPoolState && typeof c.drawPoolState === 'object' ? c.drawPoolState : { drawnSeats: [], round: 1 },
+            seatingConfig: c.seatingConfig && typeof c.seatingConfig === 'object' ? c.seatingConfig : null,
+            groupsConfig: c.groupsConfig && typeof c.groupsConfig === 'object' ? c.groupsConfig : null,
+            dutyConfig: c.dutyConfig && typeof c.dutyConfig === 'object' ? c.dutyConfig : { count: 2, seats: [1, 2], autoRotate: true, lastRotatedDate: '' },
+            blackboardConfig: c.blackboardConfig && typeof c.blackboardConfig === 'object' ? c.blackboardConfig : { writingMode: 'horizontal', theme: 'green' },
+            examTimers: c.examTimers && typeof c.examTimers === 'object' ? c.examTimers : null
         };
     }).filter(Boolean) : [];
 
