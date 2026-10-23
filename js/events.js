@@ -116,6 +116,8 @@ import {
     checkInitialMaxSeatSetup
 } from './examScores.js';
 
+import { getRosterDataFromAddForm } from './modules/classWizard.js';
+
 export function setupButtonEvents() {
     setupExamScoresEvents();
 
@@ -460,6 +462,10 @@ export function setupButtonEvents() {
         }
     });
     bindClick('back-from-student-details-btn', () => {
+        state.lastActiveStudentSeat = null;
+        showMainPage();
+    });
+    bindClick('back-from-main-student-details-btn', () => {
         state.lastActiveStudentSeat = null;
         showMainPage();
     });
@@ -2411,42 +2417,88 @@ export function setupButtonEvents() {
         const codeInput = document.getElementById('class-access-code');
         const className = nameInput ? nameInput.value.trim() : '';
         const enteredCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
-        let accessCode = enteredCode;
-        if (!accessCode) {
-            accessCode = generateRandomAccessCode();
+
+        // 1. 驗證班級名稱
+        if (!className) {
+            showToast('請填寫班級名稱！', 'warning');
+            if (nameInput) nameInput.focus();
+            return;
         }
-        if(className) {
-            if (enteredCode && state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === enteredCode)) {
-                showToast(`班級代碼「${enteredCode}」已被其他班級使用，請更換其他代碼！`, "error");
-                if (codeInput) { codeInput.focus(); codeInput.select(); }
-                return;
-            }
-            if (!enteredCode && state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === accessCode)) {
-                accessCode = generateRandomAccessCode();
-            }
-            state.appData.classes.push({ 
-                id: generateId(), 
-                name: className, 
-                accessCode: accessCode,
-                lastMaxSeat: 30,
-                contactBook: {}, 
-                studentBarcodes: {} 
-            }); 
-            await saveData(); 
-            await syncDataToCloud();
-            if (nameInput) nameInput.value = ''; 
-            if (codeInput) codeInput.value = '';
-            renderClassSelector(); 
-            renderClassList(); 
-            if(state.appData.classes.length === 1 || !state.currentClassId || !state.appData.classes.some(c=>c.id===state.currentClassId)) { 
-                state.currentClassId = state.appData.classes[0].id; 
-                localStorage.setItem('currentClassId', state.currentClassId); 
-                const userKey = getUserStorageKey(state.currentUser);
-                localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
-                renderHomeworkList(); 
-            } 
-            showToast(`新增班級「${className}」(權限碼：${accessCode})！`, "success"); 
+
+        // 2. 驗證家長權限碼 (必填)
+        if (!enteredCode) {
+            showToast('請填寫家長權限碼（可點擊右側骰子隨機產生）！', 'warning');
+            if (codeInput) codeInput.focus();
+            return;
         }
+
+        // 檢查權限碼是否與現有班級重複
+        if (state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === enteredCode)) {
+            showToast(`家長權限碼「${enteredCode}」已被其他班級使用，請更換其他代碼！`, 'error');
+            if (codeInput) { codeInput.focus(); codeInput.select(); }
+            return;
+        }
+
+        // 3. 驗證名單設定 (必須填寫且人數 > 0)
+        const roster = getRosterDataFromAddForm();
+        if (roster.error) {
+            showToast(roster.error, 'warning');
+            return;
+        }
+
+        // 4. 建立新班級物件
+        const newClass = { 
+            id: generateId(), 
+            name: className, 
+            accessCode: enteredCode,
+            lastMaxSeat: roster.maxSeat,
+            skippedSeats: roster.skippedSeats,
+            lastMissingSeats: (roster.skippedSeats || []).join(', '),
+            studentNames: roster.studentNames || {},
+            hasConfiguredMaxSeat: true,
+            contactBook: {}, 
+            studentBarcodes: {},
+            dutyConfig: {
+                count: 2,
+                mode: 'daily',
+                currentGroupIndex: 0,
+                currentSeats: [1, 2]
+            },
+            seatingConfig: {
+                rows: 5,
+                cols: 6,
+                layout: [],
+                lockedSeats: [],
+                disabledSeats: []
+            },
+            classGoal: {
+                enabled: true,
+                target: 1000,
+                reward: '全班同樂會'
+            },
+            studentScores: {}
+        };
+
+        state.appData.classes.push(newClass); 
+        await saveData(); 
+        await syncDataToCloud();
+
+        // 清空輸入
+        if (nameInput) nameInput.value = ''; 
+        if (codeInput) codeInput.value = '';
+        const namesTextarea = document.getElementById('add-class-names-textarea');
+        if (namesTextarea) namesTextarea.value = '';
+
+        state.currentClassId = newClass.id;
+        localStorage.setItem('currentClassId', state.currentClassId); 
+        const userKey = getUserStorageKey(state.currentUser);
+        localStorage.setItem('currentClassId_' + userKey, state.currentClassId);
+
+        renderClassSelector(); 
+        renderClassList(); 
+        renderHomeworkList(); 
+
+        showToast(`已成功建立「${className}」班級（家長權限碼：${enteredCode}，學生共 ${roster.count} 位）！`, 'success'); 
     });
 
     // 一鍵複製未交催繳純文字

@@ -1,20 +1,22 @@
 /**
- * 班級經營系統 - 模組 4：抽籤問答與加分系統 (arenaDrawAndPoints.js)
+ * 班級經營系統 - 模組 4：課堂加扣分與抽籤系統 (arenaDrawAndPoints.js)
  * 支援：
- * 1. 密碼級公平「不重複抽籤籤筒」 (Fair Arena Draw Pool)：記錄當輪已抽座號，全班抽滿前不重複，支援重置。
- * 2. 抽籤舞台動畫與選中學生即時加分膠囊 (+3, +2, +1, -1)
- * 3. 學生積分榜與全班加分 (全班 +1 時自動跳過今日請假/缺席學生！)
- * 4. 積分歷史日誌紀錄與榮譽頒獎台
+ * 1. CLASS GOAL 全班共同集分看板與達標福利進度條
+ * 2. 學生個人加扣分卡片網格 (大字積分、- 與 + 圓形微調按鈕、即時彈力動效)
+ * 3. 全班 +1 (自動跳過今日請假/缺席學生)
+ * 4. 密碼級公平不重複抽籤籤筒 (Fair Lottery Pool)
+ * 5. 積分歷史紀錄
  */
 
 import { state } from '../state.js';
-import { formatDate, showToast, openModal, closeModal, escapeHtml } from '../utils.js';
+import { showToast, openModal, closeModal, escapeHtml } from '../utils.js';
 import { saveData } from '../storage.js';
 import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js';
 import { isStudentAbsentOrLeaveToday } from './attendanceHub.js';
 
 let isDrawing = false;
 let currentDrawnSeat = null;
+let currentArenaTab = 'points'; // 'points' | 'draw'
 
 function ensureClassPointsData(classObj) {
     if (!classObj) return null;
@@ -33,6 +35,13 @@ function ensureClassPointsData(classObj) {
     if (!Array.isArray(classObj.drawPoolState.drawnSeats)) {
         classObj.drawPoolState.drawnSeats = [];
     }
+    if (!classObj.classGoal || typeof classObj.classGoal !== 'object') {
+        classObj.classGoal = {
+            enabled: true,
+            target: 1000,
+            reward: '全班同樂會自由活動'
+        };
+    }
     return classObj;
 }
 
@@ -47,7 +56,7 @@ export function getStudentPoints(classObj, seat) {
 /**
  * 調整學生積分並紀錄歷史
  */
-export function adjustStudentPoints(seat, delta, reason = '課堂問答', clientEvent = null) {
+export function adjustStudentPoints(seat, delta, reason = '課堂表現', clientEvent = null) {
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass) return;
     ensureClassPointsData(currentClass);
@@ -71,7 +80,7 @@ export function adjustStudentPoints(seat, delta, reason = '課堂問答', client
     saveData();
     renderDrawAndPointsModal();
 
-    if (clientEvent) {
+    if (clientEvent && clientEvent.clientX && clientEvent.clientY) {
         spawnScorePop(
             clientEvent.clientX,
             clientEvent.clientY,
@@ -79,21 +88,17 @@ export function adjustStudentPoints(seat, delta, reason = '課堂問答', client
             delta > 0
         );
     } else {
-        const stage = document.getElementById('arena-stage-avatar');
-        if (stage) {
-            const rect = stage.getBoundingClientRect();
-            spawnScorePop(rect.left + rect.width / 2, rect.top, delta > 0 ? `+${delta}` : `${delta}`, delta > 0);
-        }
+        spawnScorePop(window.innerWidth / 2, window.innerHeight * 0.45, delta > 0 ? `+${delta}` : `${delta}`, delta > 0);
     }
 
     showToast(
-        `${getStudentDisplayName(currentClass, seat, true)} ${delta > 0 ? `+${delta}` : delta} 分 (總分: ${newPoints})`,
+        `${getStudentDisplayName(currentClass, seat, true)} ${delta > 0 ? `+${delta}` : delta} 分 (目前總分: ${newPoints})`,
         delta > 0 ? 'success' : 'info'
     );
 }
 
 /**
- * 全班加分（★自動排除今日請假或缺席的學生！）
+ * 全班加分（★自動略過今日登記為缺席或請假的學生！）
  */
 export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
@@ -118,13 +123,13 @@ export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
         seat: 0,
         name: '全班獎勵',
         delta,
-        reason: `${reason}（已獎勵 ${awardedCount} 人${skippedCount > 0 ? `，自動排除 ${skippedCount} 位請假/缺席` : ''}）`,
+        reason: `${reason}（已獎勵 ${awardedCount} 人${skippedCount > 0 ? `，自動略過 ${skippedCount} 位請假/缺席` : ''}）`,
         time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
     });
 
     saveData();
     renderDrawAndPointsModal();
-    showToast(`全班獎勵發放成功！已為 ${awardedCount} 位學生各加 ${delta} 分${skippedCount > 0 ? ` (自動跳過 ${skippedCount} 位請假/缺席學生)` : ''}`, 'success');
+    showToast(`全班獎勵發放成功！已為 ${awardedCount} 位學生各加 ${delta} 分${skippedCount > 0 ? ` (自動略過 ${skippedCount} 位請假/缺席學生)` : ''}`, 'success');
 }
 
 /**
@@ -167,9 +172,8 @@ export function executeFairDraw() {
     if (scoreCapsule) scoreCapsule.classList.add('hidden');
     if (stageBox) stageBox.classList.add('draw-stage-rolling');
 
-    // 擬真轉盤跑馬燈音效感跳動
     let rollTimes = 0;
-    const maxRolls = 22;
+    const maxRolls = 20;
     const rollInterval = setInterval(() => {
         const randSeat = activeSeats[Math.floor(Math.random() * activeSeats.length)];
         if (stageNum) stageNum.textContent = `${randSeat} 號`;
@@ -178,7 +182,6 @@ export function executeFairDraw() {
 
         if (rollTimes >= maxRolls) {
             clearInterval(rollInterval);
-            // 決定最終得獎者
             const pickedSeat = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
             currentDrawnSeat = pickedSeat;
             currentClass.drawPoolState.drawnSeats.push(pickedSeat);
@@ -202,10 +205,10 @@ export function executeFairDraw() {
 }
 
 /**
- * 渲染抽籤與加分全景畫面
+ * 渲染課堂加扣分與抽籤全景畫面
  */
 export function renderDrawAndPointsModal() {
-    const page = document.getElementById('arena-draw-points-page') || document.getElementById('arena-draw-points-modal');
+    const page = document.getElementById('arena-draw-points-page');
     if (!page) return;
 
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
@@ -213,19 +216,126 @@ export function renderDrawAndPointsModal() {
     ensureClassPointsData(currentClass);
 
     const activeSeats = getActiveSeatsForClass(currentClass);
+
+    // 班級標籤
+    const classBadge = document.getElementById('arena-class-badge');
+    if (classBadge) classBadge.textContent = currentClass.name;
+
+    // 標籤頁切換
+    const pointsTabBtn = document.getElementById('arena-tab-btn-points');
+    const drawTabBtn = document.getElementById('arena-tab-btn-draw');
+    const pointsView = document.getElementById('arena-points-view');
+    const drawView = document.getElementById('arena-draw-view');
+
+    if (currentArenaTab === 'points') {
+        pointsTabBtn?.classList.add('bg-stone-800', 'text-white');
+        pointsTabBtn?.classList.remove('bg-white', 'text-stone-600');
+        drawTabBtn?.classList.remove('bg-stone-800', 'text-white');
+        drawTabBtn?.classList.add('bg-white', 'text-stone-600');
+        pointsView?.classList.remove('hidden');
+        drawView?.classList.add('hidden');
+    } else {
+        drawTabBtn?.classList.add('bg-stone-800', 'text-white');
+        drawTabBtn?.classList.remove('bg-white', 'text-stone-600');
+        pointsTabBtn?.classList.remove('bg-stone-800', 'text-white');
+        pointsTabBtn?.classList.add('bg-white', 'text-stone-600');
+        drawView?.classList.remove('hidden');
+        pointsView?.classList.add('hidden');
+    }
+
+    // 1. CLASS GOAL 全班共同集分計算
+    const goal = currentClass.classGoal || { enabled: true, target: 1000, reward: '自由活動' };
+    const totalScore = activeSeats.reduce((sum, s) => sum + getStudentPoints(currentClass, s), 0);
+
+    const totalScoreDisplay = document.getElementById('class-total-score-display');
+    const totalStudentsDisplay = document.getElementById('class-total-students-count');
+    const targetInput = document.getElementById('class-goal-target-input');
+    const rewardInput = document.getElementById('class-goal-reward-input');
+    const progressText = document.getElementById('class-goal-progress-text');
+    const progressFill = document.getElementById('class-goal-progress-fill');
+    const calloutText = document.getElementById('class-goal-callout-text');
+
+    if (totalScoreDisplay) totalScoreDisplay.textContent = totalScore.toLocaleString();
+    if (totalStudentsDisplay) totalStudentsDisplay.textContent = `共 ${activeSeats.length} 位學生`;
+    if (targetInput && document.activeElement !== targetInput) targetInput.value = goal.target;
+    if (rewardInput && document.activeElement !== rewardInput) rewardInput.value = goal.reward || '';
+
+    const targetVal = Math.max(1, parseInt(goal.target, 10) || 1000);
+    const pct = Math.min(100, Math.round((totalScore / targetVal) * 100));
+
+    if (progressText) progressText.textContent = `${totalScore.toLocaleString()} / ${targetVal.toLocaleString()}`;
+    if (progressFill) progressFill.style.width = `${pct}%`;
+
+    if (calloutText) {
+        if (totalScore >= targetVal) {
+            calloutText.innerHTML = `<span class="text-emerald-700 font-black">🎉 全班已達標！解鎖福利：${escapeHtml(goal.reward || '全班慶祝')}</span>`;
+        } else {
+            const diff = targetVal - totalScore;
+            calloutText.textContent = `再累積 ${diff.toLocaleString()} 分就達標（目前進度 ${pct}%）`;
+        }
+    }
+
+    // 2. 學生加扣分卡片網格 (points-students-grid)
+    const studentsGrid = document.getElementById('points-students-grid');
+    if (studentsGrid) {
+        studentsGrid.innerHTML = '';
+        if (activeSeats.length === 0) {
+            studentsGrid.innerHTML = `<div class="col-span-full py-12 text-center text-stone-400 font-bold">目前班級尚無學生名單，請先完成名單設定</div>`;
+        } else {
+            activeSeats.forEach(seat => {
+                const name = getStudentNameOnly(currentClass, seat) || '';
+                const score = getStudentPoints(currentClass, seat);
+                const isAbsent = isStudentAbsentOrLeaveToday(currentClass.id, seat);
+
+                const card = document.createElement('div');
+                card.className = `rounded-2xl border bg-white p-3 sm:p-3.5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between select-none ${
+                    isAbsent ? 'border-dashed border-rose-200 bg-rose-50/20' : 'border-stone-200/90'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-black font-mono text-stone-800 truncate">${seat}號</span>
+                        ${isAbsent ? `<span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded">缺席/請假</span>` : ''}
+                    </div>
+                    <div class="truncate text-xs font-bold text-stone-600 mb-2">
+                        ${escapeHtml(name || `${seat}號`)}
+                    </div>
+                    <div class="my-auto text-center py-1">
+                        <strong class="font-mono text-3xl sm:text-4xl font-black text-stone-900 leading-none">${score}</strong>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 pt-2.5 mt-2 border-t border-stone-100">
+                        <button type="button" data-seat="${seat}" data-delta="-1" class="btn-adjust-point w-9 h-9 rounded-xl bg-stone-100 hover:bg-rose-100 text-stone-700 hover:text-rose-700 font-black text-base flex items-center justify-center cursor-pointer transition-all active:scale-90" title="扣 1 分">
+                            -
+                        </button>
+                        <button type="button" data-seat="${seat}" data-delta="1" class="btn-adjust-point w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black text-base flex items-center justify-center cursor-pointer transition-all active:scale-90 shadow-2xs" title="加 1 分">
+                            +
+                        </button>
+                    </div>
+                `;
+
+                card.querySelectorAll('.btn-adjust-point').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const s = parseInt(btn.dataset.seat, 10);
+                        const d = parseInt(btn.dataset.delta, 10);
+                        adjustStudentPoints(s, d, d > 0 ? '課堂表現加分' : '課堂表現扣分', e);
+                    });
+                });
+
+                studentsGrid.appendChild(card);
+            });
+        }
+    }
+
+    // 3. 抽籤籤筒畫面渲染
     const poolState = currentClass.drawPoolState;
     const drawnSet = new Set(poolState.drawnSeats || []);
     const remainingCount = Math.max(0, activeSeats.length - drawnSet.size);
-
-    const classBadge = document.getElementById('arena-class-badge');
-    if (classBadge) classBadge.textContent = currentClass.name;
 
     const roundPill = document.getElementById('arena-stage-pool-pill');
     if (roundPill) {
         roundPill.textContent = `第 ${poolState.round || 1} 輪（剩餘 ${remainingCount} 人未抽）`;
     }
 
-    // 渲染籤筒座位狀態燈
     const poolGrid = document.getElementById('arena-pool-chips-grid');
     if (poolGrid) {
         poolGrid.innerHTML = '';
@@ -235,70 +345,32 @@ export function renderDrawAndPointsModal() {
             const chip = document.createElement('div');
             chip.className = `p-1.5 rounded-xl text-center text-xs font-black border transition-all ${
                 hasDrawn
-                    ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
+                    ? 'bg-stone-100 text-stone-400 border-stone-200 line-through opacity-60'
                     : isAbsent
                         ? 'bg-rose-50 text-rose-500 border-rose-200'
-                        : 'bg-white text-indigo-700 border-indigo-200 shadow-2xs hover:scale-105 cursor-pointer'
+                        : 'bg-white text-stone-800 border-stone-200 shadow-2xs'
             }`;
-            chip.innerHTML = `${seat}號`;
-            chip.title = `${getStudentDisplayName(currentClass, seat, true)}${hasDrawn ? ' (本輪已抽過)' : isAbsent ? ' (今日請假/缺席)' : ' (在籤筒中)'}`;
+            chip.textContent = `${seat}號`;
             poolGrid.appendChild(chip);
         });
     }
 
-    // 渲染積分排行榜 (由高至低排名前 10 名)
-    const leaderboardList = document.getElementById('arena-leaderboard-list');
-    if (leaderboardList) {
-        const sorted = activeSeats
-            .map(seat => ({
-                seat,
-                name: getStudentNameOnly(currentClass, seat) || `${seat}號`,
-                points: getStudentPoints(currentClass, seat)
-            }))
-            .sort((a, b) => b.points - a.points);
-
-        leaderboardList.innerHTML = sorted.slice(0, 15).map((item, idx) => {
-            const isTop3 = idx < 3;
-            const rankBadges = ['bg-amber-400 text-amber-950', 'bg-slate-300 text-slate-900', 'bg-amber-700 text-white'];
-            return `
-                <div class="flex items-center justify-between p-2 rounded-xl ${isTop3 ? 'bg-amber-50/70 border border-amber-200/80 shadow-xs' : 'bg-white border border-slate-100'} text-xs font-bold">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center font-black text-[11px] ${isTop3 ? rankBadges[idx] : 'bg-slate-100 text-slate-600'}">${idx + 1}</span>
-                        <span class="font-mono text-slate-800">${item.seat}號</span>
-                        <span class="truncate text-slate-700">${escapeHtml(item.name)}</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-black text-sm text-indigo-600 font-mono">${item.points}</span>
-                        <button type="button" data-seat="${item.seat}" class="arena-quick-add-btn text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold cursor-pointer">+1</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        leaderboardList.querySelectorAll('.arena-quick-add-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const s = parseInt(btn.dataset.seat, 10);
-                adjustStudentPoints(s, 1, '排行榜快速獎勵', e);
-            });
-        });
-    }
-
-    // 渲染積分變動日誌
+    // 積分變動日誌
     const historyList = document.getElementById('arena-points-history-list');
     if (historyList) {
         const hist = currentClass.pointsHistory || [];
         if (hist.length === 0) {
-            historyList.innerHTML = `<div class="text-xs text-slate-400 py-3 text-center">尚無加減分紀錄</div>`;
+            historyList.innerHTML = `<div class="text-xs text-stone-400 py-3 text-center">尚無加減分紀錄</div>`;
         } else {
             historyList.innerHTML = hist.slice(0, 10).map(h => `
-                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-[11px] font-medium border border-slate-100">
+                <div class="flex items-center justify-between p-2 rounded-lg bg-stone-50 text-[11px] font-medium border border-stone-100">
                     <div class="flex items-center gap-1.5 truncate">
-                        <span class="font-bold text-slate-800">${h.seat ? `${h.seat}號` : ''} ${escapeHtml(h.name)}</span>
-                        <span class="text-slate-400 truncate">(${escapeHtml(h.reason)})</span>
+                        <span class="font-bold text-stone-800">${h.seat ? `${h.seat}號` : ''} ${escapeHtml(h.name)}</span>
+                        <span class="text-stone-400 truncate">(${escapeHtml(h.reason)})</span>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <span class="font-black font-mono ${h.delta > 0 ? 'text-emerald-600' : 'text-rose-600'}">${h.delta > 0 ? `+${h.delta}` : h.delta}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">${h.time}</span>
+                        <span class="text-[10px] text-stone-400 font-mono">${h.time}</span>
                     </div>
                 </div>
             `).join('');
@@ -307,40 +379,68 @@ export function renderDrawAndPointsModal() {
 }
 
 /**
- * 重置全班所有學生個人積分為 0
+ * 初始化課堂加扣分模組事件
  */
-export function resetAllStudentPoints() {
-    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-    if (!currentClass) return;
-    if (!confirm('確定要將全班所有學生的個人積分歸零重置嗎？此動作將清空所有個人積分。')) return;
-
-    currentClass.pointsBySeat = {};
-    if (!currentClass.pointsHistory) currentClass.pointsHistory = [];
-    currentClass.pointsHistory.unshift({
-        seat: '全班',
-        name: '全班歸零',
-        delta: 0,
-        reason: '重置全班個人分數',
-        time: new Date().toTimeString().slice(0, 5)
-    });
-    saveData();
-    renderDrawAndPointsModal();
-    showToast('已成功重置全班所有學生的個人積分為 0', 'success');
-}
-
-export function openDrawAndPointsModal() {
-    if (window.showDrawPointsPage) {
-        window.showDrawPointsPage();
-    } else {
-        renderDrawAndPointsModal();
-    }
-}
-
 export function initArenaDrawAndPoints() {
-    document.getElementById('open-draw-points-modal-btn')?.addEventListener('click', openDrawAndPointsModal);
-    document.getElementById('mobile-sheet-draw-points-btn')?.addEventListener('click', () => {
-        document.getElementById('mobile-more-sheet')?.classList.add('hidden');
-        openDrawAndPointsModal();
+    // 標籤頁切換
+    document.getElementById('arena-tab-btn-points')?.addEventListener('click', () => {
+        currentArenaTab = 'points';
+        renderDrawAndPointsModal();
+    });
+    document.getElementById('arena-tab-btn-draw')?.addEventListener('click', () => {
+        currentArenaTab = 'draw';
+        renderDrawAndPointsModal();
+    });
+
+    // CLASS GOAL 輸入監聽
+    document.getElementById('class-goal-target-input')?.addEventListener('change', (e) => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (!currentClass) return;
+        ensureClassPointsData(currentClass);
+        currentClass.classGoal.target = parseInt(e.target.value, 10) || 1000;
+        saveData();
+        renderDrawAndPointsModal();
+    });
+
+    document.getElementById('class-goal-reward-input')?.addEventListener('change', (e) => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (!currentClass) return;
+        ensureClassPointsData(currentClass);
+        currentClass.classGoal.reward = e.target.value.trim();
+        saveData();
+        renderDrawAndPointsModal();
+    });
+
+    // 全班 +1
+    document.getElementById('points-whole-class-add-1-btn')?.addEventListener('click', () => {
+        awardWholeClassBonus(1, '全班專注守秩序');
+    });
+
+    // 前往分組模式
+    document.getElementById('points-goto-groups-btn')?.addEventListener('click', () => {
+        if (window.showClassroomStudioPage) {
+            window.showClassroomStudioPage(false, 'groups');
+        }
+    });
+
+    // 名單設定
+    document.getElementById('points-add-student-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (currentClass) {
+            const modal = document.getElementById('initial-max-seat-modal');
+            if (modal) {
+                modal.dataset.targetClassId = currentClass.id;
+                openModal(modal);
+            }
+        }
+    });
+
+    // 詳細加分模式開關
+    document.getElementById('btn-toggle-points-history')?.addEventListener('click', () => {
+        const card = document.getElementById('arena-history-collapsible-card');
+        if (card) {
+            card.classList.toggle('hidden');
+        }
     });
 
     // 抽籤主按鈕
@@ -357,10 +457,7 @@ export function initArenaDrawAndPoints() {
         showToast('已重設籤筒！所有學生已重新放回籤筒中', 'info');
     });
 
-    // 一鍵重置全班分數
-    document.getElementById('arena-reset-all-points-btn')?.addEventListener('click', resetAllStudentPoints);
-
-    // 即時加分按鈕組
+    // 抽籤即時加分膠囊按鈕
     [-1, 1, 2, 3].forEach(delta => {
         const btnId = delta > 0 ? `arena-score-add-${delta}-btn` : 'arena-score-sub-1-btn';
         document.getElementById(btnId)?.addEventListener('click', (e) => {
@@ -371,16 +468,6 @@ export function initArenaDrawAndPoints() {
             adjustStudentPoints(currentDrawnSeat, delta, '抽籤問答表現', e);
         });
     });
-
-    // 全班加分按鈕
-    document.getElementById('arena-whole-class-add-1-btn')?.addEventListener('click', () => {
-        awardWholeClassBonus(1, '全班專注守秩序');
-    });
-    document.getElementById('arena-whole-class-add-2-btn')?.addEventListener('click', () => {
-        awardWholeClassBonus(2, '全班團隊表現特優');
-    });
 }
 
 window.renderDrawAndPointsModal = renderDrawAndPointsModal;
-window.resetAllStudentPoints = resetAllStudentPoints;
-

@@ -43,6 +43,13 @@ function ensureClassBoardConfig(classObj) {
 /**
  * 輪替計算下一組有效座號
  */
+/**
+ * 智慧輪更至下一組值日生座號
+ * 規則：
+ * 1. 若當前值日生座號為連續序號（例如 1、2 或 3、4）：整組以區塊跨步輪替，下一組接續（例如 1、2 的下一組是 3、4；3、4 的下一組是 5、6）。
+ * 2. 若當前值日生座號為非連續自訂組合（例如 2、5，可能為男女雙軌或自訂搭配）：各座號分別順延 +1 位有效學生（例如 2、5 的下一組是 3、6；3、6 的下一組是 4、7）。
+ * 3. 自動適配全班有效座號陣列（自動排除轉出/缺號）並支援循環回 1 號。
+ */
 export function rotateDutySeats(classObj) {
     if (!classObj) return;
     ensureClassBoardConfig(classObj);
@@ -51,16 +58,41 @@ export function rotateDutySeats(classObj) {
     if (activeSeats.length === 0) return;
 
     const count = Math.min(Math.max(parseInt(cfg.count, 10) || 2, 1), 4);
-    const currentSeats = Array.isArray(cfg.seats) ? cfg.seats : [activeSeats[0]];
-    const lastSeat = currentSeats[currentSeats.length - 1] || activeSeats[0];
+    const currentSeats = Array.isArray(cfg.seats) && cfg.seats.length > 0
+        ? cfg.seats
+        : activeSeats.slice(0, count);
 
-    let lastIdx = activeSeats.indexOf(lastSeat);
-    if (lastIdx === -1) lastIdx = 0;
+    // 取得當前每位學生在 activeSeats 中的索引位置
+    const rawIndices = currentSeats.map(s => activeSeats.indexOf(Number(s))).filter(idx => idx !== -1);
+    if (rawIndices.length === 0) {
+        cfg.seats = activeSeats.slice(0, count);
+        return;
+    }
+
+    // 檢查是否為連續座號區塊 (sorted)
+    const sortedIndices = [...rawIndices].sort((a, b) => a - b);
+    let isConsecutive = true;
+    for (let i = 0; i < sortedIndices.length - 1; i++) {
+        if (sortedIndices[i + 1] !== sortedIndices[i] + 1) {
+            isConsecutive = false;
+            break;
+        }
+    }
 
     const nextSeats = [];
-    for (let i = 1; i <= count; i++) {
-        const nextIdx = (lastIdx + i) % activeSeats.length;
-        nextSeats.push(activeSeats[nextIdx]);
+    if (isConsecutive) {
+        // 連續區塊：整組依組人數跨步順延（例如 1, 2 -> 3, 4）
+        const step = sortedIndices.length;
+        sortedIndices.forEach(idx => {
+            const nextIdx = (idx + step) % activeSeats.length;
+            nextSeats.push(activeSeats[nextIdx]);
+        });
+    } else {
+        // 非連續組合：各自順延 +1 位有效學生（例如 2, 5 -> 3, 6）
+        rawIndices.forEach(idx => {
+            const nextIdx = (idx + 1) % activeSeats.length;
+            nextSeats.push(activeSeats[nextIdx]);
+        });
     }
 
     cfg.seats = nextSeats;
@@ -132,16 +164,18 @@ export function renderEnhancedBlackboard() {
     const dateDisplay = document.getElementById('contact-book-date');
     if (dateDisplay) dateDisplay.textContent = formatDate(state.selectedDate);
 
+    // 更新日期膠囊導航按鈕組 (對照截圖：◀ [ 2026/10/23 📅 ] ▶ [ 回到今天 ])
+    const dateTextEl = document.getElementById('bb-current-date-text');
+    if (dateTextEl) {
+        dateTextEl.textContent = formatDate(state.selectedDate, 'YYYY/MM/DD');
+    }
+    const hiddenDatePicker = document.getElementById('bb-hidden-date-picker');
+    if (hiddenDatePicker) {
+        hiddenDatePicker.value = formatDate(state.selectedDate, 'YYYY-MM-DD');
+    }
+
     const dateString = formatDate(state.selectedDate, 'YYYY-MM-DD');
     const items = currentClass.contactBook?.[dateString] || [];
-
-    // 更新直/橫切換按鈕文字與圖示
-    const toggleOrientationBtn = document.getElementById('bb-toggle-orientation-btn');
-    if (toggleOrientationBtn) {
-        toggleOrientationBtn.innerHTML = isVertical
-            ? `<i class="fa-solid fa-arrows-left-right text-indigo-400 mr-1"></i><span>切換橫式</span>`
-            : `<i class="fa-solid fa-arrows-up-down text-indigo-400 mr-1"></i><span>切換直式</span>`;
-    }
 
     // 更新值日生展示徽章
     const dutyContainer = document.getElementById('bb-duty-badge-container');
@@ -480,19 +514,35 @@ export function renderZeroScrollDashboard() {
 if (typeof window !== 'undefined') {
     window.renderZeroScrollDashboard = renderZeroScrollDashboard;
     window.openDutyModal = openDutyModal;
+    window.rotateDutySeats = rotateDutySeats;
 }
 
 export function initSmartBoard() {
-    // 直橫排切換按鈕
-    document.getElementById('bb-toggle-orientation-btn')?.addEventListener('click', () => {
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-        if (!currentClass) return;
-        ensureClassBoardConfig(currentClass);
-        const cur = currentClass.blackboardConfig.writingMode;
-        currentClass.blackboardConfig.writingMode = cur === 'vertical' ? 'horizontal' : 'vertical';
-        saveData();
+    // 日期導航按鈕組 (◀, ▶, 日期選擇器, 回到今天)
+    document.getElementById('bb-prev-day-btn')?.addEventListener('click', () => {
+        const d = new Date(state.selectedDate || new Date());
+        d.setDate(d.getDate() - 1);
+        state.selectedDate = d;
         renderEnhancedBlackboard();
-        showToast(`已切換為「${currentClass.blackboardConfig.writingMode === 'vertical' ? '直式排版 (由右至左)' : '橫式排版'}」`, 'success');
+    });
+
+    document.getElementById('bb-next-day-btn')?.addEventListener('click', () => {
+        const d = new Date(state.selectedDate || new Date());
+        d.setDate(d.getDate() + 1);
+        state.selectedDate = d;
+        renderEnhancedBlackboard();
+    });
+
+    document.getElementById('bb-today-btn')?.addEventListener('click', () => {
+        state.selectedDate = new Date();
+        renderEnhancedBlackboard();
+    });
+
+    document.getElementById('bb-hidden-date-picker')?.addEventListener('change', (e) => {
+        if (e.target.value) {
+            state.selectedDate = new Date(e.target.value + 'T00:00:00');
+            renderEnhancedBlackboard();
+        }
     });
 
     // 全螢幕投影按鈕

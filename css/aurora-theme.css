@@ -121,7 +121,7 @@
     transform: scale(1.025);
 }
 
-/* 翻課星球專屬柔和莫蘭迪微徽章 (Storybook Planet Badges) */
+/* 柔和莫蘭迪微徽章 (Storybook Module Badges) */
 .storybook-planet-pill {
     display: inline-flex;
     align-items: center;
@@ -136,7 +136,7 @@
     backdrop-filter: blur(8px);
 }
 
-/* 翻課星球導覽抽屜按鈕手感微動效 */
+/* 導覽抽屜按鈕手感微動效 */
 .planet-nav-item {
     transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -146,6 +146,14 @@
 }
 .planet-nav-item:active {
     transform: scale(0.97);
+}
+
+/* 全螢幕模式隱藏署名頁尾 */
+html.app-fullscreen-active footer,
+body.app-fullscreen-active footer,
+:fullscreen footer,
+:-webkit-full-screen footer {
+    display: none !important;
 }
 
 /* 4. 聯絡簿黑板升級：直橫切換、值日生、全螢幕投影模式 */
@@ -290,7 +298,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-/* 9. 翻課星球工作台快捷躍遷卡 (Storybook Planet Dock Cards) */
+/* 9. 工作台快捷躍遷卡 (Storybook Dock Cards) */
 .storybook-planet-dock-card {
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease, border-color 0.2s ease;
 }

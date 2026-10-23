@@ -1,16 +1,15 @@
 /**
- * 班級經營系統 - 模組 1：智慧建立班級流程與學生名單管理 (classWizard.js)
+ * 班級經營系統 - 模組 1：班級名單與建班精靈 (classWizard.js)
  * 支援：
- * 1. 智慧名單貼上解析（相容 Excel「座號 姓名」、純姓名清單、單行空白分隔）
- * 2. 純人數快速建班（自動套用最後座號與缺號）
- * 3. 學生姓名顯示輔助函式 getStudentDisplayName(classObj, seat)
- * 4. 浮動加分彈跳動效 spawnScorePop(x, y, text, isPositive)
+ * 1. 建立班級表單名單設定（雙模式：設定座號模式雙輸入框 / 設定名字模式即時解析）
+ * 2. 學生座號、缺號排除與姓名輔助函式
+ * 3. 浮動加分彈跳動效 spawnScorePop
  */
 
 import { state } from '../state.js';
-import { generateId, generateRandomAccessCode, showToast, openModal, closeModal, escapeHtml } from '../utils.js';
-import { saveData } from '../storage.js';
-import { renderClassSelector, renderClassList, renderHomeworkList } from '../render.js';
+import { generateRandomAccessCode, showToast, escapeHtml } from '../utils.js';
+
+let addRosterMode = 'seat'; // 'seat' | 'name'
 
 /**
  * 取得指定班級的所有有效座號陣列（已排除缺號 skippedSeats / lastMissingSeats）
@@ -49,13 +48,16 @@ export function getActiveSeatsForClass(classObj) {
 }
 
 /**
- * 取得座號對應顯示名稱（若有設定姓名則回傳「1號 王小明」或指定格式）
+ * 取得座號對應學生姓名
  */
 export function getStudentNameOnly(classObj, seat) {
     if (!classObj || !classObj.studentNames) return '';
     return classObj.studentNames[String(seat)] || classObj.studentNames[Number(seat)] || '';
 }
 
+/**
+ * 取得座號對應顯示全稱（例如「1 號 王小明」）
+ */
 export function getStudentDisplayName(classObj, seat, compact = false) {
     const name = getStudentNameOnly(classObj, seat);
     if (!name) return `${seat} 號`;
@@ -64,11 +66,6 @@ export function getStudentDisplayName(classObj, seat, compact = false) {
 
 /**
  * 智慧解析貼上的學生名單文字
- * 支援格式：
- * - "1 王小明\n2 李小華"
- * - "01\t王小明\n02\t李小華"
- * - "王小明\n李小華\n張小美" (自動依序編號 1, 2, 3...)
- * - 跳號自動偵測為缺號
  */
 export function parseSmartRosterText(rawText) {
     const lines = String(rawText || '')
@@ -85,7 +82,7 @@ export function parseSmartRosterText(rawText) {
     let autoSeatCounter = 1;
 
     lines.forEach(line => {
-        // 匹配開頭座號，例如 "1 王小明", "01.王小明", "1號 王小明", "1\t王小明"
+        // 匹配座號，例如 "1 王小明", "01.王小明", "1號 王小明", "1\t王小明"
         const match = line.match(/^(\d{1,3})\s*(?:號|[\.\、\-\t\s])\s*(.+)$/);
         if (match) {
             const seatNum = parseInt(match[1], 10);
@@ -97,7 +94,7 @@ export function parseSmartRosterText(rawText) {
                 return;
             }
         }
-        // 純座號與姓名無空白，例如 "1王小明"
+        // 純座號緊連姓名，例如 "1王小明"
         const matchTight = line.match(/^(\d{1,2})([^\d\s].*)$/);
         if (matchTight) {
             const seatNum = parseInt(matchTight[1], 10);
@@ -137,16 +134,29 @@ export function parseSmartRosterText(rawText) {
 }
 
 /**
- * 觸發 iOS 彈力浮動加分特效
+ * 浮動加分彈跳動效
  */
-export function spawnScorePop(clientX, clientY, labelText = '+1', isPositive = true) {
+export function spawnScorePop(x, y, text, isPositive = true) {
     const pop = document.createElement('div');
-    pop.className = `aurora-score-pop ${isPositive ? 'bg-emerald-500 text-white border border-emerald-300' : 'bg-rose-500 text-white border border-rose-300'}`;
-    const x = clientX || window.innerWidth / 2;
-    const y = clientY || window.innerHeight / 2;
+    pop.className = `fixed pointer-events-none z-[9999] font-black text-lg sm:text-xl font-mono px-2 py-0.5 rounded-full shadow-lg transition-all duration-700 ${
+        isPositive ? 'text-emerald-700 bg-emerald-100/90 ring-2 ring-emerald-400/50' : 'text-rose-700 bg-rose-100/90 ring-2 ring-rose-400/50'
+    }`;
+    pop.textContent = text;
     pop.style.left = `${x}px`;
     pop.style.top = `${y}px`;
-    pop.innerHTML = `<i class="fa-solid ${isPositive ? 'fa-star text-amber-200' : 'fa-bolt'} mr-1"></i>${escapeHtml(labelText)}`;
+    pop.style.transform = 'translate(-50%, -50%) scale(0.6)';
+    pop.style.opacity = '0';
+
+    requestAnimationFrame(() => {
+        pop.style.transform = 'translate(-50%, -120%) scale(1.15)';
+        pop.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+        pop.style.transform = 'translate(-50%, -200%) scale(0.9)';
+        pop.style.opacity = '0';
+    }, 450);
+
     document.body.appendChild(pop);
     setTimeout(() => {
         pop.remove();
@@ -154,119 +164,194 @@ export function spawnScorePop(clientX, clientY, labelText = '+1', isPositive = t
 }
 
 /**
- * 初始化智慧建班精靈與名單編輯器事件
+ * 更新新增班級表單中的座號模式即時預覽
  */
-export function initClassWizard() {
-    const openWizardBtn = document.getElementById('open-smart-class-wizard-btn');
-    const rosterTextarea = document.getElementById('wizard-roster-textarea');
-    const previewBox = document.getElementById('wizard-roster-preview');
-    const fillSampleBtn = document.getElementById('wizard-fill-sample-btn');
-    const applyRosterToCurrentBtn = document.getElementById('wizard-apply-roster-current-btn');
+function updateAddRosterSeatPreview() {
+    const maxSeatInput = document.getElementById('add-class-max-seat');
+    const skippedInput = document.getElementById('add-class-skipped-seats');
+    const statsEl = document.getElementById('add-roster-seat-stats');
+    const chipsEl = document.getElementById('add-roster-seat-chips');
 
-    const updateRosterPreview = () => {
-        if (!rosterTextarea || !previewBox) return;
-        const raw = rosterTextarea.value.trim();
+    if (!maxSeatInput || !statsEl || !chipsEl) return;
+
+    const maxSeat = parseInt(maxSeatInput.value, 10) || 30;
+    const skippedStr = skippedInput ? skippedInput.value.trim() : '';
+    const skippedSet = new Set();
+
+    if (skippedStr) {
+        skippedStr.split(/[,，、\s]+/).forEach(part => {
+            if (!part) return;
+            if (part.includes('-')) {
+                const [start, end] = part.split('-').map(x => parseInt(x, 10));
+                if (!isNaN(start) && !isNaN(end)) {
+                    for (let i = Math.min(start, end); i <= Math.max(start, end); i++) skippedSet.add(i);
+                }
+            } else {
+                const n = parseInt(part, 10);
+                if (!isNaN(n)) skippedSet.add(n);
+            }
+        });
+    }
+
+    const activeSeats = [];
+    for (let i = 1; i <= maxSeat; i++) {
+        if (!skippedSet.has(i)) activeSeats.push(i);
+    }
+
+    statsEl.textContent = `有效人數：${activeSeats.length} 人（1~${maxSeat} 號${skippedSet.size > 0 ? `，缺號 ${skippedSet.size} 人` : ''}）`;
+
+    chipsEl.innerHTML = activeSeats.slice(0, 45).map(s => `
+        <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-xs font-mono font-bold">${s}號</span>
+    `).join('');
+
+    if (activeSeats.length > 45) {
+        chipsEl.innerHTML += `<span class="text-xs text-stone-400 font-bold self-center">+其餘 ${activeSeats.length - 45} 位</span>`;
+    }
+}
+
+/**
+ * 更新新增班級表單中的名字模式即時預覽
+ */
+function updateAddRosterNamePreview() {
+    const textarea = document.getElementById('add-class-names-textarea');
+    const previewBox = document.getElementById('add-roster-names-preview');
+    if (!textarea || !previewBox) return;
+
+    const raw = textarea.value.trim();
+    if (!raw) {
+        previewBox.innerHTML = `<span class="text-stone-400 text-xs">貼上姓名後將即時預覽解析出的座號與姓名...</span>`;
+        return;
+    }
+
+    const parsed = parseSmartRosterText(raw);
+    const badges = Object.entries(parsed.studentNames)
+        .slice(0, 18)
+        .map(([seat, name]) => `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold"><strong class="font-mono text-amber-800">${seat}號</strong> ${escapeHtml(name)}</span>`)
+        .join('');
+    const moreCount = Math.max(0, parsed.count - 18);
+    const skippedText = parsed.skippedSeats.length > 0 ? `（自動標記缺號：${parsed.skippedSeats.join(', ')} 號）` : '（無跳號）';
+
+    previewBox.innerHTML = `
+        <div class="flex items-center justify-between text-xs font-black text-emerald-700 mb-1">
+            <span><i class="fa-solid fa-circle-check mr-1"></i>已解析 ${parsed.count} 位學生・最後座號 ${parsed.maxSeat} 號 ${skippedText}</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar">
+            ${badges}
+            ${moreCount > 0 ? `<span class="px-2 py-0.5 rounded-lg bg-stone-100 text-stone-600 text-xs font-bold self-center">+ 其餘 ${moreCount} 位</span>` : ''}
+        </div>
+    `;
+}
+
+/**
+ * 從新增班級表單中取得已設定的名單資料
+ */
+export function getRosterDataFromAddForm() {
+    if (addRosterMode === 'seat') {
+        const maxSeatInput = document.getElementById('add-class-max-seat');
+        const skippedInput = document.getElementById('add-class-skipped-seats');
+        const maxSeat = parseInt(maxSeatInput?.value, 10);
+        if (!maxSeat || maxSeat < 1 || maxSeat > 100) {
+            return { error: '請輸入 1 至 100 之間的有效最後號碼（全班人數）！' };
+        }
+
+        const skippedStr = skippedInput ? skippedInput.value.trim() : '';
+        const skippedSeats = [];
+        if (skippedStr) {
+            skippedStr.split(/[,，、\s]+/).forEach(part => {
+                if (!part) return;
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(x => parseInt(x, 10));
+                    if (!isNaN(start) && !isNaN(end)) {
+                        for (let i = Math.min(start, end); i <= Math.max(start, end); i++) skippedSeats.push(i);
+                    }
+                } else {
+                    const n = parseInt(part, 10);
+                    if (!isNaN(n)) skippedSeats.push(n);
+                }
+            });
+        }
+
+        const validCount = maxSeat - skippedSeats.filter(s => s <= maxSeat).length;
+        if (validCount <= 0) {
+            return { error: '名單設定中有效座號為 0，請確認最後號碼或排除缺號設定！' };
+        }
+
+        return {
+            mode: 'seat',
+            maxSeat,
+            skippedSeats,
+            studentNames: {},
+            count: validCount
+        };
+    } else {
+        const textarea = document.getElementById('add-class-names-textarea');
+        const raw = textarea ? textarea.value.trim() : '';
         if (!raw) {
-            previewBox.innerHTML = `<span class="text-slate-400 text-xs">貼上名單後將即時預覽解析出的座號、姓名與自動偵測缺號...</span>`;
-            return;
+            return { error: '請在名字模式中填寫或貼上學生姓名清單！' };
         }
         const parsed = parseSmartRosterText(raw);
-        const badges = Object.entries(parsed.studentNames)
-            .slice(0, 18)
-            .map(([seat, name]) => `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-xs font-bold"><strong class="font-mono text-indigo-900">${seat}號</strong> ${escapeHtml(name)}</span>`)
-            .join('');
-        const moreCount = Math.max(0, parsed.count - 18);
-        const skippedText = parsed.skippedSeats.length > 0 ? `（自動標記缺號：${parsed.skippedSeats.join(', ')} 號）` : '（無跳號）';
+        if (parsed.count === 0) {
+            return { error: '未能解析出任何有效的學生名單，請確認輸入格式！' };
+        }
+        return {
+            mode: 'name',
+            maxSeat: parsed.maxSeat,
+            skippedSeats: parsed.skippedSeats,
+            studentNames: parsed.studentNames,
+            count: parsed.count
+        };
+    }
+}
 
-        previewBox.innerHTML = `
-            <div class="flex items-center justify-between text-xs font-black text-emerald-700 mb-2">
-                <span><i class="fa-solid fa-circle-check mr-1"></i>已智慧辨識 ${parsed.count} 位學生・最後座號 ${parsed.maxSeat} 號 ${skippedText}</span>
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-                ${badges}
-                ${moreCount > 0 ? `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold">+ 其餘 ${moreCount} 位</span>` : ''}
-            </div>
-        `;
+/**
+ * 初始化班級名單與建班表單事件
+ */
+export function initClassWizard() {
+    // 隨機產生家長權限碼按鈕
+    const genCodeBtn = document.getElementById('gen-code-btn');
+    const accessCodeInput = document.getElementById('class-access-code');
+    if (genCodeBtn && accessCodeInput) {
+        genCodeBtn.addEventListener('click', () => {
+            accessCodeInput.value = generateRandomAccessCode();
+            showToast('已隨機產生家長權限碼！', 'info');
+        });
+    }
+
+    // 新增班級名單模式 Tab 切換
+    const seatTab = document.getElementById('add-roster-mode-tab-seat');
+    const nameTab = document.getElementById('add-roster-mode-tab-name');
+    const seatContainer = document.getElementById('add-roster-seat-container');
+    const nameContainer = document.getElementById('add-roster-name-container');
+
+    const switchAddRosterMode = (mode) => {
+        addRosterMode = mode;
+        if (mode === 'seat') {
+            seatTab?.classList.add('bg-white', 'text-amber-800', 'shadow-xs');
+            seatTab?.classList.remove('text-stone-600');
+            nameTab?.classList.remove('bg-white', 'text-amber-800', 'shadow-xs');
+            nameTab?.classList.add('text-stone-600');
+            seatContainer?.classList.remove('hidden');
+            nameContainer?.classList.add('hidden');
+            updateAddRosterSeatPreview();
+        } else {
+            nameTab?.classList.add('bg-white', 'text-amber-800', 'shadow-xs');
+            nameTab?.classList.remove('text-stone-600');
+            seatTab?.classList.remove('bg-white', 'text-amber-800', 'shadow-xs');
+            seatTab?.classList.add('text-stone-600');
+            nameContainer?.classList.remove('hidden');
+            seatContainer?.classList.add('hidden');
+            updateAddRosterNamePreview();
+        }
     };
 
-    if (rosterTextarea) {
-        rosterTextarea.addEventListener('input', updateRosterPreview);
-    }
+    seatTab?.addEventListener('click', () => switchAddRosterMode('seat'));
+    nameTab?.addEventListener('click', () => switchAddRosterMode('name'));
 
-    if (fillSampleBtn && rosterTextarea) {
-        fillSampleBtn.addEventListener('click', () => {
-            rosterTextarea.value = [
-                '1 王品妍', '2 林宥廷', '3 張語恩', '4 陳柏翰', '5 劉子睿',
-                '6 黃品潔', '7 吳承恩', '8 蔡依庭', '9 許哲瑋', '10 鄭宇軒',
-                '11 謝采潔', '12 郭宥均', '13 洪子晴', '14 邱翊誠', '15 曾品希'
-            ].join('\n');
-            updateRosterPreview();
-            showToast('已帶入範例學生名單，可自由修改或直接套用', 'info');
-        });
-    }
+    // 即時預覽輸入監聽
+    document.getElementById('add-class-max-seat')?.addEventListener('input', updateAddRosterSeatPreview);
+    document.getElementById('add-class-skipped-seats')?.addEventListener('input', updateAddRosterSeatPreview);
+    document.getElementById('add-class-names-textarea')?.addEventListener('input', updateAddRosterNamePreview);
 
-    // 套用智慧名單至目前選中班級
-    if (applyRosterToCurrentBtn) {
-        applyRosterToCurrentBtn.addEventListener('click', () => {
-            const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-            if (!currentClass) {
-                showToast('請先選擇或建立一個班級', 'error');
-                return;
-            }
-            const raw = rosterTextarea ? rosterTextarea.value.trim() : '';
-            if (!raw) {
-                showToast('請先在輸入框貼上學生名單', 'error');
-                return;
-            }
-            const parsed = parseSmartRosterText(raw);
-            if (parsed.count === 0) {
-                showToast('未能解析出有效名單，請檢查格式', 'error');
-                return;
-            }
-            currentClass.studentNames = { ...(currentClass.studentNames || {}), ...parsed.studentNames };
-            currentClass.lastMaxSeat = parsed.maxSeat;
-            currentClass.skippedSeats = parsed.skippedSeats;
-            currentClass.lastMissingSeats = parsed.skippedSeats.join(', ');
-            currentClass.hasConfiguredMaxSeat = true;
-
-            saveData();
-            renderClassList();
-            renderHomeworkList();
-            showToast(`已成功為「${currentClass.name}」匯入 ${parsed.count} 位學生姓名與座號配置！`, 'success');
-        });
-    }
-
-    // 支援在新增班級表單中同時讀取智慧名單（若有填寫）
-    const addClassForm = document.getElementById('add-class-form');
-    if (addClassForm) {
-        addClassForm.addEventListener('submit', () => {
-            setTimeout(() => {
-                const raw = rosterTextarea ? rosterTextarea.value.trim() : '';
-                if (!raw) return;
-                const newestClass = state.appData.classes[state.appData.classes.length - 1];
-                if (!newestClass) return;
-                const parsed = parseSmartRosterText(raw);
-                if (parsed.count > 0) {
-                    newestClass.studentNames = parsed.studentNames;
-                    newestClass.lastMaxSeat = parsed.maxSeat;
-                    newestClass.skippedSeats = parsed.skippedSeats;
-                    newestClass.lastMissingSeats = parsed.skippedSeats.join(', ');
-                    newestClass.hasConfiguredMaxSeat = true;
-                    rosterTextarea.value = '';
-                    updateRosterPreview();
-                    saveData();
-                    renderClassList();
-                }
-            }, 60);
-        });
-    }
-
-    if (openWizardBtn) {
-        openWizardBtn.addEventListener('click', () => {
-            const box = document.getElementById('smart-roster-wizard-drawer');
-            if (box) {
-                box.classList.toggle('hidden');
-            }
-        });
-    }
+    // 初始觸發一次預覽計算
+    updateAddRosterSeatPreview();
 }

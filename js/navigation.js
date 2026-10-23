@@ -257,6 +257,12 @@ export function showMainPage(fromHistory = false) {
     hideAllPages(); 
     const mainPageEl = document.getElementById('main-page'); 
     if (mainPageEl) mainPageEl.classList.remove('hidden');
+    // 確保預設展示總覽儀表板，隱藏內嵌學生詳情
+    const zeroDashboard = document.getElementById('zero-scroll-dashboard');
+    const studentContainer = document.getElementById('main-student-details-container');
+    if (zeroDashboard) zeroDashboard.classList.remove('hidden');
+    if (studentContainer) studentContainer.classList.add('hidden');
+
     if (!fromHistory) pushPageState({ page: 'main' }, '#main');
     checkAndCleanupStorage(); 
     updateTypeSelects(); 
@@ -280,9 +286,8 @@ export function showDetailPage(homeworkId, fromHistory = false) {
     if (detailPageEl) detailPageEl.classList.remove('hidden');
     if (!fromHistory) pushPageState({ page: 'detail', id: homeworkId }, '#detail');
 
-    // 若非從學生詳情點入，維持返回按鈕文字為「返回作業列表」
     const backBtn = document.getElementById('back-to-main-btn');
-    if (backBtn && (!detailPageEl || detailPageEl.dataset.from !== 'student-details-page')) {
+    if (backBtn) {
         backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表`;
     }
 
@@ -294,23 +299,21 @@ export function showDetailPage(homeworkId, fromHistory = false) {
 }
 
 export function showStudentDetailsPage(fromHistory = false) {
-    hideAllPages(); 
-    const studentPageEl = document.getElementById('student-details-page'); 
-    if (studentPageEl) studentPageEl.classList.remove('hidden');
-    if (!fromHistory) pushPageState({ page: 'student-details' }, '#student-details');
+    showMainPage(fromHistory); 
+    const zeroDashboard = document.getElementById('zero-scroll-dashboard');
+    const studentContainer = document.getElementById('main-student-details-container');
+    if (zeroDashboard) zeroDashboard.classList.add('hidden');
+    if (studentContainer) studentContainer.classList.remove('hidden');
+
     renderStudentDetailsPage(); 
-    restoreScroll('student-details-page');
-    updateMobileNavVisibility('student-details');
+    closeGlobalNavDrawer();
 
     if (state.lastActiveStudentSeat) {
         const targetSeat = state.lastActiveStudentSeat;
         setTimeout(() => {
             const card = document.getElementById(`student-card-seat-${targetSeat}`);
             if (card) {
-                const savedY = state.scrollPositions['student-details-page'] || 0;
-                if (!savedY) {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 card.classList.add('ring-4', 'ring-indigo-400', 'ring-offset-2', 'transition-all');
                 setTimeout(() => {
                     card.classList.remove('ring-4', 'ring-indigo-400', 'ring-offset-2');
@@ -537,7 +540,17 @@ export function updateDrawerFullscreenState() {
         icon.className = isFs ? 'fa-solid fa-compress text-amber-400 text-sm' : 'fa-solid fa-expand text-amber-400 text-sm';
     }
     if (text) {
-        text.textContent = isFs ? '退出全螢幕' : '切換全螢幕';
+        text.textContent = isFs ? '離開全螢幕' : '全螢幕';
+    }
+
+    // 同步更新考試計時看板的全螢幕按鈕
+    const examIcon = document.getElementById('exam-fs-icon');
+    const examText = document.getElementById('exam-fs-text');
+    if (examIcon) {
+        examIcon.className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+    }
+    if (examText) {
+        examText.textContent = isFs ? '離開全螢幕' : '全螢幕';
     }
 }
 window.updateDrawerFullscreenState = updateDrawerFullscreenState;
