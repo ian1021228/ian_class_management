@@ -16,6 +16,7 @@ import {
     isStudentCompleted 
 } from './render.js';
 import { checkInitialMaxSeatSetup } from './examScores.js';
+import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js';
 
 export function applyCheckMode(mode) {
     if (!mode || (mode !== 'manual' && mode !== 'scan')) {
@@ -170,7 +171,8 @@ export function restoreScroll(targetPageId) {
     const burgerBtn = document.getElementById('global-nav-burger-btn');
     if (burgerBtn) {
         // 首頁嚴格隱藏漢堡按鈕，進入系統工作台後一律常態顯示
-        burgerBtn.classList.toggle('hidden', targetPageId === 'portal-page');
+        const isPortal = targetPageId === 'portal-page' || !document.getElementById('portal-page')?.classList.contains('hidden');
+        burgerBtn.classList.toggle('hidden', isPortal);
     }
     const savedY = state.scrollPositions[targetPageId] || 0;
     window.scrollTo({ top: savedY, behavior: 'auto' }); 
@@ -239,7 +241,16 @@ export function updateMobileNavVisibility(pageName) {
 }
 
 export function showPortalPage(fromHistory = false) {
-    showMainPage(fromHistory);
+    hideAllPages();
+    const portalPageEl = document.getElementById('portal-page');
+    if (portalPageEl) portalPageEl.classList.remove('hidden');
+    if (!fromHistory) pushPageState({ page: 'portal' }, '#portal');
+    updatePortalUI();
+    restoreScroll('portal-page');
+    updateGuestHomeBtnVisibility();
+    updateMobileNavVisibility('portal');
+    const burgerBtn = document.getElementById('global-nav-burger-btn');
+    if (burgerBtn) burgerBtn.classList.add('hidden');
 }
 
 export function showMainPage(fromHistory = false) {
@@ -250,6 +261,7 @@ export function showMainPage(fromHistory = false) {
     checkAndCleanupStorage(); 
     updateTypeSelects(); 
     renderClassSelector(); 
+    renderZeroScrollDashboard();
     renderHomeworkList();
     state.currentHomeworkId = null; 
     const detailPage = document.getElementById('detail-page');
@@ -258,6 +270,8 @@ export function showMainPage(fromHistory = false) {
     updateMobileNavVisibility('main');
     checkInitialMaxSeatSetup();
     applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
+    const burgerBtn = document.getElementById('global-nav-burger-btn');
+    if (burgerBtn) burgerBtn.classList.remove('hidden');
 }
 
 export function showDetailPage(homeworkId, fromHistory = false) {
@@ -314,10 +328,11 @@ export function showContactBookPage(fromHistory = false) {
     state.selectedDate = new Date(); 
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     const titleEl = document.getElementById('contact-book-title'); 
-    if (titleEl) titleEl.textContent = `${currentClass?.name || ''} 聯絡簿`;
-    renderContactBookItems(); 
+    if (titleEl) titleEl.textContent = `【${currentClass?.name || '班級'}】聯絡簿與值日生`;
+    renderEnhancedBlackboard(); 
     restoreScroll('contact-book-page');
-    updateMobileNavVisibility('contact-book');
+    updateMobileNavVisibility('contact');
+    closeGlobalNavDrawer();
 }
 
 export function showHomeworkTypesPage(fromHistory = false) {
@@ -424,10 +439,12 @@ export function showQuickAuthPage(fromHistory = false) {
 
 if (typeof window !== 'undefined') {
     window.showMainPage = showMainPage;
+    window.showDetailPage = showDetailPage;
     window.showContactBookPage = showContactBookPage;
     window.showExamScoresPage = showExamScoresPage;
     window.showManageClassPage = showManageClassPage;
     window.showQuickAuthPage = showQuickAuthPage;
+    window.showPortalPage = showPortalPage;
 }
 
 export function openGlobalNavDrawer() {
@@ -517,12 +534,13 @@ export function updateDrawerFullscreenState() {
     const icon = document.getElementById('drawer-fs-icon');
     const text = document.getElementById('drawer-fs-text');
     if (icon) {
-        icon.className = isFs ? 'fa-solid fa-compress text-indigo-400 text-base' : 'fa-solid fa-expand text-indigo-400 text-base';
+        icon.className = isFs ? 'fa-solid fa-compress text-amber-400 text-sm' : 'fa-solid fa-expand text-amber-400 text-sm';
     }
     if (text) {
-        text.textContent = isFs ? '退出真實全螢幕' : '切換真實全螢幕';
+        text.textContent = isFs ? '退出全螢幕' : '切換全螢幕';
     }
 }
+window.updateDrawerFullscreenState = updateDrawerFullscreenState;
 
 export function initGlobalNavDrawer() {
     const burgerBtn = document.getElementById('global-nav-burger-btn');
@@ -534,7 +552,8 @@ export function initGlobalNavDrawer() {
     const logoutBtn = document.getElementById('drawer-logout-btn');
 
     if (burgerBtn) {
-        burgerBtn.classList.remove('hidden');
+        const isPortal = !state.currentPage || state.currentPage === 'portal-page' || (!document.getElementById('portal-page')?.classList.contains('hidden'));
+        burgerBtn.classList.toggle('hidden', isPortal);
         burgerBtn.onclick = (e) => {
             if (e) {
                 e.preventDefault();

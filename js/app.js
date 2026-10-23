@@ -314,9 +314,9 @@ async function init() {
         startRealtimeCloudSync();
     }
 
-    // 6. 頁面導航初始化：沉浸式純全景工作台切換模式（進站直接進入沉浸式功能工作台）
-    sessionStorage.setItem('has_passed_portal_in_session', 'true');
+    // 6. 頁面導航初始化 (未登入時預設顯示首頁且隱藏漢堡按鈕，進入系統工作台後才會顯示)
     const hash = window.location.hash;
+    const hasPassedPortal = sessionStorage.getItem('has_passed_portal_in_session') === 'true' || !!state.currentUser;
     if (hash === '#attendance') {
         showAttendancePage(true);
     } else if (hash === '#draw-points') {
@@ -331,13 +331,16 @@ async function init() {
         showStudentDetailsPage(true);
     } else if (hash === '#homework-types') {
         showHomeworkTypesPage(true);
-    } else {
+    } else if (hash === '#scores' || hash === '#exam-scores') {
+        showExamScoresPage(true);
+    } else if (hash === '#classes' || hash === '#manage-class') {
+        showManageClassPage(true);
+    } else if (hash === '#main' || (hasPassedPortal && hash !== '#portal')) {
         applyCheckMode(localStorage.getItem('checkMode') || 'manual');
         pushPageState({ page: 'main' }, '#main'); 
         showMainPage(true);
-        if (state.appData.classes.length === 0) {
-            openModal(document.getElementById('manage-classes-modal'));
-        }
+    } else {
+        showPortalPage(true);
     }
 }
 

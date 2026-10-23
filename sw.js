@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ian-class-mgmt-v5.2.0';
+const CACHE_NAME = 'ian-class-mgmt-v5.2.1';
 const urlsToCache = [
   './index.html',
   './parent.html',
@@ -34,6 +34,15 @@ const urlsToCache = [
   './assets/images/bg_seating_groups.jpg',
   './assets/images/bg_exam_timer.jpg',
   './assets/images/bg_contact_blackboard.jpg',
+  './assets/images/bg_scores_analytics.jpg',
+  './assets/images/planet_homework.png',
+  './assets/images/planet_attendance.png',
+  './assets/images/planet_arena.png',
+  './assets/images/planet_seating.png',
+  './assets/images/planet_timer.png',
+  './assets/images/planet_blackboard.png',
+  './assets/images/planet_scores.png',
+  './assets/images/planet_classes.png',
   './assets/images/banner_classroom.jpg',
   './assets/images/banner_attendance.jpg',
   './assets/images/banner_quiz_stage.jpg',

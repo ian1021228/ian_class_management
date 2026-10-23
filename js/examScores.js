@@ -1388,7 +1388,7 @@ export function setupExamScoresEvents() {
   document.getElementById('exam-scores-system-btn')?.addEventListener('click', openScoresSystem);
   document.getElementById('hw-list-scores-btn')?.addEventListener('click', openScoresSystem);
 
-  // 關閉全螢幕成績系統
+  // 關閉全螢幕成績系統 (返回作業清單)
   document.getElementById('btn-close-exam-scores-view')?.addEventListener('click', () => {
     const fullscreenView = document.getElementById('exam-scores-fullscreen-view');
     if (fullscreenView) {
@@ -1399,6 +1399,9 @@ export function setupExamScoresEvents() {
       try { unsubscribeStudentScores(); } catch (e) {}
       unsubscribeStudentScores = null;
       currentSyncClassCode = null;
+    }
+    if (window.showMainPage) {
+      window.showMainPage();
     }
   });
 

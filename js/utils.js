@@ -445,6 +445,34 @@ export function isAppFullscreen() {
     );
 }
 
+export function updateAllFullscreenUI() {
+    if (typeof window.updateDrawerFullscreenState === 'function') {
+        window.updateDrawerFullscreenState();
+    }
+}
+window.updateAllFullscreenUI = updateAllFullscreenUI;
+
+if (typeof document !== 'undefined') {
+    const onFsChange = () => {
+        const isNative = Boolean(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+        if (!isNative) {
+            document.documentElement.classList.remove('app-fullscreen-active');
+        } else {
+            document.documentElement.classList.add('app-fullscreen-active');
+        }
+        updateAllFullscreenUI();
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('mozfullscreenchange', onFsChange);
+    document.addEventListener('MSFullscreenChange', onFsChange);
+}
+
 /**
  * 切換全螢幕（呼叫瀏覽器原生 Fullscreen API，並具備沉浸全景備援）
  */
@@ -461,10 +489,10 @@ export function toggleAppFullscreen() {
                 const res = rfs.call(docEl);
                 if (res && typeof res.then === 'function') {
                     res.then(() => {
-                        window.updateAllFullscreenUI?.();
+                        updateAllFullscreenUI();
                     }).catch(err => {
                         console.warn('Native Fullscreen request rejected, using CSS Zen Fullscreen fallback:', err);
-                        window.updateAllFullscreenUI?.();
+                        updateAllFullscreenUI();
                     });
                 }
             } catch (err) {
@@ -492,7 +520,7 @@ export function toggleAppFullscreen() {
     }
 
     setTimeout(() => {
-        window.updateAllFullscreenUI?.();
+        updateAllFullscreenUI();
     }, 120);
 }
 

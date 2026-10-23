@@ -302,6 +302,7 @@ export function renderHomeworkList() {
             homeworkList.appendChild(hwItem);
         });
     }
+    window.renderZeroScrollDashboard?.();
 }
 
 export function renderStudentGrid(homeworkId) {

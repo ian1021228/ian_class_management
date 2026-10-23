@@ -206,31 +206,41 @@ export function initDynamicIsland() {
     document.getElementById('island-btn-attendance')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleDynamicIsland(false);
-        document.getElementById('open-attendance-hub-btn')?.click();
+        const btn = document.getElementById('open-attendance-hub-btn');
+        if (btn) btn.click();
+        else if (window.showAttendancePage) window.showAttendancePage();
     });
 
     document.getElementById('island-btn-draw')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleDynamicIsland(false);
-        document.getElementById('open-draw-points-modal-btn')?.click();
+        const btn = document.getElementById('open-draw-points-modal-btn');
+        if (btn) btn.click();
+        else if (window.showDrawPointsPage) window.showDrawPointsPage();
     });
 
     document.getElementById('island-btn-seating')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleDynamicIsland(false);
-        document.getElementById('open-classroom-studio-btn')?.click();
+        const btn = document.getElementById('open-classroom-studio-btn');
+        if (btn) btn.click();
+        else if (window.showClassroomStudioPage) window.showClassroomStudioPage();
     });
 
     document.getElementById('island-btn-timer')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleDynamicIsland(false);
-        document.getElementById('open-exam-timer-btn')?.click();
+        const btn = document.getElementById('open-exam-timer-btn');
+        if (btn) btn.click();
+        else if (window.showExamTimerPage) window.showExamTimerPage();
     });
 
     document.getElementById('island-btn-blackboard')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleDynamicIsland(false);
-        document.getElementById('contact-book-btn')?.click();
+        const btn = document.getElementById('open-contact-book-quick-btn') || document.getElementById('contact-book-btn');
+        if (btn) btn.click();
+        else if (window.showContactBookPage) window.showContactBookPage();
     });
 
     // 定時刷新時鐘
