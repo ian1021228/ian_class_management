@@ -1288,7 +1288,7 @@ function exportToDocx(rows, className, fileName) {
       ${rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}
     </tbody>
   </table>
-  <p class="footer">班級經營系統 3.0</p>
+  <p class="footer">PalClass 全方位班級經營系統</p>
 </body>
 </html>`;
 

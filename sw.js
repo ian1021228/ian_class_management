@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ian-class-mgmt-v5.4.1';
+const CACHE_NAME = 'palclass-v5.5.0';
 const urlsToCache = [
   './index.html',
   './parent.html',

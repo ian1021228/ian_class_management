@@ -5,19 +5,19 @@
  * 2. 課堂抽籤獨立頁面 (#lottery-page)：3D 公平籤筒（點擊籤筒直接抽籤）、密碼級不重複隨機點名、即時評分膠囊、個人積分排行榜
  */
 
-import { state } from '../state.js?v=5.4.1';
-import { showToast, openModal, closeModal, escapeHtml } from '../utils.js?v=5.4.1';
-import { saveData } from '../storage.js?v=5.4.1';
-import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js?v=5.4.1';
-import { isStudentAbsentOrLeaveToday } from './attendanceHub.js?v=5.4.1';
+import { state } from '../state.js';
+import { showToast, openModal, closeModal, escapeHtml } from '../utils.js';
+import { saveData } from '../storage.js';
+import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js';
+import { isStudentAbsentOrLeaveToday } from './attendanceHub.js';
 import {
     playLotteryTick,
     playLotteryWinner,
     playPointAdd,
     playPointDeduct,
     playGoalAchieved
-} from './audioFx.js?v=5.4.1';
-import { triggerConfetti } from './confettiFx.js?v=5.4.1';
+} from './audioFx.js';
+import { triggerConfetti } from './confettiFx.js';
 
 let isDrawing = false;
 let currentDrawnSeat = null;

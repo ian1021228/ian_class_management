@@ -200,8 +200,12 @@ export function openAttendanceStatusModal(seat) {
     const dayMap = currentClass.attendanceRecords[selectedAttendanceDate] || {};
     const existing = dayMap[String(seat)];
     const meta = ATTENDANCE_STATUS_META[existing?.status] || ATTENDANCE_STATUS_META.unmarked;
-    if (statusEl) statusEl.textContent = `目前狀態：${meta.label} (${existing?.time || '尚未打卡'})`;
+    if (statusEl) statusEl.textContent = `目前狀態：${meta.label} (${existing?.time || '尚未打卡'}${existing?.isModified ? ' · 已修改' : ''})`;
     if (noteInp) noteInp.value = existing?.note || '';
+    const timeInp = document.getElementById('att-modal-time-input');
+    if (timeInp) {
+        timeInp.value = existing?.time ? existing.time.substring(0, 8) : '';
+    }
 
     modal.classList.remove('hidden');
 }
@@ -306,7 +310,7 @@ export function renderAttendanceHub() {
                 ${sName ? escapeHtml(sName) : `學生 ${seat} 號`}
             </div>
             <div class="mt-1 flex items-center justify-between text-[11px] font-mono opacity-85">
-                <span>${rec?.time ? `<i class="fa-regular fa-clock mr-1"></i>${rec.time}` : '點擊簽到'}</span>
+                <span>${rec?.time ? `<i class="fa-regular fa-clock mr-1"></i>${rec.time}${rec.isModified ? ' <span class="text-[9px] bg-black/25 px-1 py-0.5 rounded text-white font-black ml-1">已修改</span>' : ''}` : '點擊簽到'}</span>
             </div>
         `;
 
@@ -339,7 +343,7 @@ export function renderAttendanceHub() {
                         <div class="flex items-center gap-2 min-w-0">
                             <span class="px-2.5 py-1 rounded-xl font-black ${meta.softClass}">${meta.short}</span>
                             <span class="font-black text-slate-800 truncate">${escapeHtml(getStudentDisplayName(currentClass, seat, true))}</span>
-                            <span class="font-mono text-slate-400 text-[11px]">${rec.time || ''}</span>
+                            <span class="font-mono text-slate-400 text-[11px]">${rec.time || ''}${rec.isModified ? ' <span class="text-amber-600 font-bold">(已修改)</span>' : ''}</span>
                         </div>
                         <input type="text" data-note-seat="${seat}" value="${escapeHtml(rec.note || '')}" placeholder="原因備註(例:病假/看牙醫)" class="att-note-input w-36 sm:w-48 text-xs px-2.5 py-1 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-medium">
                     </div>
@@ -550,6 +554,14 @@ export function initAttendanceHub() {
         if (e.target.id === 'attendance-status-modal') closeAttendanceStatusModal();
     });
 
+    document.getElementById('att-modal-now-time-btn')?.addEventListener('click', () => {
+        const now = new Date();
+        const timeInp = document.getElementById('att-modal-time-input');
+        if (timeInp) {
+            timeInp.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+    });
+
     document.querySelectorAll('.att-status-pick-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             if (!currentModalSeat) return;
@@ -559,8 +571,20 @@ export function initAttendanceHub() {
             const dayMap = currentClass.attendanceRecords[selectedAttendanceDate];
             const status = btn.dataset.status;
             const note = document.getElementById('att-modal-note-input')?.value.trim() || '';
+            const customTime = document.getElementById('att-modal-time-input')?.value.trim();
+            const existingRec = dayMap[String(currentModalSeat)];
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            let finalTime = existingRec?.time || timeStr;
+            let isModified = existingRec?.isModified || false;
+
+            if (customTime) {
+                const formattedCustomTime = customTime.length === 5 ? `${customTime}:00` : customTime;
+                if (!existingRec || formattedCustomTime !== existingRec.time) {
+                    finalTime = formattedCustomTime;
+                    isModified = true;
+                }
+            }
 
             if (status === 'unmarked') {
                 delete dayMap[String(currentModalSeat)];
@@ -568,11 +592,12 @@ export function initAttendanceHub() {
             } else {
                 dayMap[String(currentModalSeat)] = {
                     status,
-                    time: dayMap[String(currentModalSeat)]?.time || timeStr,
-                    note
+                    time: finalTime,
+                    note,
+                    isModified
                 };
                 const meta = ATTENDANCE_STATUS_META[status];
-                showToast(`已將 ${currentModalSeat} 號學生標記為「${meta.label}」`, 'success');
+                showToast(`已將 ${currentModalSeat} 號學生標記為「${meta.label}」${isModified ? '（自訂時間已修改）' : ''}`, 'success');
             }
             saveData();
             renderAttendanceHub();

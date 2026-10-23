@@ -13,7 +13,7 @@
  */
 
 import { state } from '../state.js';
-import { showToast, escapeHtml } from '../utils.js';
+import { showToast, escapeHtml, openModal, closeModal } from '../utils.js';
 import { saveData } from '../storage.js';
 import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly } from './classWizard.js';
 
@@ -535,22 +535,47 @@ function renderSeatingView(currentClass) {
                 } else if (studentSeat) {
                     const studentName = getStudentNameOnly(currentClass, studentSeat);
                     cell.draggable = true;
-                    cell.innerHTML = `
-                        <div class="w-full flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
-                            ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
-                        </div>
-                        <div class="my-auto text-center w-full">
-                            <strong class="font-mono text-2xl font-black text-stone-800 leading-none block">${studentSeat}</strong>
-                            ${!onlySeatNumber && studentName ? `<span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-0.5">${escapeHtml(studentName)}</span>` : ''}
-                        </div>
-                        <span class="text-[10px] text-emerald-700 font-bold">${isLocked ? '已固定' : '已就座'}</span>
-                    `;
+
+                    if (isSelected) {
+                        cell.innerHTML = `
+                            <div class="w-full flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-amber-700">${posLabel}</span>
+                                ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
+                            </div>
+                            <div class="my-auto text-center w-full flex flex-col items-center justify-center gap-1.5 py-1">
+                                <div class="flex items-center justify-center gap-1">
+                                    <strong class="font-mono text-xl font-black text-rose-700 leading-none">${studentSeat}</strong>
+                                    ${studentName ? `<span class="text-xs font-bold text-stone-700 truncate max-w-[65px]">${escapeHtml(studentName)}</span>` : ''}
+                                </div>
+                                <button type="button" class="studio-remove-to-unassigned-btn px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-90 text-white font-black text-xs shadow-md shadow-rose-600/30 flex items-center justify-center gap-1 transition-all cursor-pointer select-none" data-seat="${studentSeat}" data-r="${r}" data-c="${c}" title="移至待安排">
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                                    <span>移至待安排</span>
+                                </button>
+                            </div>
+                            <span class="text-[10px] text-rose-600 font-black">已選定</span>
+                        `;
+                    } else {
+                        cell.innerHTML = `
+                            <div class="w-full flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
+                                ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
+                            </div>
+                            <div class="my-auto text-center w-full">
+                                <strong class="font-mono text-2xl font-black text-stone-800 leading-none block">${studentSeat}</strong>
+                                ${!onlySeatNumber && studentName ? `<span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-0.5">${escapeHtml(studentName)}</span>` : ''}
+                            </div>
+                            <span class="text-[10px] text-emerald-700 font-bold">${isLocked ? '已固定' : '已就座'}</span>
+                        `;
+                    }
 
                     // 拖曳來源
                     cell.addEventListener('dragstart', (e) => {
                         draggedSource = { type: 'seat', seat: studentSeat, r, c };
                         e.dataTransfer.setData('text/plain', String(studentSeat));
+                    });
+                    cell.addEventListener('dragend', () => {
+                        draggedSource = null;
+                        setUnassignedDragHighlight(false);
                     });
                 } else {
                     // 空位
@@ -569,6 +594,13 @@ function renderSeatingView(currentClass) {
                         return;
                     }
 
+                    // 若點擊移至待安排按鈕
+                    const removeBtn = e.target.closest('.studio-remove-to-unassigned-btn');
+                    if (removeBtn && studentSeat) {
+                        moveStudentToUnassigned(studentSeat, r, c);
+                        return;
+                    }
+
                     // 若點擊的是固定菱形圖標
                     if (e.target.closest('.fa-diamond') && studentSeat) {
                         toggleSeatLocked(studentSeat);
@@ -581,8 +613,7 @@ function renderSeatingView(currentClass) {
                             placeStudentAtCell(selectedSource.seat, r, c);
                         } else if (selectedSource.type === 'seat') {
                             if (selectedSource.r === r && selectedSource.c === c) {
-                                // 點同一個座位：切換鎖定狀態或取消選取
-                                toggleSeatLocked(studentSeat);
+                                // 點同一個座位：取消選取
                                 selectedSource = null;
                                 renderClassroomStudio();
                             } else {
@@ -690,33 +721,45 @@ function renderSeatingView(currentClass) {
                 });
             }
         }
-
-        // 待安排容器支援將已就座的學生拖入以清空回待安排區塊
-        unassignedContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            unassignedContainer.classList.add('bg-rose-50/50');
-        });
-        unassignedContainer.addEventListener('dragleave', () => {
-            unassignedContainer.classList.remove('bg-rose-50/50');
-        });
-        unassignedContainer.addEventListener('drop', (e) => {
-            e.preventDefault();
-            unassignedContainer.classList.remove('bg-rose-50/50');
-            if (draggedSource && draggedSource.type === 'seat') {
-                const cfg = currentClass.seatingConfig;
-                if (cfg.layout[draggedSource.r]) {
-                    cfg.layout[draggedSource.r][draggedSource.c] = null;
-                }
-                const lIdx = cfg.lockedSeats.indexOf(draggedSource.seat);
-                if (lIdx >= 0) cfg.lockedSeats.splice(lIdx, 1);
-                draggedSource = null;
-                pushHistory(currentClass);
-                saveData();
-                renderClassroomStudio();
-                showToast('已將學生移回待安排名單', 'info');
-            }
-        });
     }
+}
+
+let isUnassignedDragHovered = false;
+export function setUnassignedDragHighlight(active) {
+    const sec = document.getElementById('studio-unassigned-section');
+    if (!sec) return;
+    if (active) {
+        if (!isUnassignedDragHovered) {
+            isUnassignedDragHovered = true;
+            sec.classList.add('bg-rose-50/70', 'border-rose-400', 'border-dashed');
+        }
+    } else {
+        if (isUnassignedDragHovered) {
+            isUnassignedDragHovered = false;
+            sec.classList.remove('bg-rose-50/70', 'border-rose-400', 'border-dashed');
+        }
+    }
+}
+
+/**
+ * 將指定座位上的學生移回待安排區塊
+ */
+export function moveStudentToUnassigned(seat, r, c) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass || !currentClass.seatingConfig) return;
+    const cfg = currentClass.seatingConfig;
+    if (cfg.layout && cfg.layout[r] && cfg.layout[r][c] === seat) {
+        cfg.layout[r][c] = null;
+    }
+    const lIdx = cfg.lockedSeats ? cfg.lockedSeats.indexOf(seat) : -1;
+    if (lIdx >= 0) cfg.lockedSeats.splice(lIdx, 1);
+    selectedSource = null;
+    draggedSource = null;
+    setUnassignedDragHighlight(false);
+    pushHistory(currentClass);
+    saveData();
+    renderClassroomStudio();
+    showToast(`已將 ${seat} 號移回待安排名單`, 'info');
 }
 
 /**
@@ -735,7 +778,7 @@ function renderGroupsView(currentClass) {
         container.innerHTML = `
             <div class="col-span-full py-12 text-center text-stone-400 font-bold space-y-3">
                 <i class="fa-solid fa-people-group text-4xl text-stone-300"></i>
-                <p>尚未建立小組分組，請點擊上方「重新劃分小組」按鈕以自動分組</p>
+                <p>尚未建立小組分組，請點擊上方「手動設定組員」或「重新劃分小組」按鈕開始分組</p>
             </div>
         `;
         return;
@@ -758,11 +801,21 @@ function renderGroupsView(currentClass) {
         }`;
 
         const membersHtml = (g.seats || []).map(seat => `
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-stone-50 border border-stone-200/80 text-xs font-bold text-stone-700">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-stone-50 border border-stone-200/80 text-xs font-bold text-stone-700">
                 <strong class="font-mono text-stone-900">${seat}號</strong>
-                <span class="truncate max-w-[70px]">${escapeHtml(getStudentNameOnly(currentClass, seat) || '')}</span>
+                <span class="truncate max-w-[65px]">${escapeHtml(getStudentNameOnly(currentClass, seat) || '')}</span>
+                <button type="button" class="studio-remove-group-member-btn text-stone-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer ml-0.5" data-gid="${g.id}" data-seat="${seat}" title="自此組移出">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
             </span>
         `).join('');
+
+        const addMemberBtnHtml = `
+            <button type="button" class="studio-add-member-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 border border-dashed border-amber-300 text-xs font-black text-amber-800 cursor-pointer active:scale-95" data-gid="${g.id}" title="加入組員">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>加入組員</span>
+            </button>
+        `;
 
         card.innerHTML = `
             <div>
@@ -770,14 +823,18 @@ function renderGroupsView(currentClass) {
                     <div class="flex items-center gap-2">
                         ${isPodium ? `<i class="fa-solid fa-trophy ${medalColors[rank - 1]} text-lg"></i>` : `<span class="w-6 h-6 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center font-mono font-bold text-xs">${rank}</span>`}
                         <h4 class="font-black text-stone-900 text-base">${escapeHtml(g.name)}</h4>
+                        <button type="button" class="studio-edit-group-btn text-stone-400 hover:text-amber-800 p-1 text-xs font-bold transition-colors cursor-pointer" data-gid="${g.id}" title="手動設定此組成員">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </button>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="font-black font-mono text-xl text-stone-900">${score}</span>
                         <span class="text-[10px] text-stone-400 font-bold">分</span>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 mb-4">
-                    ${membersHtml || '<span class="text-xs text-stone-400">尚無成員</span>'}
+                <div class="flex flex-wrap gap-1.5 mb-4 items-center">
+                    ${membersHtml}
+                    ${addMemberBtnHtml}
                 </div>
             </div>
             <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-1">
@@ -801,8 +858,170 @@ function renderGroupsView(currentClass) {
             });
         });
 
+        card.querySelectorAll('.studio-remove-group-member-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeStudentFromGroup(btn.dataset.gid, parseInt(btn.dataset.seat, 10));
+            });
+        });
+
+        card.querySelectorAll('.studio-edit-group-btn, .studio-add-member-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openManualGroupModal(btn.dataset.gid);
+            });
+        });
+
         container.appendChild(card);
     });
+}
+
+let currentEditingGroupId = null;
+
+export function removeStudentFromGroup(gid, seat) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass || !currentClass.groupsConfig) return;
+    const g = (currentClass.groupsConfig.groups || []).find(grp => grp.id === gid);
+    if (!g || !Array.isArray(g.seats)) return;
+    g.seats = g.seats.filter(s => s !== seat);
+    saveData();
+    renderClassroomStudio();
+    showToast(`已將 ${seat} 號自【${g.name}】移出`, 'info');
+}
+
+export function openManualGroupModal(targetGid = null) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    let groups = currentClass.groupsConfig.groups;
+    if (!Array.isArray(groups) || groups.length === 0) {
+        groups = [];
+        for (let i = 1; i <= 6; i++) {
+            groups.push({ id: `group_${i}`, name: `第 ${i} 組`, seats: [] });
+        }
+        currentClass.groupsConfig.groups = groups;
+        currentClass.groupsConfig.groupCount = 6;
+    }
+
+    currentEditingGroupId = targetGid || groups[0].id;
+    const modal = document.getElementById('studio-manual-group-modal');
+    if (!modal) return;
+    openModal(modal);
+
+    renderManualGroupModalContent();
+}
+
+function renderManualGroupModalContent() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass || !currentClass.groupsConfig) return;
+
+    const groups = currentClass.groupsConfig.groups || [];
+    const curGroup = groups.find(g => g.id === currentEditingGroupId) || groups[0];
+    if (!curGroup) return;
+    currentEditingGroupId = curGroup.id;
+
+    // 1. 渲染小組切換 Tabs
+    const tabsContainer = document.getElementById('studio-manual-group-tabs');
+    if (tabsContainer) {
+        tabsContainer.innerHTML = '';
+        groups.forEach(g => {
+            const isCur = g.id === currentEditingGroupId;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none ${
+                isCur 
+                    ? 'bg-amber-600 text-white shadow-xs' 
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+            }`;
+            btn.textContent = `${g.name} (${g.seats ? g.seats.length : 0}人)`;
+            btn.addEventListener('click', () => {
+                currentEditingGroupId = g.id;
+                renderManualGroupModalContent();
+            });
+            tabsContainer.appendChild(btn);
+        });
+    }
+
+    // 2. 標題與統計
+    const labelEl = document.getElementById('studio-manual-group-current-label');
+    if (labelEl) labelEl.textContent = `當前正在編輯：${curGroup.name}`;
+
+    const activeSeats = getActiveSeatsForClass(currentClass);
+    const seatToGroupMap = new Map();
+    groups.forEach(g => {
+        (g.seats || []).forEach(s => seatToGroupMap.set(s, g));
+    });
+
+    const unassignedCount = activeSeats.filter(s => !seatToGroupMap.has(s)).length;
+    const statsEl = document.getElementById('studio-manual-group-stats');
+    if (statsEl) {
+        statsEl.textContent = `本組共 ${curGroup.seats ? curGroup.seats.length : 0} 人 · 全班未分組 ${unassignedCount} 人`;
+    }
+
+    // 3. 學生網格
+    const searchVal = (document.getElementById('studio-manual-group-search')?.value || '').trim().toLowerCase();
+    const grid = document.getElementById('studio-manual-group-students-grid');
+    if (grid) {
+        grid.innerHTML = '';
+        const filteredSeats = activeSeats.filter(seat => {
+            if (!searchVal) return true;
+            const name = getStudentNameOnly(currentClass, seat) || '';
+            return String(seat).includes(searchVal) || name.toLowerCase().includes(searchVal);
+        });
+
+        if (filteredSeats.length === 0) {
+            grid.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-stone-400 font-bold">查無相符學生</div>`;
+        } else {
+            filteredSeats.forEach(seat => {
+                const name = getStudentNameOnly(currentClass, seat) || '';
+                const assignedGroup = seatToGroupMap.get(seat);
+                const isInCurrent = curGroup.seats && curGroup.seats.includes(seat);
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between select-none ${
+                    isInCurrent
+                        ? 'bg-emerald-50 border-emerald-500 shadow-2xs ring-2 ring-emerald-400/40'
+                        : assignedGroup
+                            ? 'bg-amber-50/50 border-amber-200 text-stone-700 hover:border-amber-400'
+                            : 'bg-white border-stone-200 text-stone-800 hover:border-stone-400'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <strong class="font-mono text-sm ${isInCurrent ? 'text-emerald-900' : 'text-stone-900'}">${seat} 號</strong>
+                        <span class="text-[10px] font-black px-1.5 py-0.5 rounded ${
+                            isInCurrent 
+                                ? 'bg-emerald-200 text-emerald-900' 
+                                : assignedGroup 
+                                    ? 'bg-amber-100 text-amber-800' 
+                                    : 'bg-stone-100 text-stone-500'
+                        }">
+                            ${isInCurrent ? '✓ 本組' : assignedGroup ? assignedGroup.name : '未分組'}
+                        </span>
+                    </div>
+                    <span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-1">${escapeHtml(name)}</span>
+                `;
+
+                card.addEventListener('click', () => {
+                    if (isInCurrent) {
+                        curGroup.seats = curGroup.seats.filter(s => s !== seat);
+                    } else {
+                        if (assignedGroup && Array.isArray(assignedGroup.seats)) {
+                            assignedGroup.seats = assignedGroup.seats.filter(s => s !== seat);
+                        }
+                        if (!Array.isArray(curGroup.seats)) curGroup.seats = [];
+                        curGroup.seats.push(seat);
+                        curGroup.seats.sort((a, b) => a - b);
+                    }
+                    renderManualGroupModalContent();
+                });
+
+                grid.appendChild(card);
+            });
+        }
+    }
 }
 
 /**
@@ -979,6 +1198,37 @@ export function initClassroomStudio() {
         window.print();
     });
 
+    // 手動分組名單彈窗設定
+    document.getElementById('studio-manual-group-btn')?.addEventListener('click', () => {
+        openManualGroupModal();
+    });
+    document.getElementById('close-studio-manual-group-modal-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('studio-manual-group-modal'));
+    });
+    document.getElementById('studio-manual-group-cancel-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('studio-manual-group-modal'));
+    });
+    document.getElementById('studio-manual-group-save-btn')?.addEventListener('click', () => {
+        saveData();
+        closeModal(document.getElementById('studio-manual-group-modal'));
+        renderClassroomStudio();
+        showToast('小組成員設定已成功儲存！', 'success');
+    });
+    document.getElementById('studio-manual-group-clear-current-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (currentClass && currentClass.groupsConfig && currentClass.groupsConfig.groups) {
+            const curG = currentClass.groupsConfig.groups.find(g => g.id === currentEditingGroupId);
+            if (curG) {
+                curG.seats = [];
+                renderManualGroupModalContent();
+                showToast(`已清空【${curG.name}】成員名單`, 'info');
+            }
+        }
+    });
+    document.getElementById('studio-manual-group-search')?.addEventListener('input', () => {
+        renderManualGroupModalContent();
+    });
+
     // 點擊空白處取消選取
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#studio-seats-grid') && !e.target.closest('#studio-unassigned-list')) {
@@ -992,3 +1242,4 @@ export function initClassroomStudio() {
 
 window.renderClassroomStudio = renderClassroomStudio;
 window.resetAllGroupScores = resetAllGroupScores;
+window.openManualGroupModal = openManualGroupModal;

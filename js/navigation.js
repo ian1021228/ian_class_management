@@ -1,6 +1,6 @@
-import { state } from './state.js?v=5.4.1';
-import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js?v=5.4.1';
-import { saveData, checkAndCleanupStorage } from './storage.js?v=5.4.1';
+import { state } from './state.js';
+import { openModal, closeModal, showToast, formatDate, toggleAppFullscreen, isAppFullscreen } from './utils.js';
+import { saveData, checkAndCleanupStorage } from './storage.js';
 import { 
     renderClassSelector, 
     renderClassList, 
@@ -14,9 +14,9 @@ import {
     updatePortalUI, 
     updateGuestHomeBtnVisibility,
     isStudentCompleted 
-} from './render.js?v=5.4.1';
-import { checkInitialMaxSeatSetup } from './examScores.js?v=5.4.1';
-import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js?v=5.4.1';
+} from './render.js';
+import { checkInitialMaxSeatSetup } from './examScores.js';
+import { renderEnhancedBlackboard, renderZeroScrollDashboard } from './modules/smartBoard.js';
 
 export function applyCheckMode(mode) {
     if (!mode || (mode !== 'manual' && mode !== 'scan')) {
@@ -305,7 +305,7 @@ export function showDetailPage(homeworkId, fromHistory = false) {
 
     const backBtn = document.getElementById('back-to-main-btn');
     if (backBtn) {
-        backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表`;
+        backBtn.innerHTML = `<i class="fa-solid fa-arrow-left text-xs"></i> <span>返回作業列表</span>`;
     }
 
     renderStudentGrid(homeworkId); 
@@ -760,10 +760,31 @@ export function initGlobalNavDrawer() {
         closeGlobalNavDrawer();
         openModal(document.getElementById('settings-modal'));
     });
-    logoutBtn?.addEventListener('click', () => {
-        closeGlobalNavDrawer();
-        document.getElementById('logout-btn')?.click();
-    });
+    if (logoutBtn && !logoutBtn.dataset.bound) {
+        logoutBtn.dataset.bound = 'true';
+        logoutBtn.addEventListener('click', async (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            closeGlobalNavDrawer();
+            if (typeof window.performFullLogout === 'function') {
+                await window.performFullLogout();
+            } else {
+                const exitBtn = document.getElementById('settings-exit-system-btn') || 
+                                document.getElementById('portal-logout-btn') || 
+                                document.getElementById('portal-nav-logout-btn');
+                if (exitBtn) {
+                    exitBtn.click();
+                } else {
+                    localStorage.removeItem('app_user_session');
+                    localStorage.removeItem('visitor_id');
+                    sessionStorage.clear();
+                    window.location.reload();
+                }
+            }
+        });
+    }
 }
 
 

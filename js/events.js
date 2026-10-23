@@ -2,7 +2,7 @@
  * 班級經營系統 3.0 - DOM 事件監聽與交互管理
  */
 
-import { state } from './state.js?v=5.4.1';
+import { state } from './state.js';
 
 import {
     DEFAULT_TYPES,
@@ -10,7 +10,7 @@ import {
     globalAppId,
     PARENT_DASHBOARD_URL,
     STUDENT_DASHBOARD_URL
-} from './constants.js?v=5.4.1';
+} from './constants.js';
 
 import {
     generateId,
@@ -31,7 +31,7 @@ import {
     bindClick,
     bindSubmit,
     bindChange
-} from './utils.js?v=5.4.1';
+} from './utils.js';
 
 import {
     fbAuth,
@@ -60,7 +60,7 @@ import {
     stopRealtimeCloudSync,
     deleteMyAccount,
     syncClassStudentPinsToCloud
-} from './firebase.js?v=5.4.1';
+} from './firebase.js';
 
 import {
     saveData,
@@ -72,7 +72,7 @@ import {
     flushPendingSave,
     getUserStorageKey,
     loadLocalDataForUser
-} from './storage.js?v=5.4.1';
+} from './storage.js';
 
 import {
     getHomeworkType,
@@ -91,7 +91,7 @@ import {
     updatePortalUI,
     isStudentCompleted,
     renderAllDoneList,
-    } from './render.js?v=5.4.1';
+    } from './render.js';
 
 import {
     applyCheckMode,
@@ -112,16 +112,16 @@ import {
     openCopyClassModal,
     showWelcomeStep2,
     fullRender
-} from './navigation.js?v=5.4.1';
+} from './navigation.js';
 
 import {
     setupExamScoresEvents,
     updateClassMaxSeat,
     checkInitialMaxSeatSetup
-} from './examScores.js?v=5.4.1';
+} from './examScores.js';
 
-import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.4.1';
-import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js?v=5.4.1';
+import { getRosterDataFromAddForm } from './modules/classWizard.js';
+import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js';
 
 export function setupButtonEvents() {
     setupExamScoresEvents();
@@ -704,9 +704,25 @@ export function setupButtonEvents() {
 
     // 登出邏輯
     const performFullLogout = async () => {
-        // 先完整保存當前帳號的最新修改至該用戶專屬之本地快取與雲端
-        await flushPendingSave();
-        stopRealtimeCloudSync();
+        if (window.__isLoggingOut) return;
+        window.__isLoggingOut = true;
+        try {
+            if (typeof window.closeGlobalNavDrawer === 'function') {
+                window.closeGlobalNavDrawer();
+            }
+        } catch(e) {}
+
+        // 先保存當前帳號的最新修改至該用戶專屬之本地快取與雲端 (最多等 1 秒避免掛起)
+        try {
+            await Promise.race([
+                flushPendingSave(),
+                new Promise(resolve => setTimeout(resolve, 1000))
+            ]);
+        } catch(e) {
+            console.warn("flushPendingSave on logout notice:", e);
+        }
+
+        try { stopRealtimeCloudSync(); } catch(e) {}
 
         // 磁碟直接寫入控制權重置，嚴禁前一個帳號的磁碟檔案綁定外洩給下一位使用者
         state.fileHandle = null;
@@ -732,7 +748,10 @@ export function setupButtonEvents() {
 
         if (fbAuth && state.currentUser) {
             try {
-                await signOut(fbAuth);
+                await Promise.race([
+                    signOut(fbAuth),
+                    new Promise(resolve => setTimeout(resolve, 1500))
+                ]);
             } catch (err) {
                 console.error("Logout error:", err);
             }
@@ -755,9 +774,13 @@ export function setupButtonEvents() {
         updatePortalUI();
         showPortalPage(true);
         showToast("已成功登出並返回網站首頁", "info");
+        window.__isLoggingOut = false;
     };
+    window.performFullLogout = performFullLogout;
     bindClick('portal-logout-btn', performFullLogout);
     bindClick('portal-nav-logout-btn', performFullLogout);
+    bindClick('drawer-logout-btn', performFullLogout);
+    bindClick('logout-btn', performFullLogout);
     bindClick('close-account-picker-btn', () => {
         closeModal(document.getElementById('account-picker-modal'));
     });
@@ -2236,7 +2259,6 @@ export function setupButtonEvents() {
         e.target.value = ''; 
     });
 
-    // 新增作業表單
     bindSubmit('add-homework-form', async (e) => {
         e.preventDefault(); 
         const editId = document.getElementById('edit-homework-id').value, name = document.getElementById('homework-name').value.trim(), typeId = document.getElementById('homework-type-select').value; 
@@ -2249,8 +2271,20 @@ export function setupButtonEvents() {
                 showToast("修改名稱成功！"); 
                 renderHomeworkList(); 
             } 
-        } else { 
-            const studentCount = parseInt(document.getElementById('student-count').value), missingInput = document.getElementById('homework-missing-seats').value; 
+        } else {
+            let studentCount = parseInt(document.getElementById('student-count').value); 
+            const missingInput = document.getElementById('homework-missing-seats')?.value || ''; 
+            const curCls = state.appData.classes.find(c => c.id === state.currentClassId) || state.appData.classes[0];
+            if (isNaN(studentCount) || studentCount <= 0) {
+                studentCount = curCls?.lastMaxSeat || curCls?.maxSeat || 30;
+            }
+            if (!state.currentClassId && curCls) {
+                state.currentClassId = curCls.id;
+                localStorage.setItem('currentClassId', curCls.id);
+            }
+            if (!state.appData.homeworks || !Array.isArray(state.appData.homeworks)) {
+                state.appData.homeworks = [];
+            }
             let missingSeats = []; 
             const parts = missingInput.replace(/，/g, ',').split(/[\s,]+/);
             for (let part of parts) { 
@@ -2341,6 +2375,9 @@ export function setupButtonEvents() {
 
     // 作業種類管理
     bindClick('add-new-type-btn', async () => { 
+        if (!state.appData.homeworkTypes || !Array.isArray(state.appData.homeworkTypes)) {
+            state.appData.homeworkTypes = safeClone(DEFAULT_TYPES);
+        }
         state.appData.homeworkTypes.push({ 
             id: `custom-${Date.now()}`, 
             name: '新作業種類', 
@@ -3139,7 +3176,7 @@ export function setupButtonEvents() {
                     detailPage.dataset.from = 'student-details-page';
                     const backBtn = document.getElementById('back-to-main-btn');
                     if (backBtn) {
-                        backBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回學生詳情`;
+                        backBtn.innerHTML = `<i class="fa-solid fa-arrow-left text-xs"></i> <span>返回學生詳情</span>`;
                     }
                 }
                 showDetailPage(e.target.dataset.id); 
@@ -3176,13 +3213,17 @@ export function setupButtonEvents() {
             if (studentBtn) {
                 const seat = parseInt(studentBtn.dataset.seat); 
                 const hw = state.appData.homeworks.find(h => h.id === state.currentHomeworkId); 
-                if (!hw || !hw.students) return;
-                const studentIndex = hw.students.findIndex(s => s.seat === seat); 
-                if (studentIndex === -1) return;
-                const student = hw.students[studentIndex]; 
+                if (!hw) return;
+                if (!hw.students || !Array.isArray(hw.students)) hw.students = [];
                 const typeConfig = getHomeworkType(hw.typeId);
+                let studentIndex = hw.students.findIndex(s => s.seat === seat); 
+                if (studentIndex === -1) {
+                    hw.students.push({ seat: seat, status: typeConfig.statuses[0].key });
+                    studentIndex = hw.students.length - 1;
+                }
+                const student = hw.students[studentIndex]; 
                 let currentIndex = typeConfig.statuses.findIndex(s => s.key === student.status); 
-                if(currentIndex === -1) currentIndex = 0;
+                if (currentIndex === -1) currentIndex = 0;
                 const nextIndex = (currentIndex + 1) % typeConfig.statuses.length;
                 const oldStatus = student.status; 
                 const newStatus = typeConfig.statuses[nextIndex].key;

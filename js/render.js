@@ -1,12 +1,15 @@
 import { state } from './state.js';
 import { DEFAULT_TYPES } from './constants.js';
-import { formatDate, safeStringify, showToast, showConfirmModal, closeModal } from './utils.js';
+import { formatDate, safeStringify, showToast, showConfirmModal, closeModal, escapeHtml, safeClone } from './utils.js';
 import { fbDb, fbAuth, isGoogleAdmin, isGoogleAuthUser } from './firebase.js';
 import { renderEnhancedBlackboard } from './modules/smartBoard.js';
 import { getStudentNameOnly } from './modules/classWizard.js';
 import { getStudentAttendanceForDate } from './modules/attendanceHub.js';
 
 export function getHomeworkType(typeId) { 
+    if (!state.appData.homeworkTypes || !Array.isArray(state.appData.homeworkTypes) || state.appData.homeworkTypes.length === 0) {
+        state.appData.homeworkTypes = safeClone(DEFAULT_TYPES);
+    }
     return state.appData.homeworkTypes.find(t => t.id === typeId) || state.appData.homeworkTypes.find(t => t.id === 'default') || DEFAULT_TYPES[0]; 
 }
 
@@ -17,8 +20,9 @@ export function isStudentCompleted(student, homeworkTypeId) {
 }
 
 export function updateSingleStudentUI(seat, oldStatusKey, newStatusKey, typeConfig) {
-    const btn = document.getElementById(`btn-seat-${seat}`); 
+    const btn = document.getElementById(`btn-seat-${seat}`) || document.querySelector(`#student-grid > button[data-seat="${seat}"]`); 
     if (!btn) return;
+    btn.dataset.status = newStatusKey;
     const newStatus = typeConfig.statuses.find(s => s.key === newStatusKey) || typeConfig.statuses[0];
     typeConfig.statuses.forEach(s => {
         const ring = (s.color || '').replace('bg-', 'ring-').replace('-500', '-200').replace('-400', '-200');
@@ -28,8 +32,18 @@ export function updateSingleStudentUI(seat, oldStatusKey, newStatusKey, typeConf
     const newRingColor = (newStatus.color || '').replace('bg-', 'ring-').replace('-500', '-200').replace('-400', '-200');
     const newClasses = [...(newStatus.color || '').split(' '), ...(newStatus.textColor || '').split(' '), `hover:${newRingColor}`, `focus:${newRingColor}`].filter(Boolean);
     btn.classList.add(...newClasses);
-    const spans = btn.querySelectorAll('span'); 
-    if (spans && spans.length > 1) spans[1].textContent = newStatus.text;
+
+    const curCls = state.appData.classes.find(c => c.id === state.currentClassId);
+    const sName = getStudentNameOnly(curCls, seat);
+    const statusTextEl = btn.querySelector('.student-status-text');
+    if (statusTextEl) {
+        statusTextEl.textContent = sName ? `${sName} · ${newStatus.text}` : newStatus.text;
+    } else {
+        const nonBadgeSpans = Array.from(btn.querySelectorAll('span')).filter(s => !s.classList.contains('absolute'));
+        if (nonBadgeSpans.length >= 2) {
+            nonBadgeSpans[1].textContent = sName ? `${sName} · ${newStatus.text}` : newStatus.text;
+        }
+    }
 }
 
 export function updateSummaryUI(hw) {
@@ -382,7 +396,12 @@ export function renderStudentGrid(homeworkId) {
     }
 
     const curCls = state.appData.classes.find(c => c.id === state.currentClassId);
-    (hw.students || []).forEach(student => {
+    (hw.students || []).forEach((student, idx) => {
+        if (typeof student !== 'object' || student === null) {
+            student = { seat: typeof student === 'number' ? student : idx + 1, status: typeConfig.statuses[0].key };
+            hw.students[idx] = student;
+        }
+        if (!student.seat) student.seat = idx + 1;
         let statusInfo = typeConfig.statuses.find(s => s.key === student.status);
         if (!statusInfo) { 
             statusInfo = typeConfig.statuses[0]; 
@@ -393,6 +412,7 @@ export function renderStudentGrid(homeworkId) {
         studentBtn.id = `btn-seat-${student.seat}`;
         studentBtn.className = `disable-on-admin-view student-btn relative rounded-2xl shadow-sm text-center transition-all duration-300 transform hover:scale-[1.05] active:scale-90 ${statusInfo.color} ${statusInfo.textColor} flex flex-col items-center justify-center border-2 border-transparent aspect-square overflow-hidden cursor-pointer w-full h-full ring-4 ring-offset-1 ring-transparent hover:${ringColor} focus:outline-none focus:${ringColor}`;
         studentBtn.dataset.seat = student.seat;
+        studentBtn.dataset.status = statusInfo.key;
         const fontSizeNum = Math.max(12, bestBoxSize * 0.35); 
         const fontSizeText = Math.max(9, bestBoxSize * 0.15); 
         const sName = getStudentNameOnly(curCls, student.seat);
@@ -408,8 +428,8 @@ export function renderStudentGrid(homeworkId) {
 
         studentBtn.innerHTML = `
             ${attBadgeHtml}
-            <span class="font-black leading-none tracking-tighter select-none" style="font-size: ${fontSizeNum}px; pointer-events: none;">${student.seat}</span>
-            <span class="font-bold leading-tight mt-1 opacity-90 truncate w-full px-1 select-none" style="font-size: ${fontSizeText}px; pointer-events: none;">${sName ? `${sName} · ${statusInfo.text}` : statusInfo.text}</span>
+            <span class="student-seat-num font-black leading-none tracking-tighter select-none" style="font-size: ${fontSizeNum}px; pointer-events: none;">${student.seat}</span>
+            <span class="student-status-text font-bold leading-tight mt-1 opacity-90 truncate w-full px-1 select-none" style="font-size: ${fontSizeText}px; pointer-events: none;">${sName ? `${sName} · ${statusInfo.text}` : statusInfo.text}</span>
         `;
         studentGrid.appendChild(studentBtn);
     });
@@ -431,6 +451,7 @@ export function renderStudentDetailsPage() {
     if (!studentDetailsList) return;
     studentDetailsList.innerHTML = '';
     const filteredHomeworks = state.appData.homeworks.filter(hw => hw.classId === state.currentClassId);
+    const curCls = state.appData.classes.find(c => c.id === state.currentClassId);
 
     if (filteredHomeworks.length === 0) { 
         studentDetailsList.innerHTML = '<div class="col-span-full text-center text-slate-400 py-10 font-bold text-sm glass-card rounded-3xl m-2">目前此班級尚無登錄作業。</div>'; 
@@ -440,10 +461,22 @@ export function renderStudentDetailsPage() {
     const studentData = []; 
     let maxStudentCount = 0;
     filteredHomeworks.forEach(hw => { 
-        (hw.students || []).forEach(s => { 
-            maxStudentCount = Math.max(maxStudentCount, s.seat); 
+        (hw.students || []).forEach((s, idx) => { 
+            const seatNum = typeof s === 'number' ? s : s?.seat;
+            if (seatNum) maxStudentCount = Math.max(maxStudentCount, seatNum);
+            // 正規化為物件結構
+            if (typeof s === 'number') {
+                const typeConfig = getHomeworkType(hw.typeId);
+                const isSub = Array.isArray(hw.submitted) && hw.submitted.includes(s);
+                const completedKey = typeConfig.statuses.find(st => st.isCompleted)?.key || 'submitted';
+                const uncompletedKey = typeConfig.statuses.find(st => !st.isCompleted)?.key || typeConfig.statuses[0].key;
+                hw.students[idx] = { seat: s, status: isSub ? completedKey : uncompletedKey };
+            }
         }); 
     });
+    if (curCls && (curCls.lastMaxSeat || curCls.maxSeat)) {
+        maxStudentCount = Math.max(maxStudentCount, curCls.lastMaxSeat || curCls.maxSeat || 0);
+    }
 
     if (maxStudentCount === 0) { 
         studentDetailsList.innerHTML = '<div class="col-span-full text-center text-slate-400 py-10 font-bold text-sm">此班級尚無建立學生。</div>'; 
@@ -455,17 +488,23 @@ export function renderStudentDetailsPage() {
         let isExistsInAnyHw = false;
         filteredHomeworks.forEach(hw => {
             const typeId = hw.typeId || 'default'; 
-            const student = (hw.students || []).find(s => s.seat === i);
+            const student = (hw.students || []).find(s => (typeof s === 'number' ? s : s.seat) === i);
             if (student) {
                 isExistsInAnyHw = true;
-                if (!isStudentCompleted(student, typeId)) {
-                    const typeConfig = getHomeworkType(typeId); 
-                    const statusInfo = typeConfig.statuses.find(s => s.key === student.status) || typeConfig.statuses[0];
+                const typeConfig = getHomeworkType(typeId); 
+                const isCompleted = typeof student === 'number'
+                    ? (Array.isArray(hw.submitted) && hw.submitted.includes(student))
+                    : isStudentCompleted(student, typeId);
+
+                if (!isCompleted) {
+                    const statusInfo = typeof student === 'object'
+                        ? (typeConfig.statuses.find(s => s.key === student.status) || typeConfig.statuses[0])
+                        : typeConfig.statuses[0];
                     issues.push({ 
                         hwName: hw.name, 
                         hwId: hw.id, 
                         statusText: statusInfo.text, 
-                        colorClass: statusInfo.textColor.includes('white') ? (statusInfo.color || '').replace('bg-', 'text-') : 'text-slate-600' 
+                        colorClass: statusInfo.textColor?.includes('white') ? (statusInfo.color || '').replace('bg-', 'text-') : 'text-slate-600' 
                     });
                 }
             }
@@ -474,28 +513,51 @@ export function renderStudentDetailsPage() {
     }
 
     const sortMethod = document.getElementById('sort-student-detail') ? document.getElementById('sort-student-detail').value : 'number';
-    studentData.sort((a, b) => sortMethod === 'number' ? a.seat - b.seat : b.issues.length - a.issues.length);
+    if (sortMethod === 'missing') {
+        studentData.sort((a, b) => (b.issues.length - a.issues.length) || (a.seat - b.seat));
+    } else {
+        studentData.sort((a, b) => a.seat - b.seat);
+    }
 
-    let hasIssues = false;
+    let renderedCount = 0;
     studentData.forEach(data => {
-        if (data.issues.length === 0) return;
-        hasIssues = true;
+        if (sortMethod === 'unfinished-only' && data.issues.length === 0) return;
+        renderedCount++;
         const studentCard = document.createElement('div');
-        studentCard.className = 'glass-card rounded-3xl shadow-sm border border-slate-200/60 p-6 sm:p-8 hover:shadow-md transition-all';
+        studentCard.className = 'glass-card rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between';
         studentCard.dataset.seat = data.seat;
         studentCard.id = `student-card-seat-${data.seat}`;
-        const issuesHtml = data.issues.map(issue => `<span class="mr-2 inline-block bg-slate-50 border border-slate-200/40 rounded-xl px-3 py-1.5 mb-2 text-sm"><span class="homework-link font-black ${issue.colorClass} cursor-pointer hover:underline" data-id="${issue.hwId}">${issue.hwName}</span> <span class="text-xs font-bold opacity-50 ml-1">(${issue.statusText})</span></span>`).join('');
-        studentCard.innerHTML = `
-            <h3 class="text-xl font-black text-slate-800 flex justify-between items-center mb-4">
-                <span class="bg-slate-100 px-3 py-1.5 rounded-xl">${data.seat} 號</span>
-                <span class="text-sm font-bold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100">未完成: ${data.issues.length}</span>
-            </h3>
-            <div class="mt-1 flex flex-wrap">${issuesHtml}</div>
-        `;
+        const sName = getStudentNameOnly(curCls, data.seat);
+
+        if (data.issues.length === 0) {
+            studentCard.innerHTML = `
+                <div>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-800 flex justify-between items-center mb-2">
+                        <span class="bg-slate-100 px-3 py-1.5 rounded-xl">${data.seat} 號${sName ? ` <span class="text-sm sm:text-base text-stone-600 font-bold ml-1">${escapeHtml(sName)}</span>` : ''}</span>
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> 全部繳齊</span>
+                    </h3>
+                    <div class="mt-3 text-xs text-stone-400 font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-medal text-amber-500"></i>
+                        <span>榮譽全勤・無缺交作業</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            const issuesHtml = data.issues.map(issue => `<span class="mr-1.5 inline-block bg-slate-50 border border-slate-200/60 rounded-xl px-2.5 py-1 mb-1.5 text-xs font-bold"><span class="homework-link font-black ${issue.colorClass} cursor-pointer hover:underline" data-id="${issue.hwId}">${issue.hwName}</span> <span class="text-[11px] font-semibold opacity-60 ml-0.5">(${issue.statusText})</span></span>`).join('');
+            studentCard.innerHTML = `
+                <div>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-800 flex justify-between items-center mb-3">
+                        <span class="bg-slate-100 px-3 py-1.5 rounded-xl">${data.seat} 號${sName ? ` <span class="text-sm sm:text-base text-stone-600 font-bold ml-1">${escapeHtml(sName)}</span>` : ''}</span>
+                        <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200/80">未完成: ${data.issues.length}</span>
+                    </h3>
+                    <div class="mt-1 flex flex-wrap">${issuesHtml}</div>
+                </div>
+            `;
+        }
         studentDetailsList.appendChild(studentCard);
     });
     
-    if (!hasIssues) {
+    if (renderedCount === 0) {
         studentDetailsList.innerHTML = `<div class="col-span-full bg-emerald-50 border border-emerald-100 rounded-3xl p-8 text-center shadow-inner"><div class="text-3xl mb-2 text-amber-500"><i class="fa-solid fa-trophy"></i></div><p class="text-emerald-700 font-extrabold text-base">全班所有作業均已準時點收完成！</p></div>`;
     }
 }
@@ -504,6 +566,9 @@ export function renderHomeworkTypesPage() {
     const list = document.getElementById('types-list'); 
     if (!list) return; 
     list.innerHTML = '';
+    if (!state.appData.homeworkTypes || !Array.isArray(state.appData.homeworkTypes) || state.appData.homeworkTypes.length === 0) {
+        state.appData.homeworkTypes = safeClone(DEFAULT_TYPES);
+    }
     state.appData.homeworkTypes.forEach((type, typeIndex) => {
         const card = document.createElement('div');
         card.className = 'glass-card rounded-3xl shadow-sm border border-slate-200/60 p-6 sm:p-8 hover:shadow-md transition-shadow relative overflow-hidden';

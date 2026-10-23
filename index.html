@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>班級經營系統 3.0</title>
-    <meta name="description" content="班級經營系統 3.0 - 支援實體條碼掃描槍、雲端備份、親師聯絡簿與成績登記的全方位班級經營系統">
-    <meta property="og:title" content="班級經營系統 3.0">
-    <meta property="og:description" content="班級經營系統 3.0 - 支援實體條碼掃描槍、雲端備份、親師聯絡簿與成績登記的全方位班級經營系統">
+    <title>PalClass - 全方位班級經營系統</title>
+    <meta name="description" content="PalClass - 支援實體條碼掃描槍、雲端備份、親師聯絡簿與成績登記的全方位班級經營系統">
+    <meta property="og:title" content="PalClass - 全方位班級經營系統">
+    <meta property="og:description" content="PalClass - 支援實體條碼掃描槍、雲端備份、親師聯絡簿與成績登記的全方位班級經營系統">
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4f46e5">
@@ -60,7 +60,7 @@
                 }
             });
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=5.4.1')
+                navigator.serviceWorker.register('./sw.js?v=5.5.0')
                     .then(reg => {
                         reg.update();
                         console.log('系統離線防護已啟動:', reg.scope);
@@ -108,7 +108,7 @@
                     <i class="fa-solid fa-shapes"></i>
                 </div>
                 <div>
-                    <h3 id="drawer-class-title" class="font-black text-stone-900 text-base leading-tight">班級經營系統・功能導覽</h3>
+                    <h3 id="drawer-class-title" class="font-black text-stone-900 text-base leading-tight">PalClass・功能導覽</h3>
                     <p class="text-xs text-amber-700 font-extrabold mt-0.5">沉浸式工作台隨選即達</p>
                 </div>
             </div>
@@ -244,8 +244,8 @@
                 </div>
             </button>
 
-            <!-- 11. 作業種類 -->
-            <button type="button" id="drawer-nav-types" class="planet-nav-item w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-orange-900 hover:bg-orange-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
+            <!-- 11. 作業種類 (作業種類屬於作業點收工作台內部，不顯示於全局抽屜功能列) -->
+            <button type="button" id="drawer-nav-types" class="hidden planet-nav-item w-full items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-stone-700 hover:text-orange-900 hover:bg-orange-50/80 font-black text-sm transition-all text-left cursor-pointer active:scale-98">
                 <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-sm shrink-0 shadow-xs border border-orange-200/80">
                     <i class="fa-solid fa-shapes text-orange-600"></i>
                 </span>
@@ -281,7 +281,7 @@
                     <i class="fa-solid fa-book-bookmark"></i>
                 </span>
                 <span>系統更新紀錄 (Changelog)</span>
-                <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.4.1</span>
+                <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.5.0</span>
             </button>
 
             <div class="pt-3 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">系統與顯示</div>
@@ -319,7 +319,7 @@
                 <i class="fa-solid fa-gear text-stone-400"></i>
                 <span>系統設定</span>
             </button>
-            <button type="button" id="drawer-logout-btn" class="flex-1 py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+            <button type="button" id="drawer-logout-btn" onclick="if(window.performFullLogout) window.performFullLogout();" class="flex-1 py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
                 <i class="fa-solid fa-right-from-bracket text-rose-500"></i>
                 <span>登出 / 雲端</span>
             </button>
@@ -442,9 +442,9 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-10 h-16 sm:h-20 flex items-center justify-between gap-3">
                 <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端，維持寬度不被壓縮) -->
                 <button id="portal-nav-logo-btn" class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none text-left shrink-0" title="返回首頁頂端">
-                    <img src="icon.svg" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="班級經營系統">
+                    <img src="icon.svg" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="PalClass">
                     <div class="shrink-0 flex flex-col justify-center">
-                        <span class="text-base sm:text-xl lg:text-2xl font-black text-stone-900 tracking-tight block whitespace-nowrap">班級經營系統</span>
+                        <span class="text-base sm:text-xl lg:text-2xl font-black text-stone-900 tracking-tight block whitespace-nowrap">PalClass</span>
                         <span class="text-[10px] sm:text-xs font-extrabold text-amber-700 tracking-wide block -mt-0.5 whitespace-nowrap">國一生獨立開發 • 經典三合一版</span>
                     </div>
                 </button>
@@ -565,7 +565,7 @@
 
                     <!-- 副標題說明 (針對本班級經營系統真實特色) -->
                     <p class="text-stone-600 text-base sm:text-lg leading-relaxed max-w-xl">
-                        班級經營系統 3.0 (v3.5) 提供全方位的班級作業點收、條碼掃描辨識與雲端/本地即時同步解決方案。由國一生獨立編程設計，結合即時缺繳名單統計、親師聯絡簿整合與多元存儲，助您輕鬆搞定每日班級經營與點收作業。
+                        PalClass 提供全方位的班級作業點收、條碼掃描辨識與雲端/本地即時同步解決方案。由國一生獨立編程設計，結合即時缺繳名單統計、親師聯絡簿整合與多元存儲，助您輕鬆搞定每日班級經營與點收作業。
                     </p>
 
                     <!-- 行動按鈕列 -->
@@ -627,6 +627,14 @@
                     <div class="absolute -inset-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[2.5rem] blur-xl opacity-70"></div>
                     
                     <div class="relative bg-white/95 backdrop-blur-md rounded-[2.25rem] border border-stone-200/90 p-6 sm:p-7 shadow-2xl shadow-stone-900/10 space-y-5">
+                        <!-- AI 繪本風旗艦視覺橫幅 -->
+                        <div class="relative overflow-hidden rounded-2xl shadow-inner border border-amber-200/70 aspect-[16/9] max-h-48 group">
+                            <img src="assets/images/palclass_hero_synergy.png" alt="PalClass 暖心現代班級經營" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent flex items-end p-3.5">
+                                <span class="text-white text-xs font-black drop-shadow-md flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> PalClass 暖心協作與智慧課堂</span>
+                            </div>
+                        </div>
+
                         <!-- 視窗控制點與目前作業標題 -->
                         <div class="flex items-center justify-between pb-3 border-b border-stone-100">
                             <div class="flex items-center gap-1.5">
@@ -714,7 +722,7 @@
                                 </span>
                                 <div>
                                     <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
-                                    <span class="text-xs text-stone-400 font-bold">最新版本 v5.1.1 • 2026/10/23</span>
+                                    <span class="text-xs text-stone-400 font-bold">最新版本 v5.5.0 • 2026/10/23</span>
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200">最新版本</span>
@@ -723,20 +731,20 @@
                         <div class="p-4 bg-gradient-to-br from-indigo-50/80 via-emerald-50/50 to-amber-50/40 rounded-2xl border border-indigo-100/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
                             <div class="font-bold text-indigo-950 flex items-center gap-1.5">
                                 <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                                <span>v5.1.1 左上角常態漢堡選單與零延遲導覽升級：</span>
+                                <span>v5.5.0 PalClass 旗艦版・品牌躍升與點收工坊全方位加固：</span>
                             </div>
                             <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>漢堡選單常態固定於左上角</b>：符合人體工學與自然視線，抽屜改由左側滑出，點擊即時開合無延遲。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>全域最高層級（z-[150]）保護</b>：解決被其他彈窗遮蔽點擊無反應問題，支援 Esc 快捷關閉與背景遮罩輕觸關閉。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>各全畫面專屬呼吸留白</b>：首頁、作業頁、出勤中樞、抽籤擂台、分組座位、考試計時均完美適配左側按鈕空間。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>真實原生 OS 全螢幕與分數重置</b>：一鍵鋪滿投影白板，課堂個人與小組積分隨時歸零重啟。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>全站品牌全面更名 PalClass</b>：全方位統一系統品牌與三端視覺，置入 3D 暖心協作與榮譽獎盃插畫，質感大幅躍升。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>作業方格狀態切換與種類管理加固</b>：精確綁定狀態文字，徹底根治文字被覆蓋與狀態變更失效問題，新增自訂種類與工作台入口 100% 正常常駐。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>學生詳情無跳號全名單與全勤徽章</b>：個人詳情完整呈現全班學生（杜絕 7 號等全勤學生跳號遺失），展示「全部繳齊 · 全勤」榮譽徽章與名單篩選。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂工坊座位表與考試計時進化</b>：座位點選顯示紅色「移至待安排」按鈕，手動分組彈窗隨選即調，考試計時防呆連動與空檔/考畢大看板。</span></li>
                             </ul>
                         </div>
 
                         <div class="flex items-center justify-between pt-1">
                             <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-950 font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
                                 <i class="fa-solid fa-clock-rotate-left text-emerald-700"></i>
-                                <span>查看完整版本演進日誌 (v1.0 ~ v5.1.1)</span>
+                                <span>查看完整版本演進日誌 (v1.0 ~ v5.5.0)</span>
                             </button>
                         </div>
                     </div>
@@ -1238,7 +1246,7 @@
                 <div class="mb-8">
                     <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">系統公告與動態</h2>
                     <p class="text-stone-500 text-sm sm:text-base">
-                        隨時掌握班級經營系統 3.0 (v3.5) 最新功能與重要訊息。
+                        隨時掌握 PalClass 最新功能與重要訊息。
                     </p>
                 </div>
 
@@ -1249,7 +1257,7 @@
                             <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">最新版本</span>
                             <span class="text-xs text-stone-400 font-medium">2026 年最新發布</span>
                         </div>
-                        <h3 class="text-base sm:text-lg font-black text-stone-900">班級經營系統 3.0 (v3.5) 正式上線！全新首頁導覽與親師生三端全面升級</h3>
+                        <h3 class="text-base sm:text-lg font-black text-stone-900">PalClass 旗艦版正式上線！全新首頁導覽與親師生三端全面升級</h3>
                         <p class="text-stone-500 text-sm leading-relaxed">
                             重構全站視覺與首頁入口，引進實體條碼槍秒速辨識、雲端帳號備份、親師聯絡簿整合等多項強大功能。
                         </p>
@@ -1292,7 +1300,7 @@
                         準備好提升班級經營效率了嗎？
                     </h2>
                     <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto mb-8 relative z-10 leading-relaxed">
-                        加入 班級經營系統 3.0，立即體驗無縫銜接的數位化作業管理與班級經營環境。只需一分鐘即可完成設定並開始使用。
+                        加入 PalClass，立即體驗無縫銜接的數位化作業管理與班級經營環境。只需一分鐘即可完成設定並開始使用。
                     </p>
                     <button id="portal-cta-start-btn" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 font-black text-base shadow-lg hover:shadow-xl active:shadow-inner active:scale-[0.96] active:translate-y-1 transition-all duration-150 transform relative z-20 cursor-pointer select-none focus:outline-none focus:ring-4 focus:ring-white/40">
                         <span class="pointer-events-none select-none inline-block">免費建立帳號 / 立即開始使用</span>
@@ -1309,7 +1317,7 @@
                 <div class="flex flex-col sm:flex-row items-center gap-3.5 text-center sm:text-left">
                     <button id="portal-footer-logo-btn" class="flex items-center gap-2 cursor-pointer group" title="返回首頁頂端">
                         <img src="icon.svg" class="w-8 h-8 rounded-xl shadow-xs group-hover:scale-105 transition-transform" alt="Logo">
-                        <span class="font-black text-stone-900 text-base">班級經營系統 3.0</span>
+                        <span class="font-black text-stone-900 text-base">PalClass</span>
                     </button>
                     <span class="hidden sm:inline text-stone-300">|</span>
                     <p class="font-semibold text-stone-700">
@@ -1331,7 +1339,7 @@
                         <i class="fa-solid fa-copy text-stone-500"></i>
                         <span class="font-mono text-xs">ianw.solar@gmail.com</span>
                     </button>
-                    <p class="text-stone-400 text-xs w-full text-center md:w-auto">Created by 七賢國中107 王禹硯（<a href="mailto:ianw.solar@gmail.com" class="hover:underline">ianw.solar@gmail.com</a>） • © 2026 班級經營系統 3.0 (v3.5)</p>
+                    <p class="text-stone-400 text-xs w-full text-center md:w-auto">Created by 七賢國中107 王禹硯（<a href="mailto:ianw.solar@gmail.com" class="hover:underline">ianw.solar@gmail.com</a>） • © 2026 PalClass</p>
                 </div>
             </div>
         </footer>
@@ -1375,7 +1383,7 @@
                             <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black uppercase tracking-wider border border-amber-200">
                                 專案作者的心聲
                             </span>
-                            <span class="text-xs text-stone-400 font-medium">班級經營系統 3.0</span>
+                            <span class="text-xs text-stone-400 font-medium">PalClass</span>
                         </div>
                         <h3 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight mt-0.5">給老師的話：</h3>
                     </div>
@@ -1413,7 +1421,7 @@
                             <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-black uppercase tracking-wider border border-amber-200">
                                 國一生獨立開發者
                             </span>
-                            <span class="text-xs text-stone-400 font-medium">班級經營系統 3.0</span>
+                            <span class="text-xs text-stone-400 font-medium">PalClass</span>
                         </div>
                         <h3 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight mt-0.5">提供意見 / 聯絡作者</h3>
                     </div>
@@ -1426,7 +1434,7 @@
                         <span>感謝您的使用與支持！</span>
                     </p>
                     <p>
-                        這套「班級經營系統 3.0」是由我身為國中一年級學生，針對國中、國小教學現場的點收痛點，<b>經歷多次版本更新反覆打磨、獨自一人用心打造而成</b>。
+                        這套「PalClass」是由我身為國中一年級學生，針對國中、國小教學現場的點收痛點，<b>經歷多次版本更新反覆打磨、獨自一人用心打造而成</b>。
                     </p>
                     <p class="text-stone-600">
                         若您在使用過程中有任何問題、建議、操作疑問或功能許願，非常歡迎直接與我聯絡！
@@ -1495,7 +1503,7 @@
                 </div>
                 <h3 id="usage-inquiry-title" class="text-2xl font-black text-stone-900 tracking-tight mb-2">是否使用過此系統？</h3>
                 <p id="usage-inquiry-desc" class="text-stone-500 text-sm font-medium leading-relaxed mb-6">
-                    請問您以前是否使用過本班級經營系統？<br>請選擇您目前的帳號狀態以利快速導向：
+                    請問您以前是否使用過 PalClass？<br>請選擇您目前的帳號狀態以利快速導向：
                 </p>
 
                 <div class="grid grid-cols-2 gap-3.5">
@@ -1521,13 +1529,13 @@
 
                 <!-- 頂部 Logo -->
                 <div class="flex justify-center mb-4">
-                    <img src="icon.svg" class="w-16 h-16 rounded-[1.2rem] shadow-lg shadow-indigo-600/20" alt="班級經營系統 3.0">
+                    <img src="icon.svg" class="w-16 h-16 rounded-[1.2rem] shadow-lg shadow-indigo-600/20" alt="PalClass">
                 </div>
 
                 <!-- 1. 登入視圖 (Sign In View) -->
                 <div id="portal-view-signin" class="space-y-3.5">
                     <div class="text-center">
-                        <h2 class="text-2xl font-black text-stone-900 tracking-tight">登入 班級經營系統 3.0</h2>
+                        <h2 class="text-2xl font-black text-stone-900 tracking-tight">登入 PalClass</h2>
                         <p class="text-xs sm:text-sm text-stone-500 font-medium mt-1">輕鬆點收作業，雲端同步與條碼快速登記。</p>
                     </div>
 
@@ -1604,7 +1612,7 @@
                 <!-- 2. 註冊視圖 (Sign Up View) -->
                 <div id="portal-view-signup" class="space-y-3.5 hidden">
                     <div class="text-center">
-                        <h2 class="text-2xl font-black text-stone-900 tracking-tight">註冊 班級經營系統 3.0 帳號</h2>
+                        <h2 class="text-2xl font-black text-stone-900 tracking-tight">註冊 PalClass 帳號</h2>
                         <p class="text-xs sm:text-sm text-stone-500 font-medium mt-1">建立帳號，雲端自動備份您的所有作業與班級資料。</p>
                     </div>
 
@@ -1696,7 +1704,7 @@
                     </div>
                     <div class="space-y-2.5 pt-2">
                         <button type="button" id="portal-enter-app-btn" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base rounded-xl shadow-md shadow-indigo-600/25 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
-                            <span class="flex items-center justify-center gap-1.5"><i class="fa-solid fa-arrow-right-to-bracket"></i> 進入班級經營系統</span>
+                            <span class="flex items-center justify-center gap-1.5"><i class="fa-solid fa-arrow-right-to-bracket"></i> 進入 PalClass 工作台</span>
                         </button>
                         <button type="button" id="portal-switch-account-btn" class="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs sm:text-sm rounded-xl transition-all">
                             使用其他帳號登入
@@ -1719,8 +1727,8 @@
             <div class="flex items-center justify-between gap-3 sm:gap-4 w-full">
                 <!-- 左側：呼吸間距、Logo、標題與班級選擇器 -->
                 <div class="flex items-center gap-2.5 sm:gap-4 flex-shrink-0 pl-11 sm:pl-12">
-                     <button id="overview-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="班級經營系統">
-                         <img src="icon.svg" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="班級經營系統">
+                     <button id="overview-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="PalClass">
+                         <img src="icon.svg" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="PalClass">
                          <span class="text-lg sm:text-xl font-black text-stone-900 tracking-tight whitespace-nowrap hidden sm:inline">課堂全景總覽</span>
                      </button>
                      <select id="overview-class-selector" class="class-selector-sync rounded-xl border border-stone-200/90 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm bg-white font-extrabold text-indigo-700 cursor-pointer transition-all"></select>
@@ -1968,8 +1976,8 @@
             <div class="flex items-center justify-between gap-3 sm:gap-4 w-full flex-wrap">
                 <!-- 左側：呼吸間距、Logo、標題、班級選擇器 -->
                 <div class="flex items-center gap-2.5 sm:gap-4 flex-shrink-0 pl-11 sm:pl-12">
-                     <button id="main-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="班級經營系統">
-                         <img src="icon.svg" class="w-8 h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="班級經營系統">
+                     <button id="main-logo-btn" type="button" class="cursor-pointer group flex items-center gap-2 sm:gap-2.5 select-none text-left shrink-0" title="PalClass">
+                         <img src="icon.svg" class="w-8 h-8 rounded-xl drop-shadow-sm inline-block group-hover:scale-105 transition-transform" alt="PalClass">
                          <span class="text-xl font-black text-stone-900 tracking-tight whitespace-nowrap hidden sm:inline">作業點收工作台</span>
                      </button>
                      <select id="class-selector" class="class-selector-sync rounded-xl border border-stone-200/90 shadow-xs focus:border-indigo-500 focus:ring-indigo-500 py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm bg-white font-extrabold text-indigo-700 cursor-pointer transition-all"></select>
@@ -1977,7 +1985,7 @@
 
                 <!-- 右側操作按鈕列 (作業種類、學生詳情、設定、新增作業) -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <!-- 作業種類 -->
+                    <!-- 作業種類 (作業點收內部自訂核心功能，正常常駐顯示) -->
                     <button id="show-types-modal-btn" type="button" class="border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-black py-2 px-3.5 text-xs sm:text-sm rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
                         <i class="fa-solid fa-shapes text-orange-500"></i>
                         <span class="hidden md:inline">作業種類</span>
@@ -2062,10 +2070,11 @@
                     </button>
                 </div>
                 <div class="flex justify-end items-center gap-2 mt-3 pt-2.5 border-t border-[#EBDCCB]/80">
-                    <label for="sort-student-detail" class="text-xs font-bold text-stone-500 uppercase tracking-wider">排序方式：</label>
-                    <select id="sort-student-detail" class="text-xs font-bold rounded-xl border border-[#EBDCCB] bg-white text-stone-800 py-1 px-2.5 cursor-pointer">
-                        <option value="number">座號 (小→大)</option>
+                    <label for="sort-student-detail" class="text-xs font-bold text-stone-500 uppercase tracking-wider">排序與篩選：</label>
+                    <select id="sort-student-detail" class="text-xs font-bold rounded-xl border border-[#EBDCCB] bg-white text-stone-800 py-1 px-2.5 cursor-pointer shadow-2xs">
+                        <option value="number">全班座號 (含全勤完成)</option>
                         <option value="missing">缺交數量 (多→少)</option>
+                        <option value="unfinished-only">僅顯示缺交學生</option>
                     </select>
                 </div>
             </header>
@@ -2086,8 +2095,9 @@
     <div id="detail-page" class="hidden container mx-auto w-[96%] max-w-[1600px] p-5 sm:p-8 lg:p-10 page-section h-screen flex flex-col">
         <header class="mb-6 flex-shrink-0 relative z-10 p-6 glass-card rounded-3xl">
             <div class="flex items-center justify-between mb-4">
-                <button id="back-to-main-btn" class="ml-11 sm:ml-12 text-slate-500 hover:text-indigo-600 font-bold inline-flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-x-1 text-sm tracking-wide bg-white/50 px-3 py-1.5 rounded-full border border-slate-200/50">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> 返回作業列表
+                <button type="button" id="back-to-main-btn" class="text-slate-600 hover:text-indigo-600 font-bold inline-flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-x-1 text-sm tracking-wide bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full border border-slate-200/60 shadow-2xs self-start ml-0">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>返回作業列表</span>
                 </button>
             </div>
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2162,7 +2172,11 @@
     <!-- 作業種類管理頁 -->
     <div id="homework-types-page" class="hidden container mx-auto w-[96%] max-w-[1600px] p-5 sm:p-8 lg:p-10 page-section hide-on-admin-view">
         <header class="mb-8 relative z-10 p-6 storybook-banner-card rounded-3xl border border-[#EBDCCB] shadow-xl overflow-hidden group bg-white/95">
-            <div class="flex items-center justify-between mb-3 pl-11 sm:pl-12">
+            <div class="flex items-center justify-between mb-3">
+                <button type="button" id="back-from-types-btn" class="text-slate-600 hover:text-indigo-600 font-bold inline-flex items-center gap-2 cursor-pointer transition-all transform hover:-translate-x-1 text-sm tracking-wide bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full border border-slate-200/60 shadow-2xs self-start">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>返回作業工作台</span>
+                </button>
                 <div class="flex items-center gap-2">
                     <span class="storybook-planet-pill text-amber-900 border-amber-300 bg-amber-50/90">
                         <i class="fa-solid fa-shapes text-amber-600"></i>
@@ -2170,7 +2184,7 @@
                     </span>
                 </div>
             </div>
-            <div class="flex justify-between items-center mt-2 flex-wrap gap-3 pl-11 sm:pl-12">
+            <div class="flex justify-between items-center mt-2 flex-wrap gap-3">
                 <h1 class="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">作業種類與評量自訂</h1>
                 <button id="add-new-type-btn" class="bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 hover:from-amber-700 hover:to-orange-600 text-white font-extrabold py-3 px-5 text-sm sm:text-base rounded-2xl shadow-md shadow-amber-600/25 transition-all transform hover:-translate-y-0.5 whitespace-nowrap flex-shrink-0 cursor-pointer">
                     <i class="fa-solid fa-plus mr-1.5"></i>新增自訂種類
@@ -2564,6 +2578,14 @@
                     <i class="fa-solid fa-rotate-left text-slate-400"></i>
                     <span>取消簽到 / 重設為未到</span>
                 </button>
+            </div>
+
+            <div>
+                <label for="att-modal-time-input" class="text-xs font-bold text-slate-500 mb-1 block">簽到打卡時間 (選填，可自訂打卡時間):</label>
+                <div class="flex items-center gap-2 mb-2">
+                    <input type="time" step="1" id="att-modal-time-input" class="w-full text-xs font-bold py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500">
+                    <button type="button" id="att-modal-now-time-btn" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shrink-0 transition-colors">現在時間</button>
+                </div>
             </div>
 
             <div>
@@ -2988,8 +3010,8 @@
 
                         <!-- 右側：待安排與教室配置 (lg:col-span-4 xl:col-span-3) -->
                         <div class="lg:col-span-4 xl:col-span-3 bg-white rounded-3xl border border-stone-200 p-5 shadow-sm space-y-6">
-                            <!-- 1. 待安排 -->
-                            <div class="space-y-3">
+                            <!-- 1. 待安排 (全域快速拖曳放置回未安排區塊) -->
+                            <div id="studio-unassigned-section" class="space-y-3 p-2 rounded-2xl transition-colors border border-transparent">
                                 <div class="flex items-center gap-2">
                                     <h3 class="text-base font-black text-stone-900">待安排</h3>
                                     <span id="studio-unassigned-count" class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black">0</span>
@@ -3066,12 +3088,16 @@
                             <h3 class="text-base font-black text-stone-900">課堂小組團隊競賽</h3>
                             <p class="text-xs text-stone-500 font-medium">自訂組數平均分組，支援課堂答題小組累積積分與榮譽獎台。</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" id="studio-reset-group-scores-btn" class="px-3.5 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="將所有小組得分重置為 0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button type="button" id="studio-reset-group-scores-btn" class="px-3.5 py-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="將所有小組得分重置為 0">
                                 <i class="fa-solid fa-trash-can text-rose-500"></i>
                                 <span>重置小組積分</span>
                             </button>
-                            <button type="button" id="studio-auto-group-btn" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-black text-white font-black text-xs shadow-md shadow-stone-800/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
+                            <button type="button" id="studio-manual-group-btn" class="px-3.5 py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="手動設定各組組員名單">
+                                <i class="fa-solid fa-user-pen text-amber-700"></i>
+                                <span>手動設定組員</span>
+                            </button>
+                            <button type="button" id="studio-auto-group-btn" class="px-4 py-2 rounded-2xl bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-black text-white font-black text-xs shadow-md shadow-stone-800/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                                 <span>重新劃分小組</span>
                             </button>
@@ -3283,41 +3309,65 @@
                     </div>
 
                     <!-- 右側：超大投影看板 -->
-                    <div class="lg:col-span-9 rounded-3xl bg-white/95 backdrop-blur-md border border-[#EBDCCB] p-6 sm:p-12 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
-                        <!-- 即時時間 -->
-                        <div id="exam-running-clock" class="text-3xl sm:text-4xl font-black text-[#1e2e3b] font-mono tracking-wider">15:14:55</div>
-                        <div id="exam-running-status" class="text-xs sm:text-sm font-bold text-stone-500 tracking-wider">考試進行中</div>
+                    <div class="lg:col-span-9 rounded-3xl bg-white/95 backdrop-blur-md border border-[#EBDCCB] p-6 sm:p-12 shadow-sm flex flex-col items-center justify-center text-center min-h-[500px]">
+                        <!-- 1. 進行中面板 (ACTIVE BOARD - 依規範不得暫停、重設或延長時間) -->
+                        <div id="exam-running-active-board" class="w-full flex flex-col items-center justify-center text-center space-y-6">
+                            <!-- 即時時間 -->
+                            <div id="exam-running-clock" class="text-3xl sm:text-4xl font-black text-[#1e2e3b] font-mono tracking-wider">15:14:55</div>
+                            <div id="exam-running-status" class="text-xs sm:text-sm font-bold text-stone-500 tracking-wider">考試進行中</div>
 
-                        <!-- 考試內容超大標題 -->
-                        <h1 id="exam-running-title" class="text-5xl sm:text-7xl font-black text-[#1e2e3b] tracking-tight">國語</h1>
+                            <!-- 考試內容超大標題 -->
+                            <h1 id="exam-running-title" class="text-5xl sm:text-7xl font-black text-[#1e2e3b] tracking-tight">國語</h1>
 
-                        <!-- 超大倒數計時外框 -->
-                        <div class="w-full max-w-3xl py-8 sm:py-12 px-6 rounded-3xl bg-stone-50/90 border-2 border-stone-200 shadow-inner flex items-center justify-center">
-                            <div id="exam-running-digits" class="font-mono font-black text-7xl sm:text-8xl md:text-9xl text-[#1e2e3b] tracking-tight">05:45:04</div>
+                            <!-- 超大倒數計時外框 -->
+                            <div class="w-full max-w-3xl py-8 sm:py-12 px-6 rounded-3xl bg-stone-50/90 border-2 border-stone-200 shadow-inner flex items-center justify-center">
+                                <div id="exam-running-digits" class="font-mono font-black text-7xl sm:text-8xl md:text-9xl text-[#1e2e3b] tracking-tight">05:45:04</div>
+                            </div>
+
+                            <!-- 到考統計行 -->
+                            <div id="exam-running-attendance" class="text-xl sm:text-2xl font-black text-[#1e2e3b]">應到 30 · 實到 30 · 缺席 0</div>
+
+                            <!-- 注意事項提醒卡片 -->
+                            <div id="exam-running-notes" class="p-3.5 sm:p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-bold max-w-xl"></div>
                         </div>
 
-                        <!-- 到考統計行 -->
-                        <div id="exam-running-attendance" class="text-xl sm:text-2xl font-black text-[#1e2e3b]">應到 30 · 實到 30 · 缺席 0</div>
+                        <!-- 2. 兩場考試間的空檔面板 (BREAK BOARD - 顯示下一場考試) -->
+                        <div id="exam-running-break-board" class="w-full hidden flex-col items-center justify-center text-center space-y-6 py-6">
+                            <div class="text-3xl sm:text-4xl font-black text-[#1e2e3b] font-mono tracking-wider" id="exam-break-clock">15:14:55</div>
+                            <div>
+                                <span class="px-4 py-1.5 rounded-full bg-teal-100 text-teal-800 text-sm font-black inline-flex items-center gap-1.5 shadow-xs">
+                                    <i class="fa-solid fa-mug-hot text-teal-700"></i>
+                                    <span>下課休息中</span>
+                                </span>
+                            </div>
+                            <div class="space-y-2 max-w-2xl">
+                                <div class="text-xs font-black text-amber-800 uppercase tracking-widest">NEXT SESSION</div>
+                                <h1 id="exam-break-next-title" class="text-4xl sm:text-6xl font-black text-[#1e2e3b] tracking-tight">下一場考試：【數學第二單元】</h1>
+                                <p id="exam-break-next-info" class="text-stone-500 font-mono text-sm sm:text-base font-bold pt-1">預計時間：10:10 ~ 10:55 (45 分鐘)</p>
+                            </div>
+                            <div class="pt-4">
+                                <button type="button" id="exam-start-next-schedule-btn" class="px-8 py-3.5 rounded-2xl bg-teal-800 hover:bg-teal-900 text-white font-black text-base shadow-lg shadow-teal-900/20 transition-all cursor-pointer active:scale-95 flex items-center gap-2">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span>立即開始下一場考試</span>
+                                </button>
+                            </div>
+                        </div>
 
-                        <!-- 注意事項提醒卡片 -->
-                        <div id="exam-running-notes" class="p-3.5 sm:p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-bold max-w-xl"></div>
-
-                        <!-- 輔助操作微條 (暫停/開始、重設、+1分、+5分) -->
-                        <div class="flex items-center justify-center gap-2.5 pt-2 flex-wrap">
-                            <button type="button" id="exam-running-play-pause-btn" class="px-5 py-2.5 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-black text-xs sm:text-sm shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95">
-                                <i class="fa-solid fa-pause"></i>
-                                <span>暫停</span>
-                            </button>
-                            <button type="button" id="exam-running-reset-btn" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs border border-stone-200 cursor-pointer active:scale-95">
-                                <i class="fa-solid fa-rotate-left"></i>
-                                <span>重設</span>
-                            </button>
-                            <button type="button" id="exam-running-add1-btn" class="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs border border-stone-200 cursor-pointer active:scale-95">
-                                +1 分鐘
-                            </button>
-                            <button type="button" id="exam-running-add5-btn" class="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs border border-stone-200 cursor-pointer active:scale-95">
-                                +5 分鐘
-                            </button>
+                        <!-- 3. 全部考試結束面板 (FINISHED BOARD - 恭喜結束考試) -->
+                        <div id="exam-running-finished-board" class="w-full hidden flex-col items-center justify-center text-center space-y-6 py-8">
+                            <div class="w-24 h-24 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center text-5xl shadow-xl shadow-amber-500/20">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div class="space-y-3 max-w-xl">
+                                <h1 class="text-4xl sm:text-6xl font-black text-[#1e2e3b] tracking-tight">恭喜結束考試！</h1>
+                                <p class="text-base sm:text-lg text-stone-600 font-bold leading-relaxed">今日所有排定之考試考程已全數圓滿結束，各位同學辛苦了！</p>
+                            </div>
+                            <div class="pt-4 flex items-center gap-3">
+                                <button type="button" id="exam-finished-return-btn" class="px-8 py-3.5 rounded-2xl bg-stone-900 hover:bg-black text-white font-black text-sm sm:text-base shadow-md transition-all cursor-pointer active:scale-95 flex items-center gap-2">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>返回考程設定</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3436,7 +3486,7 @@
             <div class="bg-slate-50 px-6 py-4 sm:px-8 sm:py-6 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
                 <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 flex items-center gap-3">
                     <span class="bg-indigo-100 text-indigo-600 p-2 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253"></path></svg></span>
-                    班級經營系統 - 終極功能指南
+                    PalClass - 終極功能指南
                 </h2>
                 <button class="cancel-btn text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -3445,7 +3495,7 @@
             <div class="overflow-y-auto p-6 sm:p-8 space-y-6 sm:space-y-8 text-sm text-slate-600 flex-grow font-medium custom-scrollbar">
                 
                 <div class="mb-4">
-                    <p class="text-base text-slate-700 leading-relaxed font-bold mb-4">這是一套專為教育現場打造的「全方位班級經營系統」，結合智慧條碼掃描功能、雙軌儲存機制與離線 PWA 支援，為您帶來極致流暢的教學與班級經營管理體驗。</p>
+                    <p class="text-base text-slate-700 leading-relaxed font-bold mb-4">這是一套專為教育現場打造的「PalClass 全方位班級經營系統」，結合智慧條碼掃描功能、雙軌儲存機制與離線 PWA 支援，為您帶來極致流暢的教學與班級經營管理體驗。</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -3522,7 +3572,7 @@
                 <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 mx-auto sm:mx-0">
                     <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
                 </div>
-                <h2 class="text-3xl font-black mb-3 text-slate-900 tracking-tight">歡迎使用班級經營系統</h2>
+                <h2 class="text-3xl font-black mb-3 text-slate-900 tracking-tight">歡迎使用 PalClass</h2>
                 <p class="text-slate-500 mb-6 leading-relaxed font-medium">
                     請先選擇您的資料儲存方式。本系統支援綁定本機硬碟檔案，以及 <b>Google 帳號雲端備份</b> 功能！
                 </p>
@@ -3642,7 +3692,7 @@
                    </p>
                    <button id="install-pwa-btn" type="button" class="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-black py-3 px-4 rounded-xl shadow-md shadow-pink-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5 active:translate-y-0">
                        <i class="fa-solid fa-download text-sm"></i>
-                       <span>安裝班級經營系統 App</span>
+                       <span>安裝 PalClass App</span>
                    </button>
                    <p id="install-pwa-tip" class="text-[11px] text-slate-400 mt-2 font-medium text-center">
                        提示：若未出現提示，亦可透過瀏覽器選單點擊「加到主畫面」或「安裝應用程式」
@@ -4349,6 +4399,9 @@
     <!-- 全勤名單 Modal -->
     <div id="overall-all-done-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 hidden modal z-50">
         <div class="modal-content glass-card rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg transform scale-95 border border-slate-100">
+            <div class="rounded-2xl overflow-hidden mb-4 shadow-sm border border-amber-200/70 aspect-[16/9] max-h-40">
+                <img src="assets/images/palclass_celebrate_all_done.png" alt="全勤榮譽金色星光獎盃" class="w-full h-full object-cover">
+            </div>
             <h2 class="text-2xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 drop-shadow-sm"><i class="fa-solid fa-trophy text-amber-500 mr-2"></i>全勤榮譽名單</h2>
             <p id="overall-all-done-desc" class="text-sm text-slate-500 mb-6">此處列出在當前班級的所有作業中，狀態皆為「已完成/已繳交」的學生。</p>
             <div id="overall-all-done-list" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar"></div>
@@ -4681,7 +4734,7 @@
                         </div>
                         <div>
                             <h3 class="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">系統版本更新日誌 (Changelog)</h3>
-                            <p class="text-xs text-stone-500 font-medium">記錄班級經營系統的每一次進化與功能更新</p>
+                            <p class="text-xs text-stone-500 font-medium">記錄 PalClass 的每一次進化與功能更新</p>
                         </div>
                     </div>
                     <button id="close-changelog-modal-btn" type="button" class="cancel-btn text-stone-400 hover:text-stone-700 p-2 rounded-xl hover:bg-stone-100 transition-colors text-xl leading-none">
@@ -4691,8 +4744,82 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
-                    <!-- v5.4.1 全域導航完備化與商用效能加固版 -->
+                    <!-- v5.5.0 PalClass 旗艦版 -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/70 to-emerald-50/50 border-2 border-indigo-600 shadow-xl relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.5.0 PalClass 旗艦版</span>
+                                <span class="text-xs font-bold text-indigo-950">全站品牌更名 PalClass・點收方格狀態切換加固・學生詳情無跳號全勤榮譽徽章・3D 暖心視覺</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-indigo-800">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>全站品牌全面更名 PalClass</b>：首頁、三端介面、PWA Manifest 與 Meta 標籤全面統一為「PalClass」，並引入 3D 暖心教室協作插畫與榮譽金獎盃視覺，打造頂級教育體驗。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>作業方格點擊輪替狀態與種類管理徹底加固</b>：精確綁定 `.student-status-text` 狀態文字，徹底根治文字被覆蓋或切換失敗問題；作業工作台頂部正常常駐「作業種類」自訂入口與「← 返回作業工作台」按鈕，空資料自動容錯初始化。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>學生詳情無跳號全名單與全勤徽章</b>：個人詳情完整呈現全班學生（徹底排查並解決 7 號等全勤學生跳號遺失），展示「全部繳齊 · 全勤」綠色榮譽徽章，並提供「全班座號 / 缺交數量 / 僅顯示缺交學生」即時篩選。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>返回作業列表按鈕 0.0px 齊頭左對齊</b>：移除多餘左側邊距，與下方作業標題、全班狀態套用及卡片保持齊頭向左對齊。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>課堂工坊座位表與分組靈活配置</b>：選中座位中央顯示醒目紅色「移至待安排」按鈕，一鍵移回待安排名單；提供「手動設定小組成員」專屬彈窗，支援學生搜尋、本組/他組標籤與組員即時配置。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>專注考試計時全新看板規格</b>：移除暫停/延長干擾，時長自訂連動結束時間且後場不得早於前場；空檔顯示下課休息與下一場考試看板，全日結束呈現榮譽獎盃與彩紙慶祝。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>簽到打卡自訂時間與「已修改」標註</b>：支援自訂微調出勤時間，於打卡時間後方清楚呈現「(已修改)」標籤。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>高並發效能與全圖標 FontAwesome 化</b>：300ms 防抖儲存，Local-First 快取，全系統 100% 採用 FontAwesome 專業 SVG 圖標素材，嚴格禁止 Emoji。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.4.2 作業點收齊頭對齊與課堂工具旗艦升級版 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-rose-50/70 to-indigo-50/50 border border-stone-200 shadow-sm relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.4.2 作業點收齊頭對齊與課堂工具升級版</span>
+                                <span class="text-xs font-bold text-indigo-950">返回按鈕齊頭左對齊・小組手動配置彈窗・考試計時空檔與獎盃大看板・全圖標 FontAwesome 化</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-indigo-800">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>返回作業列表按鈕齊頭向左對齊</b>：移除作業點收與詳情頁頂部「返回作業列表」按鈕之多餘左側留白，與下方作業標題、全班狀態套用及卡片網格保持齊頭向左對齊，視覺平衡整齊。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>座位分組工坊小組成員手動靈活設定</b>：支援點選組別彈窗手動指派與調換學生座號，具備即時姓名搜尋、本組/他組標籤與未分組人數即時統計。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>專注考試計時全新看板規格</b>：考試進行中面板隱藏干擾與易誤觸操作，新增考程空檔下課休息大看板（顯示下一場考試資訊與立即開始按鈕）及全日考試圓滿結束金色獎盃大看板。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>作業種類專屬入口與全圖標 FontAwesome 化</b>：作業點收工作台頂部正常常駐「作業種類」自訂入口與返回工作台按鈕，全局抽屜導覽精簡收納，全系統 100% 採用 FontAwesome 專業圖標素材，嚴禁系統 Emoji。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.4.1 全域導航完備化與商用效能加固版 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-rose-50/70 to-indigo-50/50 border border-stone-200 shadow-sm relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.4.1 全域導航完備化與商用效能加固版</span>
@@ -5997,7 +6124,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.4.1"></script>
+<script type="module" src="js/app.js?v=5.5.0"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->
@@ -6412,6 +6539,75 @@
             <button type="button" id="btn-save-initial-max-seat" class="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
                 確認儲存名單設定
             </button>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 課堂小組手動設定組員彈窗 (Manual Group Members Setup Modal)      -->
+    <!-- ============================================================== -->
+    <div id="studio-manual-group-modal" class="fixed inset-0 z-[120] bg-stone-900/60 backdrop-blur-md hidden flex items-center justify-center p-4 modal transition-all duration-300">
+        <div class="modal-content w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar border border-stone-200">
+            <!-- 標題與關閉按鈕 -->
+            <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shadow-2xs">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-black text-stone-900">手動設定小組成員</h3>
+                        <p class="text-xs text-stone-500 font-medium">點選座號卡片即可加入或移出當前小組</p>
+                    </div>
+                </div>
+                <button type="button" id="close-studio-manual-group-modal-btn" class="w-9 h-9 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center transition-colors cursor-pointer" title="關閉">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 目標小組切換 Tabs -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-black text-stone-700">選擇要編輯的小組：</label>
+                <div id="studio-manual-group-tabs" class="flex flex-wrap gap-2">
+                    <!-- 由 JS 動態生成組別按鈕 (例如：第 1 組、第 2 組...) -->
+                </div>
+            </div>
+
+            <!-- 學生名單選擇網格 -->
+            <div class="space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="text-xs font-black text-stone-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-group text-amber-600"></i>
+                        <span id="studio-manual-group-current-label">當前正在編輯：第 1 組</span>
+                    </span>
+                    <span id="studio-manual-group-stats" class="text-xs font-bold text-stone-500">本組共 0 人 · 未分組 0 人</span>
+                </div>
+
+                <!-- 搜尋座號或姓名 -->
+                <div class="relative">
+                    <input type="text" id="studio-manual-group-search" placeholder="搜尋學生座號或姓名..." class="w-full pl-3 pr-8 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-stone-50/50">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs"></i>
+                </div>
+
+                <div id="studio-manual-group-students-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto custom-scrollbar p-1.5 bg-stone-50/60 rounded-2xl border border-stone-200">
+                    <!-- 由 JS 動態填入全班學生卡片 -->
+                </div>
+            </div>
+
+            <!-- 底部動作按鈕 -->
+            <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
+                <button type="button" id="studio-manual-group-clear-current-btn" class="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-stone-600 text-xs font-black transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>清空本組</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="studio-manual-group-cancel-btn" class="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-bold transition-colors cursor-pointer active:scale-95">
+                        取消
+                    </button>
+                    <button type="button" id="studio-manual-group-save-btn" class="px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-black shadow-md transition-all cursor-pointer active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i>
+                        <span>完成設定</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

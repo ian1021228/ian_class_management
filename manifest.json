@@ -1,7 +1,7 @@
 {
   "id": "ian-class-management-pwa",
-  "name": "班級經營系統 3.0",
-  "short_name": "班級經營 3.0",
+  "name": "PalClass 班級經營系統",
+  "short_name": "PalClass",
   "description": "支援實體條碼掃描槍、數位黑板聯絡簿、課堂抽籤加扣分與座位分組的全方位班級經營系統",
   "lang": "zh-TW",
   "start_url": "./index.html",

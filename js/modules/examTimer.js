@@ -16,9 +16,10 @@
  *    - Web Audio API 考畢下課和弦鐘聲
  */
 
-import { state } from '../state.js?v=5.4.1';
-import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen } from '../utils.js?v=5.4.1';
-import { isSoundEnabled } from './audioFx.js?v=5.4.1';
+import { state } from '../state.js';
+import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen } from '../utils.js';
+import { saveData } from '../storage.js';
+import { isSoundEnabled } from './audioFx.js';
 import { getAttendanceSummaryForClass } from './attendanceHub.js';
 
 let isExamRunning = false;
@@ -426,13 +427,24 @@ export function updateExamFullscreenButtonUI() {
     }
 }
 
+function updatePresetDurationUI(mins) {
+    document.querySelectorAll('.exam-duration-preset-btn').forEach(btn => {
+        const btnMins = parseInt(btn.dataset.mins, 10);
+        if (btnMins === mins) {
+            btn.className = 'exam-duration-preset-btn px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 font-black text-xs transition-all cursor-pointer shadow-xs ring-2 ring-amber-300/40';
+        } else {
+            btn.className = 'exam-duration-preset-btn px-3 py-1.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-bold text-xs transition-colors cursor-pointer';
+        }
+    });
+}
+
 /**
  * 初始化考試計時模組與雙向連動事件
  */
 export function initExamTimer() {
     const startInput = document.getElementById('exam-setup-start-time');
     const endInput = document.getElementById('exam-setup-end-time');
-    const customDurationInput = document.getElementById('exam-setup-custom-duration');
+    const customDurationInput = document.getElementById('exam-setup-duration-input');
 
     // 預設當前時間與 +45 分鐘
     if (startInput && !startInput.value) {
@@ -442,6 +454,8 @@ export function initExamTimer() {
             endInput.value = addMinutesToTime(startInput.value, 45);
         }
     }
+    const initDur = parseInt(customDurationInput?.value, 10) || 45;
+    updatePresetDurationUI(initDur);
 
     // 1. 開始時間修改 -> 自動連動結束時間
     startInput?.addEventListener('change', () => {
@@ -457,6 +471,7 @@ export function initExamTimer() {
         if (startInput && endInput) {
             const diff = getMinutesBetween(startInput.value, endInput.value);
             if (customDurationInput) customDurationInput.value = diff;
+            updatePresetDurationUI(diff);
         }
         renderExamTimerSetup();
     });
@@ -466,6 +481,7 @@ export function initExamTimer() {
         btn.addEventListener('click', () => {
             const mins = parseInt(btn.dataset.mins, 10);
             if (customDurationInput) customDurationInput.value = mins;
+            updatePresetDurationUI(mins);
             if (startInput && endInput) {
                 endInput.value = addMinutesToTime(startInput.value, mins);
             }
@@ -474,8 +490,17 @@ export function initExamTimer() {
     });
 
     // 4. 自訂時長輸入
+    customDurationInput?.addEventListener('input', () => {
+        const mins = parseInt(customDurationInput.value, 10) || 45;
+        updatePresetDurationUI(mins);
+        if (startInput && endInput) {
+            endInput.value = addMinutesToTime(startInput.value, mins);
+        }
+        renderExamTimerSetup();
+    });
     customDurationInput?.addEventListener('change', () => {
         const mins = parseInt(customDurationInput.value, 10) || 45;
+        updatePresetDurationUI(mins);
         if (startInput && endInput) {
             endInput.value = addMinutesToTime(startInput.value, mins);
         }
