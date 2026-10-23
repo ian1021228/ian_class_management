@@ -164,7 +164,7 @@ export function renderEnhancedBlackboard() {
     const dateDisplay = document.getElementById('contact-book-date');
     if (dateDisplay) dateDisplay.textContent = formatDate(state.selectedDate);
 
-    // 更新日期膠囊導航按鈕組 (對照截圖：◀ [ 2026/10/23 📅 ] ▶ [ 回到今天 ])
+    // 更新日期膠囊導航按鈕組 (對照截圖：◀ [ 2026/10/23  ] ▶ [ 回到今天 ])
     const dateTextEl = document.getElementById('bb-current-date-text');
     if (dateTextEl) {
         dateTextEl.textContent = formatDate(state.selectedDate, 'YYYY/MM/DD');

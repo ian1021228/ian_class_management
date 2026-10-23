@@ -5,11 +5,19 @@
  * 2. 課堂抽籤獨立頁面 (#lottery-page)：3D 公平籤筒（點擊籤筒直接抽籤）、密碼級不重複隨機點名、即時評分膠囊、個人積分排行榜
  */
 
-import { state } from '../state.js';
-import { showToast, openModal, closeModal, escapeHtml } from '../utils.js';
-import { saveData } from '../storage.js';
-import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js';
-import { isStudentAbsentOrLeaveToday } from './attendanceHub.js';
+import { state } from '../state.js?v=5.4.0';
+import { showToast, openModal, closeModal, escapeHtml } from '../utils.js?v=5.4.0';
+import { saveData } from '../storage.js?v=5.4.0';
+import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js?v=5.4.0';
+import { isStudentAbsentOrLeaveToday } from './attendanceHub.js?v=5.4.0';
+import {
+    playLotteryTick,
+    playLotteryWinner,
+    playPointAdd,
+    playPointDeduct,
+    playGoalAchieved
+} from './audioFx.js?v=5.4.0';
+import { triggerConfetti } from './confettiFx.js?v=5.4.0';
 
 let isDrawing = false;
 let currentDrawnSeat = null;
@@ -80,6 +88,12 @@ export function adjustStudentPoints(seat, delta, reason = '課堂表現', client
         currentClass.pointsHistory.pop();
     }
 
+    if (delta > 0) {
+        playPointAdd();
+    } else if (delta < 0) {
+        playPointDeduct();
+    }
+
     saveData();
     renderPointsPage();
     renderLotteryPage();
@@ -130,6 +144,12 @@ export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
         reason: `${reason}（已獎勵 ${awardedCount} 人${skippedCount > 0 ? `，自動略過 ${skippedCount} 位請假/缺席` : ''}）`,
         time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
     });
+
+    if (delta > 0) {
+        playPointAdd();
+    } else if (delta < 0) {
+        playPointDeduct();
+    }
 
     saveData();
     renderPointsPage();
@@ -186,6 +206,7 @@ export function executeFairDraw() {
         const randSeat = activeSeats[Math.floor(Math.random() * activeSeats.length)];
         if (stageNum) stageNum.textContent = `${randSeat} 號`;
         if (stageName) stageName.textContent = getStudentNameOnly(currentClass, randSeat) || '抽籤中...';
+        playLotteryTick();
         rollTimes++;
 
         if (rollTimes >= maxRolls) {
@@ -203,6 +224,9 @@ export function executeFairDraw() {
                 scoreCapsule.classList.remove('hidden');
                 scoreCapsule.classList.add('flex');
             }
+
+            playLotteryWinner();
+            triggerConfetti({ count: 90 });
 
             saveData();
             isDrawing = false;
@@ -254,8 +278,15 @@ export function renderPointsPage() {
 
     if (calloutText) {
         if (totalScore >= targetVal) {
-            calloutText.innerHTML = `<span class="text-emerald-700 font-black">🎉 全班已達標！解鎖福利：${escapeHtml(goal.reward || '全班慶祝')}</span>`;
+            calloutText.innerHTML = `<span class="text-emerald-700 font-black"><i class="fa-solid fa-trophy text-amber-500 mr-1.5"></i>全班已達標！解鎖福利：${escapeHtml(goal.reward || '全班慶祝')}</span>`;
+            if (!currentClass.hasCelebratedGoal) {
+                currentClass.hasCelebratedGoal = true;
+                playGoalAchieved();
+                triggerConfetti({ count: 160 });
+                showToast(`全班總分達成 ${targetVal} 分！恭喜解鎖：${goal.reward || '全班慶祝'}！`, 'success');
+            }
         } else {
+            currentClass.hasCelebratedGoal = false;
             const diff = targetVal - totalScore;
             calloutText.textContent = `再累積 ${diff.toLocaleString()} 分就達標（目前進度 ${pct}%）`;
         }

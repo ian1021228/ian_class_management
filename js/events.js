@@ -2,7 +2,7 @@
  * 班級經營系統 3.0 - DOM 事件監聽與交互管理
  */
 
-import { state } from './state.js?v=5.3.2';
+import { state } from './state.js?v=5.4.0';
 
 import {
     DEFAULT_TYPES,
@@ -10,7 +10,7 @@ import {
     globalAppId,
     PARENT_DASHBOARD_URL,
     STUDENT_DASHBOARD_URL
-} from './constants.js?v=5.3.2';
+} from './constants.js?v=5.4.0';
 
 import {
     generateId,
@@ -31,7 +31,7 @@ import {
     bindClick,
     bindSubmit,
     bindChange
-} from './utils.js?v=5.3.2';
+} from './utils.js?v=5.4.0';
 
 import {
     fbAuth,
@@ -60,7 +60,7 @@ import {
     stopRealtimeCloudSync,
     deleteMyAccount,
     syncClassStudentPinsToCloud
-} from './firebase.js?v=5.3.2';
+} from './firebase.js?v=5.4.0';
 
 import {
     saveData,
@@ -72,7 +72,7 @@ import {
     flushPendingSave,
     getUserStorageKey,
     loadLocalDataForUser
-} from './storage.js?v=5.3.2';
+} from './storage.js?v=5.4.0';
 
 import {
     getHomeworkType,
@@ -91,7 +91,7 @@ import {
     updatePortalUI,
     isStudentCompleted,
     renderAllDoneList,
-    } from './render.js?v=5.3.2';
+    } from './render.js?v=5.4.0';
 
 import {
     applyCheckMode,
@@ -112,18 +112,29 @@ import {
     openCopyClassModal,
     showWelcomeStep2,
     fullRender
-} from './navigation.js?v=5.3.2';
+} from './navigation.js?v=5.4.0';
 
 import {
     setupExamScoresEvents,
     updateClassMaxSeat,
     checkInitialMaxSeatSetup
-} from './examScores.js?v=5.3.2';
+} from './examScores.js?v=5.4.0';
 
-import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.3.2';
+import { getRosterDataFromAddForm } from './modules/classWizard.js?v=5.4.0';
+import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js?v=5.4.0';
 
 export function setupButtonEvents() {
     setupExamScoresEvents();
+
+    // 初始化課堂音效切換 UI 與事件監聽
+    updateSoundToggleUI();
+    document.querySelectorAll('.sound-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const state = toggleSound();
+            showToast(state ? '課堂音效已開啟' : '課堂音效已切換為靜音模式', 'info');
+        });
+    });
 
     // 訪客體驗懸浮回首頁
     bindClick('guest-home-btn', () => {
@@ -3518,7 +3529,11 @@ export function setupButtonEvents() {
         });
     });
 
+    // ============================================
+    // 全域鍵盤快捷鍵系統 (Teacher Pro Shortcuts)
+    // ============================================
     window.addEventListener('keydown', (e) => {
+        // 1. Esc 關閉所有開啟中的彈窗與導覽抽屜
         if (e.key === 'Escape') {
             const openModals = document.querySelectorAll('.modal:not(.hidden)');
             if (openModals.length > 0) {
@@ -3527,6 +3542,34 @@ export function setupButtonEvents() {
                     closeModal(topModal);
                 }
             }
+            if (window.closeGlobalNavDrawer) {
+                window.closeGlobalNavDrawer();
+            }
+        }
+
+        // 若使用者正在表單輸入框或文字區塊打字，略過單鍵功能快捷鍵
+        const activeTag = document.activeElement?.tagName?.toUpperCase();
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || document.activeElement?.isContentEditable) {
+            return;
+        }
+
+        // 2. 空白鍵快捷鍵 (Space)：抽籤頁直接抽籤、考試頁切換暫停/繼續
+        if (e.code === 'Space' || e.key === ' ') {
+            const lotteryEl = document.getElementById('lottery-page');
+            const examRunningView = document.getElementById('exam-timer-running-view');
+            if (lotteryEl && !lotteryEl.classList.contains('hidden')) {
+                e.preventDefault();
+                if (window.executeFairDraw) window.executeFairDraw();
+            } else if (examRunningView && !examRunningView.classList.contains('hidden')) {
+                e.preventDefault();
+                document.getElementById('exam-running-play-pause-btn')?.click();
+            }
+        }
+
+        // 3. F 鍵：切換目前頁面全螢幕 (不與 Ctrl+F / Cmd+F 搜尋衝突)
+        if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            toggleAppFullscreen();
         }
     });
 

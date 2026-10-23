@@ -16,8 +16,9 @@
  *    - Web Audio API 考畢下課和弦鐘聲
  */
 
-import { state } from '../state.js';
-import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen } from '../utils.js';
+import { state } from '../state.js?v=5.4.0';
+import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen } from '../utils.js?v=5.4.0';
+import { isSoundEnabled } from './audioFx.js?v=5.4.0';
 import { getAttendanceSummaryForClass } from './attendanceHub.js';
 
 let isExamRunning = false;
@@ -60,6 +61,7 @@ function ensureClassExamData(classObj) {
  * Web Audio API 合成經典考試下課鐘聲 (叮咚叮咚)
  */
 function playExamBell() {
+    if (typeof isSoundEnabled === 'function' && !isSoundEnabled()) return;
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;

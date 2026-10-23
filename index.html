@@ -60,7 +60,7 @@
                 }
             });
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=5.3.2')
+                navigator.serviceWorker.register('./sw.js?v=5.4.0')
                     .then(reg => {
                         reg.update();
                         console.log('系統離線防護已啟動:', reg.scope);
@@ -281,7 +281,7 @@
                     <i class="fa-solid fa-book-bookmark"></i>
                 </span>
                 <span>系統更新紀錄 (Changelog)</span>
-                <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.3.1</span>
+                <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.4.0</span>
             </button>
 
             <div class="pt-3 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">系統與顯示</div>
@@ -293,6 +293,15 @@
                     <span id="drawer-fs-text">切換全螢幕</span>
                 </div>
                 <span class="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded-md font-mono">F11</span>
+            </button>
+
+            <!-- 全域音效開關 -->
+            <button type="button" id="drawer-sound-toggle-btn" class="sound-toggle-btn w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white hover:bg-stone-100 text-stone-800 border border-[#EBDCCB] font-black text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-98" title="點擊切換音效開啟/靜音">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-volume-high text-emerald-600 text-sm"></i>
+                    <span class="sound-toggle-text">音效：開啟</span>
+                </div>
+                <span class="text-[10px] bg-stone-100 text-stone-500 px-2 py-0.5 rounded-md font-mono">Audio FX</span>
             </button>
 
             <!-- 班級快速切換下拉 -->
@@ -2203,14 +2212,14 @@
                             <button id="lineheight-increase-btn" class="px-3.5 py-2 text-sm text-stone-600 hover:bg-amber-50 font-bold transition-colors flex items-center gap-1" title="加大行距"><i class="fa-solid fa-arrows-up-down text-xs"></i>+</button>
                         </div>
 
-                        <!-- 日期導航按鈕組 (對照截圖：◀ [ 2026/10/23 📅 ] ▶ [ 回到今天 ]) -->
+                        <!-- 日期導航按鈕組 (對照截圖：◀ [ 2026/10/23  ] ▶ [ 回到今天 ]) -->
                         <div class="inline-flex items-center gap-1.5 p-1 rounded-full border border-stone-300 bg-white/95 backdrop-blur-md shadow-2xs">
                             <!-- 前一天 ◀ -->
                             <button type="button" id="bb-prev-day-btn" class="w-8 h-8 rounded-full border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-stone-100 hover:border-stone-400 cursor-pointer active:scale-90 transition-all" title="切換至前一天">
                                 <i class="fa-solid fa-caret-left text-xs"></i>
                             </button>
 
-                            <!-- 當前日期與選擇器 [ 2026/10/23 📅 ] -->
+                            <!-- 當前日期與選擇器 [ 2026/10/23  ] -->
                             <div class="relative flex items-center gap-2 px-3 py-1.5 rounded-full border border-stone-300 bg-white cursor-pointer hover:border-amber-500 transition-colors">
                                 <span id="bb-current-date-text" class="text-xs sm:text-sm font-black text-stone-800 font-mono tracking-tight">2026/10/23</span>
                                 <i class="fa-regular fa-calendar text-stone-600 text-xs"></i>
@@ -2596,8 +2605,12 @@
                         </div>
                     </div>
 
-                    <!-- 捷徑跳轉至課堂抽籤獨立頁 -->
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <!-- 捷徑跳轉至課堂抽籤獨立頁 與 音效切換 -->
+                    <div class="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                        <button type="button" class="sound-toggle-btn px-3 py-2 rounded-2xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95" title="音效開關">
+                            <i class="fa-solid fa-volume-high text-emerald-600"></i>
+                            <span class="sound-toggle-text hidden sm:inline">音效：開啟</span>
+                        </button>
                         <button type="button" id="points-to-lottery-btn" class="px-4 py-2.5 rounded-2xl bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-200/90 font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs">
                             <i class="fa-solid fa-dice text-orange-500"></i>
                             <span>前往課堂抽籤</span>
@@ -2761,8 +2774,12 @@
                         </div>
                     </div>
 
-                    <!-- 捷徑跳轉至課堂加扣分獨立頁 -->
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <!-- 捷徑跳轉至課堂加扣分獨立頁 與 音效切換 -->
+                    <div class="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                        <button type="button" class="sound-toggle-btn px-3 py-2 rounded-2xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95" title="音效開關">
+                            <i class="fa-solid fa-volume-high text-emerald-600"></i>
+                            <span class="sound-toggle-text hidden sm:inline">音效：開啟</span>
+                        </button>
                         <button type="button" id="lottery-to-points-btn" class="px-4 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs">
                             <i class="fa-solid fa-star text-amber-500"></i>
                             <span>前往課堂加扣分</span>
@@ -4688,11 +4705,48 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
-                    <!-- v5.3.2 快取自動修復與模組同步升級版 (Cache Auto-Purge & Module Sync Edition) -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/95 via-teal-50/70 to-amber-50/50 border-2 border-emerald-600 shadow-lg relative">
+                    <!-- v5.4.0 旗艦商用發布版 (Production Ready Ultimate Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-rose-50/70 to-indigo-50/50 border-2 border-amber-600 shadow-xl relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.3.2 快取自動修復與版本同步版</span>
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.4.0 旗艦商用發布版</span>
+                                <span class="text-xs font-bold text-amber-950">課堂原聲音效引擎・全螢幕彩帶特效・專業列印輸出樣式・全域鍵盤快捷鍵・商用 PWA 旗艦發布規格</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-amber-800">2026-10-23</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>Web Audio API 原生課堂音效引擎</b>：打造零外部檔案依賴之離線合成音效系統，提供籤筒指針滴答聲（Tick）、抽中學生榮耀和弦（Victory Chime）、個人/全班加分清脆音（Level-Up Chime）、扣分提示音、CLASS GOAL 達成之凱旋樂章（Fanfare）及考試倒數結束之經典雙音叮咚鐘聲（School Bell）。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>三處即時音效開關與狀態持久化</b>：於左側全域導覽抽屜、課堂加扣分頂部、課堂抽籤頂部同步配置一鍵靜音/開啟按鈕，自動儲存偏好設定，適應各類課堂與安靜自習情境。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>全螢幕絢麗彩帶彩紙特效（Confetti Engine）</b>：抽出獲獎學生、全班達成共同集分目標時，啟動 60FPS 物理流暢重力彩紙彩帶噴泉，視覺沉浸感與班級互動樂趣倍增。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>專業紙本列印樣式（@media print）</b>：座位安排工作台支援專屬黑白高對比列印，自動隱藏所有網頁介面雜訊與彩色底圖，保留清晰講台方向、座號與學生姓名，一鍵輸出貼上講桌或列印給科任教師；聯絡簿與作業未繳清單同步支援無干擾列印。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>教師專業鍵盤快捷鍵系統（Teacher Pro Shortcuts）</b>：空白鍵（Space）於抽籤頁一鍵開抽、考試計時頁一鍵暫停/繼續；Esc 鍵一鍵關閉彈窗與選單；F 鍵一鍵切換全螢幕，完美適配大屏觸控一體機與外接鍵盤操作。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>商用 PWA 上架規格完善</b>：更新 Web App Manifest，補全類別、繁體中文語系、Maskable 自適應圖標與 Standalone 獨立原生應用程式體驗。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.3.2 快取自動修復與模組同步升級版 (Cache Auto-Purge & Module Sync Edition) -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/95 via-teal-50/70 to-amber-50/50 border border-emerald-300 shadow-sm relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">v5.3.2 快取自動修復與版本同步版</span>
                                 <span class="text-xs font-bold text-emerald-950">深層模組快取穿透・ServiceWorker 自動換版刷新・用戶端語法衝突自愈防護</span>
                             </div>
                             <span class="text-xs font-mono font-bold text-emerald-800">2026-10-23</span>
@@ -5936,7 +5990,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.3.2"></script>
+<script type="module" src="js/app.js?v=5.4.0"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->

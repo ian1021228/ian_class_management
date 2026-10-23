@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ian-class-mgmt-v5.3.2';
+const CACHE_NAME = 'ian-class-mgmt-v5.4.0';
 const urlsToCache = [
   './index.html',
   './parent.html',
@@ -21,6 +21,8 @@ const urlsToCache = [
   './js/state.js',
   './js/storage.js',
   './js/utils.js',
+  './js/modules/audioFx.js',
+  './js/modules/confettiFx.js',
   './js/modules/classWizard.js',
   './js/modules/attendanceHub.js',
   './js/modules/smartBoard.js',

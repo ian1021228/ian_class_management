@@ -239,4 +239,74 @@ html.dark .modal-content, html.dark .confirm-modal-content { background-color: #
     mask-size: contain;
 }
 
+/* ============================================================== */
+/* 專業列印樣式 (Classroom Print Engine)                         */
+/* ============================================================== */
+@media print {
+    /* 隱藏所有互動元件、浮動按鈕、導覽抽屜、背後插圖與背景光效 */
+    #global-nav-burger-btn,
+    #global-nav-drawer,
+    #mobile-bottom-bar,
+    #mobile-more-sheet,
+    #admin-view-banner,
+    .storybook-banner-card,
+    .modal,
+    button:not(.print-keep),
+    .btn-adjust-point,
+    .nav-buttons,
+    #sync-banner,
+    .sound-toggle-btn {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+        font-size: 12pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 列印座位表優化：清晰高對比黑白邊框 */
+    #classroom-studio-page {
+        display: block !important;
+        padding: 0 !important;
+        min-height: auto !important;
+    }
+    #studio-seats-grid {
+        border: 2px solid #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        padding: 8px !important;
+    }
+    #studio-seats-grid > div {
+        border: 1.5px solid #222 !important;
+        color: #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    #studio-lectern-top, #studio-lectern-bottom {
+        border: 2px solid #000 !important;
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        font-weight: 900 !important;
+    }
+
+    /* 列印聯絡簿黑板內容 */
+    #contact-book-page {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    #contact-book-board-container {
+        border: 2px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+
 
