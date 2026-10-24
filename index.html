@@ -432,7 +432,7 @@
     <div id="portal-page" class="min-h-screen bg-[#FBF8F3] text-stone-800 flex flex-col font-sans transition-all duration-300 relative z-30 overflow-x-hidden hidden">
         <!-- 可愛萌物探頭背景固定層 & 柔和氛圍光 (Cute Creature Peeking Frosted Background) -->
         <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-            <img src="assets/bg/cute_creature_bg.jpg" alt="" class="w-full h-full object-cover object-bottom sm:object-right-bottom opacity-[0.16] select-none pointer-events-none transition-opacity duration-700" />
+            <img src="assets/bg/cute_creature_bg.jpg?v=5.5.1" alt="" class="w-full h-full object-cover opacity-[0.16] select-none pointer-events-none transition-opacity duration-700" style="object-position: 80% 100%;" />
             <div class="absolute -top-[10%] -left-[10%] w-[55vw] h-[55vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 70%);"></div>
             <div class="absolute top-[30%] right-[-5%] w-[45vw] h-[45vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 70%);"></div>
             <div class="absolute -bottom-[10%] left-[20%] w-[55vw] h-[55vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0) 70%);"></div>
@@ -442,38 +442,50 @@
         <header class="sticky top-0 z-40 bg-[#fbf8f3]/80 backdrop-blur-xl border-b border-white/80 shadow-[0_4px_20px_-2px_rgba(120,90,60,0.03)] transition-all">
             <div class="max-w-7xl mx-auto px-4 sm:px-10 h-16 sm:h-20 flex items-center justify-between gap-3">
                 <!-- 左側：網站 Logo 與名稱 (點擊返回首頁頂端，維持寬度不被壓縮) -->
-                <button id="portal-nav-logo-btn" class="flex items-center gap-2.5 sm:gap-3.5 cursor-pointer group select-none text-left shrink-0" title="返回首頁頂端">
+                <button id="portal-nav-logo-btn" class="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none text-left shrink-0" title="返回首頁頂端">
                     <img src="icon.svg" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform shrink-0" alt="PalClass">
                     <div class="shrink-0 flex flex-col justify-center">
                         <span class="text-base sm:text-xl lg:text-2xl font-black text-stone-900 tracking-tight block whitespace-nowrap">PalClass</span>
-                        <span class="text-[10px] sm:text-xs font-extrabold text-amber-700 tracking-wide block -mt-0.5 whitespace-nowrap">國一生獨立開發 • 經典三合一版</span>
+                        <span class="text-[10px] sm:text-xs font-extrabold text-amber-700 tracking-wide block -mt-0.5 whitespace-nowrap"><span class="hidden sm:inline">國一生獨立開發 • </span>經典三合一版</span>
                     </div>
                 </button>
 
                 <!-- 右側：功能按鈕列 (黃金比例精簡收納，乾淨清爽) -->
                 <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                    <!-- 家長端直達按鈕 -->
-                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-indigo-700 bg-white/70 hover:bg-white/95 border border-indigo-200/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
+                    <!-- 家長端直達按鈕 (桌面端展示，行動端收納於選單) -->
+                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex text-xs sm:text-sm font-bold text-indigo-700 bg-white/70 hover:bg-white/95 border border-indigo-200/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
                         <i class="fa-solid fa-house-chimney-user text-indigo-600"></i>
-                        <span class="hidden sm:inline">家長端</span>
+                        <span>家長端</span>
                     </a>
 
-                    <!-- 學生端直達按鈕 -->
-                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm font-bold text-emerald-800 bg-white/70 hover:bg-white/95 border border-emerald-300/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
+                    <!-- 學生端直達按鈕 (桌面端展示，行動端收納於選單) -->
+                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex text-xs sm:text-sm font-bold text-emerald-800 bg-white/70 hover:bg-white/95 border border-emerald-300/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
                         <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
-                        <span class="hidden sm:inline">學生端</span>
+                        <span>學生端</span>
                     </a>
 
-                    <!-- 說明與日誌下拉選單 (收納：給老師的話、意見回饋、更新日誌、教學影片) -->
+                    <!-- 說明與日誌下拉選單 (收納：家長端/學生端快捷、給老師的話、意見回饋、更新日誌、教學影片) -->
                     <div class="relative inline-block text-left" id="portal-nav-more-dropdown-container">
-                        <button type="button" id="portal-nav-more-menu-btn" class="text-xs sm:text-sm font-bold text-stone-700 bg-white/75 hover:bg-white border border-stone-200/80 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統說明、教學影片與更新紀錄" aria-expanded="false">
-                            <i class="fa-solid fa-circle-info text-amber-600"></i>
+                        <button type="button" id="portal-nav-more-menu-btn" class="text-xs sm:text-sm font-bold text-stone-700 bg-white/75 hover:bg-white border border-stone-200/80 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統說明、教學影片與更新紀錄" aria-expanded="false">
+                            <i class="fa-solid fa-ellipsis text-stone-600 sm:hidden"></i>
+                            <i class="fa-solid fa-circle-info text-amber-600 hidden sm:inline-block"></i>
                             <span class="hidden md:inline">說明與日誌</span>
                             <i id="portal-nav-more-chevron" class="fa-solid fa-chevron-down text-[10px] text-stone-400 transition-transform duration-200"></i>
                         </button>
 
                         <!-- 浮動卡片選單 -->
-                        <div id="portal-nav-more-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/80 py-2 z-50 transform origin-top-right transition-all duration-150">
+                        <div id="portal-nav-more-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-white/80 py-2 z-50 transform origin-top-right transition-all duration-150">
+                            <!-- 行動端專屬直達入口 -->
+                            <a href="parent.html" target="_blank" rel="noopener noreferrer" class="sm:hidden w-full text-left px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-house-chimney-user text-indigo-600 text-sm w-4 text-center"></i>
+                                <span>家長端即時查核看板</span>
+                            </a>
+                            <a href="student.html" target="_blank" rel="noopener noreferrer" class="sm:hidden w-full text-left px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-graduation-cap text-emerald-600 text-sm w-4 text-center"></i>
+                                <span>學生端數位聯絡簿</span>
+                            </a>
+                            <div class="sm:hidden border-t border-stone-100 my-1"></div>
+
                             <button type="button" id="portal-nav-letter-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-amber-50 hover:text-amber-950 flex items-center gap-2.5 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-envelope-open-text text-amber-600 text-sm w-4 text-center"></i>
                                 <span>給老師的話</span>
@@ -499,35 +511,39 @@
                     <div id="portal-nav-guest-actions" class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
                         <button id="portal-nav-qr-login-btn" class="text-xs sm:text-sm font-black text-emerald-800 bg-white/70 hover:bg-emerald-50 border border-emerald-300/80 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap" title="快速登入（掃碼或認證碼）">
                             <i class="fa-solid fa-bolt text-amber-500 text-xs sm:text-sm"></i>
-                            <span class="inline">快速登入</span>
+                            <span class="hidden xs:inline sm:inline">快速登入</span>
                         </button>
                         <button id="portal-nav-login-btn" class="text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-950 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-stone-200/50 transition-colors whitespace-nowrap cursor-pointer">
                             登入
                         </button>
                         <button id="portal-nav-signup-btn" class="text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-sm hover:shadow transition-all whitespace-nowrap cursor-pointer">
-                            免費註冊
+                            <span class="hidden sm:inline">免費</span>註冊
                         </button>
                     </div>
 
-                    <!-- 已登入狀態 (Profile 下拉 + 進入系統主行動按鈕) -->
-                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-2 shrink-0 whitespace-nowrap">
+                    <!-- 已登入狀態 (Profile 下拉 + 進入系統主行動按鈕，行動端俐落自適應) -->
+                    <div id="portal-nav-user-badge" class="hidden flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap">
                         <!-- 主行動按鈕：進入系統 -->
-                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer transform hover:-translate-y-0.5">
+                        <button id="portal-nav-enter-btn" class="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer transform hover:-translate-y-0.5">
                             <span>進入系統</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
 
                         <!-- 使用者個人選單下拉 (收納：快速授權、使用者名稱、登出) -->
                         <div class="relative inline-block text-left" id="portal-nav-profile-dropdown-container">
-                            <button type="button" id="portal-nav-profile-btn" class="flex items-center gap-2 bg-white/80 backdrop-blur-md hover:bg-white border border-stone-200/80 py-1.5 px-3 rounded-full shadow-2xs transition-all cursor-pointer whitespace-nowrap" title="帳號管理與授權">
+                            <button type="button" id="portal-nav-profile-btn" class="flex items-center gap-1.5 sm:gap-2 bg-white/80 backdrop-blur-md hover:bg-white border border-stone-200/80 py-1.5 px-2.5 sm:px-3 rounded-full shadow-2xs transition-all cursor-pointer whitespace-nowrap" title="帳號管理與授權">
                                 <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
                                     <i class="fa-solid fa-user"></i>
                                 </div>
-                                <span id="portal-nav-user-name" class="text-xs sm:text-sm font-bold text-stone-800 max-w-[90px] sm:max-w-[120px] truncate">--</span>
+                                <span id="portal-nav-user-name" class="hidden sm:inline text-xs sm:text-sm font-bold text-stone-800 max-w-[120px] truncate">--</span>
                                 <i id="portal-nav-profile-chevron" class="fa-solid fa-chevron-down text-[10px] text-stone-400 transition-transform duration-200"></i>
                             </button>
 
-                            <div id="portal-nav-profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/80 py-2 z-50 transform origin-top-right transition-all duration-150">
+                            <div id="portal-nav-profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-white/80 py-2 z-50 transform origin-top-right transition-all duration-150">
+                                <div class="px-3.5 py-1.5 border-b border-stone-100 sm:hidden">
+                                    <div class="text-[10px] text-stone-400 font-bold">目前登入</div>
+                                    <div id="portal-nav-mobile-user-name" class="text-xs font-bold text-stone-800 truncate">--</div>
+                                </div>
                                 <button type="button" id="portal-nav-qr-scan-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-emerald-50 hover:text-emerald-900 flex items-center gap-2.5 transition-colors cursor-pointer">
                                     <i class="fa-solid fa-bolt text-amber-500 text-sm w-4 text-center"></i>
                                     <span>快速登入授權</span>
@@ -714,6 +730,7 @@
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>首頁液態磨砂玻璃質感 (Liquid Glassmorphism)</b>：導覽列與卡片全數升級通透毛玻璃、細緻高光微漸層內邊框與柔和陰影。</span></li>
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>可愛萌物探頭背景固定層</b>：右下角可愛萌物以低透明度固定背景若隱若現，營造療癒吸睛視覺，文字清晰好讀。</span></li>
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>8 大核心亮點精緻網格收納</b>：以 4 欄式精巧卡片網格俐落收納核心功能，支援即時點擊放大高畫質燈箱。</span></li>
+                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>行動端 393px 自適應無溢位</b>：導覽列精算佈局與智慧收納，手機端瀏覽徹底杜絕橫向捲軸破版。</span></li>
                                 <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂與點收全套核心加固</b>：全班共同集分預設零示範資料、24h 出勤滾輪、出缺席每月重置、考試計時器 24h 制防呆。</span></li>
                             </ul>
                         </div>
@@ -4714,6 +4731,10 @@
                             <li class="flex items-start gap-2">
                                 <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
                                 <span><b>8 大核心亮點精緻網格收納</b>：破除冗長垂直捲動，以 4 欄式精巧卡片網格俐落收納核心功能，支援即時點擊放大高畫質燈箱。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>
+                                <span><b>行動端導覽列極致自適應 (Mobile Viewport Optimization)</b>：精算 393px 手機螢幕寬度，家長與學生端入口智慧收納於下拉選單，未登入與已登入狀態下皆完美自適應，徹底杜絕橫向溢位破版。</span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <i class="fa-solid fa-check text-amber-600 shrink-0 mt-0.5"></i>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'palclass-v5.5.0';
+const CACHE_NAME = 'palclass-v5.5.1';
 const urlsToCache = [
   './index.html',
   './parent.html',
@@ -6,6 +6,7 @@ const urlsToCache = [
   './manifest.json',
   './css/style.css',
   './css/aurora-theme.css',
+  './assets/bg/cute_creature_bg.jpg',
   './js/shared/config.js',
   './js/parent/app.js',
   './js/student/app.js',
