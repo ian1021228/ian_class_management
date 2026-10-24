@@ -809,7 +809,13 @@ export async function syncDataToCloud() {
 
         if (Array.isArray(state.appData.classes)) {
             for (const c of state.appData.classes) {
-                if (c && c.accessCode && String(c.accessCode).trim()) {
+                if (c) {
+                    if (!c.accessCode || !String(c.accessCode).trim()) {
+                        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                        let gen = '';
+                        for (let i = 0; i < 6; i++) gen += chars.charAt(Math.floor(Math.random() * chars.length));
+                        c.accessCode = gen;
+                    }
                     const code = String(c.accessCode).trim();
                     const parentDocRef = doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'parentClasses', code);
                     const classHomeworks = (state.appData.homeworks || []).filter(h => h.classId === c.id).map(h => ({
@@ -820,13 +826,19 @@ export async function syncDataToCloud() {
                         studentCount: typeof h.studentCount === 'number' ? h.studentCount : (h.students || []).length,
                         students: (h.students || []).map(s => ({ seat: s.seat, status: s.status }))
                     }));
-                    // 規範：預設 PIN 碼全面採用【班級代碼 + 座號】
                     c.studentPins = c.studentPins || {};
+                    c.studentTokens = c.studentTokens || {};
                     const maxSeat = typeof c.lastMaxSeat === 'number' ? c.lastMaxSeat : 30;
+                    const tkChars = 'abcdefghjkmnpqrstuvwxyz23456789';
                     for (let s = 1; s <= maxSeat; s++) {
                         const legacyPin = String(100000 + Number(s));
                         if (!c.studentPins[s] || c.studentPins[s] === legacyPin) {
                             c.studentPins[s] = `${code}${s}`;
+                        }
+                        if (!c.studentTokens[s]) {
+                            let rand = '';
+                            for (let k = 0; k < 8; k++) rand += tkChars.charAt(Math.floor(Math.random() * tkChars.length));
+                            c.studentTokens[s] = `tk_${rand}`;
                         }
                     }
 
@@ -853,6 +865,8 @@ export async function syncDataToCloud() {
                         accessCode: code,
                         lastMaxSeat: typeof c.lastMaxSeat === 'number' ? c.lastMaxSeat : 30,
                         lastMissingSeats: c.lastMissingSeats || '',
+                        skippedSeats: Array.isArray(c.skippedSeats) ? c.skippedSeats : [],
+                        studentNames: c.studentNames || {},
                         teacherEmail: state.currentUser.email || '',
                         teacherName: state.currentUser.displayName || state.currentUser.email || '班級導師',
                         teacherUid: targetUid,
@@ -861,6 +875,7 @@ export async function syncDataToCloud() {
                         contactBook: c.contactBook || {},
                         homeworkTypes: safeClone(state.appData.homeworkTypes || DEFAULT_TYPES),
                         studentPins: c.studentPins || {},
+                        studentTokens: c.studentTokens || {},
                         exams: c.exams || []
                     };
                     await setDoc(parentDocRef, {

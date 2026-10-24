@@ -141,6 +141,8 @@ export function ensureClassStudioData(classObj) {
     }
     if (!classObj.seatingConfig.rows) classObj.seatingConfig.rows = 5;
     if (!classObj.seatingConfig.cols) classObj.seatingConfig.cols = 6;
+    if (!classObj.seatingConfig.layoutType) classObj.seatingConfig.layoutType = layoutType || 'individual';
+    layoutType = classObj.seatingConfig.layoutType;
 
     if (!classObj.groupsConfig || typeof classObj.groupsConfig !== 'object') {
         classObj.groupsConfig = {
@@ -480,6 +482,7 @@ function renderSeatingView(currentClass) {
     if (colsInput) colsInput.value = cfg.cols;
 
     // 排列選單
+    layoutType = cfg.layoutType || layoutType || 'individual';
     const layoutSelect = document.getElementById('studio-layout-type-select');
     if (layoutSelect) layoutSelect.value = layoutType;
 
@@ -487,7 +490,6 @@ function renderSeatingView(currentClass) {
     const seatsGrid = document.getElementById('studio-seats-grid');
     if (seatsGrid) {
         seatsGrid.innerHTML = '';
-        seatsGrid.style.gridTemplateColumns = `repeat(${cfg.cols}, minmax(80px, 1fr))`;
 
         // 判定遍歷順序 (講台在上方 vs 講台在下方 180° 完全旋轉)
         const rowIndices = [];
@@ -502,181 +504,242 @@ function renderSeatingView(currentClass) {
             for (let c = cfg.cols - 1; c >= 0; c--) colIndices.push(c);
         }
 
+        const isPairsMode = layoutType === 'pairs';
+        if (isPairsMode) {
+            const pairGroupsCount = Math.ceil(colIndices.length / 2);
+            const hasOddSingle = colIndices.length % 2 === 1;
+            seatsGrid.className = 'grid gap-x-5 sm:gap-x-7 gap-y-4 min-w-[580px] select-none';
+            if (hasOddSingle && pairGroupsCount > 1) {
+                seatsGrid.style.gridTemplateColumns = `repeat(${pairGroupsCount - 1}, minmax(172px, 2fr)) minmax(88px, 1fr)`;
+            } else if (hasOddSingle) {
+                seatsGrid.style.gridTemplateColumns = `minmax(88px, 1fr)`;
+            } else {
+                seatsGrid.style.gridTemplateColumns = `repeat(${pairGroupsCount}, minmax(172px, 2fr))`;
+            }
+        } else {
+            seatsGrid.className = 'grid gap-3 min-w-[560px] select-none';
+            seatsGrid.style.gridTemplateColumns = `repeat(${cfg.cols}, minmax(80px, 1fr))`;
+        }
+
         let emptyCount = 0;
 
-        rowIndices.forEach(r => {
-            colIndices.forEach(c => {
-                const cellKey = `${r}_${c}`;
-                const isDisabled = disabledSet.has(cellKey);
-                const studentSeat = cfg.layout[r]?.[c];
-                const isLocked = studentSeat && lockedSet.has(studentSeat);
-                const isSelected = selectedSource && selectedSource.type === 'seat' && selectedSource.r === r && selectedSource.c === c;
+        const createSeatCellElement = (r, c, pairSide = null) => {
+            const cellKey = `${r}_${c}`;
+            const isDisabled = disabledSet.has(cellKey);
+            const studentSeat = cfg.layout[r]?.[c];
+            const isLocked = studentSeat && lockedSet.has(studentSeat);
+            const isSelected = selectedSource && selectedSource.type === 'seat' && selectedSource.r === r && selectedSource.c === c;
 
-                if (!isDisabled && !studentSeat) emptyCount++;
+            if (!isDisabled && !studentSeat) emptyCount++;
 
-                const cell = document.createElement('div');
-                cell.className = `relative rounded-2xl border transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] ${
-                    isDisabled 
-                        ? 'bg-stone-100 border-dashed border-stone-300 opacity-60 cursor-pointer'
-                        : isSelected
-                            ? 'bg-amber-50 border-2 border-amber-500 shadow-md ring-2 ring-amber-400/30'
-                            : studentSeat
-                                ? 'bg-white border-stone-200/90 shadow-2xs hover:border-emerald-500 hover:shadow-xs cursor-pointer'
-                                : 'bg-white border-stone-200/90 hover:border-stone-400 hover:bg-stone-50/50 cursor-pointer'
-                }`;
+            const roundingClass = pairSide === 'left'
+                ? 'rounded-l-xl rounded-r-md'
+                : pairSide === 'right'
+                    ? 'rounded-r-xl rounded-l-md'
+                    : 'rounded-2xl';
 
-                cell.dataset.r = r;
-                cell.dataset.c = c;
+            const cell = document.createElement('div');
+            cell.className = `relative ${roundingClass} border transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] ${
+                isDisabled 
+                    ? 'bg-stone-100 border-dashed border-stone-300 opacity-60 cursor-pointer'
+                    : isSelected
+                        ? 'bg-amber-50 border-2 border-amber-500 shadow-md ring-2 ring-amber-400/30'
+                        : studentSeat
+                            ? 'bg-white border-stone-200/90 shadow-2xs hover:border-emerald-500 hover:shadow-xs cursor-pointer'
+                            : 'bg-white border-stone-200/90 hover:border-stone-400 hover:bg-stone-50/50 cursor-pointer'
+            }`;
 
-                // 標題顯示：X排 Y列（始終展示真實排與列）
-                const posLabel = `${r + 1}排 ${c + 1}列`;
+            cell.dataset.r = r;
+            cell.dataset.c = c;
 
-                if (isDisabled) {
+            // 標題顯示：X排 Y列（始終展示真實排與列）
+            const posLabel = `${r + 1}排 ${c + 1}列`;
+
+            if (isDisabled) {
+                cell.innerHTML = `
+                    <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
+                    <div class="my-auto text-xs font-bold text-stone-400 flex items-center gap-1">
+                        <i class="fa-solid fa-ban text-[11px]"></i>
+                        <span>走道</span>
+                    </div>
+                    <span class="text-[10px] text-stone-400 font-medium">停用</span>
+                `;
+            } else if (studentSeat) {
+                const studentName = getStudentNameOnly(currentClass, studentSeat);
+                cell.draggable = true;
+
+                if (isSelected) {
                     cell.innerHTML = `
-                        <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
-                        <div class="my-auto text-xs font-bold text-stone-400 flex items-center gap-1">
-                            <i class="fa-solid fa-ban text-[11px]"></i>
-                            <span>走道</span>
+                        <div class="w-full flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-amber-700">${posLabel}</span>
+                            ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
                         </div>
-                        <span class="text-[10px] text-stone-400 font-medium">停用</span>
+                        <div class="my-auto text-center w-full flex flex-col items-center justify-center gap-1.5 py-1">
+                            <div class="flex items-center justify-center gap-1">
+                                <strong class="font-mono text-xl font-black text-rose-700 leading-none">${studentSeat}</strong>
+                                ${studentName ? `<span class="text-xs font-bold text-stone-700 truncate max-w-[65px]">${escapeHtml(studentName)}</span>` : ''}
+                            </div>
+                            <button type="button" class="studio-remove-to-unassigned-btn px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-90 text-white font-black text-xs shadow-md shadow-rose-600/30 flex items-center justify-center gap-1 transition-all cursor-pointer select-none" data-seat="${studentSeat}" data-r="${r}" data-c="${c}" title="移至待安排">
+                                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                                <span>移至待安排</span>
+                            </button>
+                        </div>
+                        <span class="text-[10px] text-rose-600 font-black">已選定</span>
                     `;
-                } else if (studentSeat) {
-                    const studentName = getStudentNameOnly(currentClass, studentSeat);
-                    cell.draggable = true;
-
-                    if (isSelected) {
-                        cell.innerHTML = `
-                            <div class="w-full flex items-center justify-between">
-                                <span class="text-[10px] font-bold text-amber-700">${posLabel}</span>
-                                ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
-                            </div>
-                            <div class="my-auto text-center w-full flex flex-col items-center justify-center gap-1.5 py-1">
-                                <div class="flex items-center justify-center gap-1">
-                                    <strong class="font-mono text-xl font-black text-rose-700 leading-none">${studentSeat}</strong>
-                                    ${studentName ? `<span class="text-xs font-bold text-stone-700 truncate max-w-[65px]">${escapeHtml(studentName)}</span>` : ''}
-                                </div>
-                                <button type="button" class="studio-remove-to-unassigned-btn px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-90 text-white font-black text-xs shadow-md shadow-rose-600/30 flex items-center justify-center gap-1 transition-all cursor-pointer select-none" data-seat="${studentSeat}" data-r="${r}" data-c="${c}" title="移至待安排">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
-                                    <span>移至待安排</span>
-                                </button>
-                            </div>
-                            <span class="text-[10px] text-rose-600 font-black">已選定</span>
-                        `;
-                    } else {
-                        cell.innerHTML = `
-                            <div class="w-full flex items-center justify-between">
-                                <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
-                                ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
-                            </div>
-                            <div class="my-auto text-center w-full">
-                                <strong class="font-mono text-2xl font-black text-stone-800 leading-none block">${studentSeat}</strong>
-                                ${!onlySeatNumber && studentName ? `<span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-0.5">${escapeHtml(studentName)}</span>` : ''}
-                            </div>
-                            <span class="text-[10px] text-emerald-700 font-bold">${isLocked ? '已固定' : '已就座'}</span>
-                        `;
-                    }
-
-                    // 拖曳來源
-                    cell.addEventListener('dragstart', (e) => {
-                        draggedSource = { type: 'seat', seat: studentSeat, r, c };
-                        e.dataTransfer.setData('text/plain', String(studentSeat));
-                    });
-                    cell.addEventListener('dragend', () => {
-                        draggedSource = null;
-                        setUnassignedDragHighlight(false);
-                    });
                 } else {
-                    // 空位
-                    const isUnassignedSelected = selectedSource && selectedSource.type === 'unassigned';
-                    if (isUnassignedSelected) {
-                        cell.className = `relative rounded-2xl border-2 border-dashed border-emerald-500 bg-emerald-50/80 hover:bg-emerald-100 hover:border-emerald-600 shadow-xs cursor-pointer transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] group`;
-                        cell.innerHTML = `
-                            <span class="text-[10px] font-black text-emerald-700">${posLabel}</span>
-                            <div class="my-auto flex flex-col items-center justify-center text-emerald-800">
-                                <i class="fa-solid fa-arrow-down text-sm mb-0.5 group-hover:scale-110 transition-transform"></i>
-                                <span class="text-xs font-black">點擊安排</span>
-                            </div>
-                            <span class="text-[10px] text-emerald-600 font-bold">${selectedSource.seat} 號入座</span>
-                        `;
-                    } else {
-                        cell.className = `relative rounded-2xl border transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] bg-white border-stone-200/90 hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer group`;
-                        cell.innerHTML = `
+                    cell.innerHTML = `
+                        <div class="w-full flex items-center justify-between">
                             <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
-                            <div class="my-auto text-center">
-                                <strong class="font-black text-2xl text-stone-300 group-hover:text-emerald-600 leading-none block transition-colors">+</strong>
-                                <span class="text-[10px] text-stone-400 group-hover:text-emerald-700 font-bold block mt-0.5 transition-colors">點擊選座號</span>
-                            </div>
-                            <span class="text-[11px] font-bold text-stone-400">空位</span>
-                        `;
-                    }
+                            ${isLocked ? `<span class="text-amber-500 font-black text-xs cursor-pointer" title="固定座位 (點擊解除)"><i class="fa-solid fa-diamond"></i></span>` : ''}
+                        </div>
+                        <div class="my-auto text-center w-full">
+                            <strong class="font-mono text-2xl font-black text-stone-800 leading-none block">${studentSeat}</strong>
+                            ${!onlySeatNumber && studentName ? `<span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-0.5">${escapeHtml(studentName)}</span>` : ''}
+                        </div>
+                        <span class="text-[10px] text-emerald-700 font-bold">${isLocked ? '已固定' : '已就座'}</span>
+                    `;
                 }
 
-                // 點擊事件
-                cell.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (disableSeatMode) {
-                        toggleCellDisabled(r, c);
-                        return;
-                    }
+                // 拖曳來源
+                cell.addEventListener('dragstart', (e) => {
+                    draggedSource = { type: 'seat', seat: studentSeat, r, c };
+                    e.dataTransfer.setData('text/plain', String(studentSeat));
+                });
+                cell.addEventListener('dragend', () => {
+                    draggedSource = null;
+                    setUnassignedDragHighlight(false);
+                });
+            } else {
+                // 空位
+                const isUnassignedSelected = selectedSource && selectedSource.type === 'unassigned';
+                if (isUnassignedSelected) {
+                    cell.className = `relative ${roundingClass} border-2 border-dashed border-emerald-500 bg-emerald-50/80 hover:bg-emerald-100 hover:border-emerald-600 shadow-xs cursor-pointer transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] group`;
+                    cell.innerHTML = `
+                        <span class="text-[10px] font-black text-emerald-700">${posLabel}</span>
+                        <div class="my-auto flex flex-col items-center justify-center text-emerald-800">
+                            <i class="fa-solid fa-arrow-down text-sm mb-0.5 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-xs font-black">點擊安排</span>
+                        </div>
+                        <span class="text-[10px] text-emerald-600 font-bold">${selectedSource.seat} 號入座</span>
+                    `;
+                } else {
+                    cell.className = `relative ${roundingClass} border transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] bg-white border-stone-200/90 hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer group`;
+                    cell.innerHTML = `
+                        <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
+                        <div class="my-auto text-center">
+                            <strong class="font-black text-2xl text-stone-300 group-hover:text-emerald-600 leading-none block transition-colors">+</strong>
+                            <span class="text-[10px] text-stone-400 group-hover:text-emerald-700 font-bold block mt-0.5 transition-colors">點擊選座號</span>
+                        </div>
+                        <span class="text-[11px] font-bold text-stone-400">空位</span>
+                    `;
+                }
+            }
 
-                    // 若點擊移至待安排按鈕
-                    const removeBtn = e.target.closest('.studio-remove-to-unassigned-btn');
-                    if (removeBtn && studentSeat) {
-                        moveStudentToUnassigned(studentSeat, r, c);
-                        return;
-                    }
+            // 點擊事件
+            cell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (disableSeatMode) {
+                    toggleCellDisabled(r, c);
+                    return;
+                }
 
-                    // 若點擊的是固定菱形圖標
-                    if (e.target.closest('.fa-diamond') && studentSeat) {
-                        toggleSeatLocked(studentSeat);
-                        return;
-                    }
+                // 若點擊移至待安排按鈕
+                const removeBtn = e.target.closest('.studio-remove-to-unassigned-btn');
+                if (removeBtn && studentSeat) {
+                    moveStudentToUnassigned(studentSeat, r, c);
+                    return;
+                }
 
-                    // 若目前已有選取來源
-                    if (selectedSource) {
-                        if (selectedSource.type === 'unassigned') {
-                            placeStudentAtCell(selectedSource.seat, r, c);
-                        } else if (selectedSource.type === 'seat') {
-                            if (selectedSource.r === r && selectedSource.c === c) {
-                                // 點同一個座位：取消選取
-                                selectedSource = null;
-                                renderClassroomStudio();
-                            } else {
-                                // 互換座位或移到空位
-                                placeStudentAtCell(selectedSource.seat, r, c);
-                            }
-                        }
-                    } else {
-                        // 首次選取該座位
-                        if (studentSeat) {
-                            selectedSource = { type: 'seat', seat: studentSeat, r, c };
+                // 若點擊的是固定菱形圖標
+                if (e.target.closest('.fa-diamond') && studentSeat) {
+                    toggleSeatLocked(studentSeat);
+                    return;
+                }
+
+                // 若目前已有選取來源
+                if (selectedSource) {
+                    if (selectedSource.type === 'unassigned') {
+                        placeStudentAtCell(selectedSource.seat, r, c);
+                    } else if (selectedSource.type === 'seat') {
+                        if (selectedSource.r === r && selectedSource.c === c) {
+                            // 點同一個座位：取消選取
+                            selectedSource = null;
                             renderClassroomStudio();
-                        } else if (!isDisabled) {
-                            // 直接按下空位 -> 跳出待安排座號選擇彈窗！
-                            openSeatPickerModal(r, c);
+                        } else {
+                            // 互換座位或移到空位
+                            placeStudentAtCell(selectedSource.seat, r, c);
                         }
                     }
-                });
-
-                // 拖曳放置目標
-                cell.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    cell.classList.add('border-emerald-500', 'bg-emerald-50/40');
-                });
-                cell.addEventListener('dragleave', () => {
-                    cell.classList.remove('border-emerald-500', 'bg-emerald-50/40');
-                });
-                cell.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    cell.classList.remove('border-emerald-500', 'bg-emerald-50/40');
-                    if (draggedSource) {
-                        placeStudentAtCell(draggedSource.seat, r, c);
-                        draggedSource = null;
+                } else {
+                    // 首次選取該座位
+                    if (studentSeat) {
+                        selectedSource = { type: 'seat', seat: studentSeat, r, c };
+                        renderClassroomStudio();
+                    } else if (!isDisabled) {
+                        // 直接按下空位 -> 跳出待安排座號選擇彈窗！
+                        openSeatPickerModal(r, c);
                     }
-                });
-
-                seatsGrid.appendChild(cell);
+                }
             });
+
+            // 拖曳放置目標
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                cell.classList.add('border-emerald-500', 'bg-emerald-50/40');
+            });
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('border-emerald-500', 'bg-emerald-50/40');
+            });
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('border-emerald-500', 'bg-emerald-50/40');
+                if (draggedSource) {
+                    placeStudentAtCell(draggedSource.seat, r, c);
+                    draggedSource = null;
+                }
+            });
+
+            return cell;
+        };
+
+        rowIndices.forEach(r => {
+            if (!isPairsMode) {
+                colIndices.forEach(c => {
+                    seatsGrid.appendChild(createSeatCellElement(r, c, null));
+                });
+            } else {
+                for (let gIdx = 0; gIdx < colIndices.length; gIdx += 2) {
+                    const c1 = colIndices[gIdx];
+                    const hasPartner = gIdx + 1 < colIndices.length;
+                    const deskFrame = document.createElement('div');
+                    if (hasPartner) {
+                        const c2 = colIndices[gIdx + 1];
+                        const pairNumber = Math.floor(gIdx / 2) + 1;
+                        deskFrame.className = 'bg-[#F5EFE6]/90 border-2 border-[#D5C3AE] rounded-2xl p-1.5 shadow-xs flex flex-col gap-1';
+                        deskFrame.innerHTML = `
+                            <div class="flex items-center justify-between px-2 py-0.5 text-[10px] font-black text-amber-900/80 bg-[#EBDCCB]/70 rounded-lg">
+                                <span class="inline-flex items-center gap-1"><i class="fa-solid fa-user-group text-[9px] text-amber-700"></i>雙人併桌 ${pairNumber}</span>
+                                <span>第 ${r + 1} 排</span>
+                            </div>
+                        `;
+                        const pairPairRow = document.createElement('div');
+                        pairPairRow.className = 'grid grid-cols-2 gap-1 flex-1';
+                        pairPairRow.appendChild(createSeatCellElement(r, c1, 'left'));
+                        pairPairRow.appendChild(createSeatCellElement(r, c2, 'right'));
+                        deskFrame.appendChild(pairPairRow);
+                    } else {
+                        deskFrame.className = 'bg-[#F5EFE6]/60 border-2 border-dashed border-[#D5C3AE] rounded-2xl p-1.5 shadow-xs flex flex-col gap-1';
+                        deskFrame.innerHTML = `
+                            <div class="flex items-center justify-between px-2 py-0.5 text-[10px] font-black text-stone-600 bg-stone-200/70 rounded-lg">
+                                <span>單人獨立桌</span>
+                                <span>第 ${r + 1} 排</span>
+                            </div>
+                        `;
+                        deskFrame.appendChild(createSeatCellElement(r, c1, null));
+                    }
+                    seatsGrid.appendChild(deskFrame);
+                }
+            }
         });
 
         // 3. 更新右側摘要
@@ -1032,17 +1095,27 @@ export function exportSeatingChartToPNG() {
 
     const cols = cfg.cols;
     const rows = cfg.rows;
+    const isPairsMode = (cfg.layoutType || layoutType) === 'pairs';
 
     const cellWidth = 130;
     const cellHeight = 85;
     const cellGap = 12;
+    const pairInnerGap = 6;
+    const pairAisleGap = 28;
     const padding = 36;
     const headerHeight = 90;
     const podiumHeight = 44;
     const podiumMargin = 16;
     const footerHeight = 40;
 
-    const gridWidth = cols * cellWidth + (cols - 1) * cellGap;
+    let gridWidth = cols * cellWidth + (cols - 1) * cellGap;
+    if (isPairsMode && cols > 1) {
+        let totalGaps = 0;
+        for (let i = 0; i < cols - 1; i++) {
+            totalGaps += (i % 2 === 0) ? pairInnerGap : pairAisleGap;
+        }
+        gridWidth = cols * cellWidth + totalGaps;
+    }
     const totalWidth = Math.max(680, gridWidth + padding * 2);
     const gridOffsetX = padding + (totalWidth - padding * 2 - gridWidth) / 2;
 
@@ -1069,7 +1142,7 @@ export function exportSeatingChartToPNG() {
     ctx.fillStyle = '#78716c';
     ctx.font = '12px system-ui, -apple-system, sans-serif';
     const todayStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    ctx.fillText(`規格：${rows} 排 × ${cols} 列 · 講台方向：${podiumPosition === 'top' ? '講台在上方' : '講台在下方'} · 匯出時間：${todayStr}`, padding, padding + 32);
+    ctx.fillText(`規格：${rows} 排 × ${cols} 列 · 排列：${isPairsMode ? '雙人併桌' : '個人網格'} · 講台方向：${podiumPosition === 'top' ? '講台在上方' : '講台在下方'} · 匯出時間：${todayStr}`, padding, padding + 32);
 
     ctx.strokeStyle = '#e7e5e4';
     ctx.lineWidth = 1;
@@ -1135,8 +1208,19 @@ export function exportSeatingChartToPNG() {
             const studentSeat = cfg.layout[r]?.[c];
             const isLocked = studentSeat && lockedSet.has(studentSeat);
 
-            const x = gridOffsetX + cIdx * (cellWidth + cellGap);
+            let x = gridOffsetX + cIdx * (cellWidth + cellGap);
+            if (isPairsMode) {
+                let offset = 0;
+                for (let i = 0; i < cIdx; i++) {
+                    offset += cellWidth + ((i % 2 === 0) ? pairInnerGap : pairAisleGap);
+                }
+                x = gridOffsetX + offset;
+            }
             const y = curY + rIdx * (cellHeight + cellGap);
+
+            if (isPairsMode && cIdx % 2 === 0 && cIdx + 1 < colIndices.length) {
+                drawBox(x - 4, y - 4, cellWidth * 2 + pairInnerGap + 8, cellHeight + 8, 14, '#F5EFE6', '#D5C3AE');
+            }
 
             if (isDisabled) {
                 drawBox(x, y, cellWidth, cellHeight, 12, '#f5f5f4', '#d6d3d1', true);
@@ -1727,8 +1811,22 @@ export function initClassroomStudio() {
 
     // 排列選單 (個人網格 / 雙人併桌)
     document.getElementById('studio-layout-type-select')?.addEventListener('change', (e) => {
-        layoutType = e.target.value;
+        const chosenLayout = e.target.value;
+        layoutType = chosenLayout;
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (currentClass) {
+            ensureClassStudioData(currentClass);
+            currentClass.seatingConfig.layoutType = chosenLayout;
+            layoutType = chosenLayout;
+            saveData();
+        }
         renderClassroomStudio();
+        showToast(
+            chosenLayout === 'pairs'
+                ? '已切換為「雙人併桌」排列（每兩列合併為雙人桌組）'
+                : '已切換為「個人網格」排列（單人獨立座位等距排列）',
+            'info'
+        );
     });
 
     // 標籤頁切換 (座位安排 / 分組競賽)

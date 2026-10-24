@@ -71,8 +71,8 @@
     </script>
 </head>
 <body class="text-slate-800 antialiased overflow-x-hidden relative">
-    <!-- 網站右上角常駐音效/靜音按鈕 (Top-Right Persistent Sound/Mute Toggle) -->
-    <button id="global-sound-toggle-btn" type="button" aria-label="切換音效" class="sound-toggle-btn fixed top-3.5 right-3.5 sm:top-4 sm:right-4 z-[150] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#FFFDF9]/95 hover:bg-white backdrop-blur-xl border border-[#EBDCCB] shadow-md hover:shadow-lg text-stone-700 hover:text-amber-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none pointer-events-auto" title="點擊切換音效開啟/靜音">
+    <!-- 網站右下角常駐音效/靜音按鈕 (Bottom-Right Persistent Sound/Mute Toggle) -->
+    <button id="global-sound-toggle-btn" type="button" aria-label="切換音效" class="sound-toggle-btn fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[150] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#FFFDF9]/95 hover:bg-white backdrop-blur-xl border border-[#EBDCCB] shadow-lg hover:shadow-xl text-stone-700 hover:text-amber-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none pointer-events-auto" title="點擊切換音效開啟/靜音">
         <i class="fa-solid fa-volume-high text-emerald-600 text-lg sm:text-xl"></i>
     </button>
     <!-- Admin View Mode Banner -->
@@ -262,23 +262,23 @@
 
             <div class="pt-3 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">親師生串聯與日誌</div>
 
-            <!-- 家長端直達 -->
-            <a href="parent.html" target="_blank" rel="noopener noreferrer" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-indigo-800 bg-indigo-50/70 hover:bg-indigo-100/80 font-black text-xs transition-all border border-indigo-200/70">
+            <!-- 查看家長端專屬連結 -->
+            <button type="button" id="drawer-view-parent-links-btn" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-indigo-800 bg-indigo-50/70 hover:bg-indigo-100/80 font-black text-xs transition-all border border-indigo-200/70 cursor-pointer">
                 <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm shrink-0 border border-indigo-200/80">
                     <i class="fa-solid fa-house-chimney-user"></i>
                 </span>
-                <span>家長端專屬即時查核看板</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-indigo-400 ml-auto"></i>
-            </a>
+                <span>查看家長端專屬連結</span>
+                <i class="fa-solid fa-link text-[10px] text-indigo-400 ml-auto"></i>
+            </button>
 
-            <!-- 學生端直達 -->
-            <a href="student.html" target="_blank" rel="noopener noreferrer" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100/80 font-black text-xs transition-all border border-emerald-200/70">
+            <!-- 查看學生端專屬連結 -->
+            <button type="button" id="drawer-view-student-links-btn" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100/80 font-black text-xs transition-all border border-emerald-200/70 cursor-pointer">
                 <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0 border border-emerald-200/80">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </span>
-                <span>學生端數位聯絡簿</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-emerald-400 ml-auto"></i>
-            </a>
+                <span>查看學生端專屬連結</span>
+                <i class="fa-solid fa-link text-[10px] text-emerald-400 ml-auto"></i>
+            </button>
 
             <!-- 系統更新紀錄 -->
             <button type="button" id="drawer-changelog-btn" class="planet-nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-amber-900 bg-amber-50/80 hover:bg-amber-100 font-black text-xs transition-all border border-amber-200/80 cursor-pointer">
@@ -286,7 +286,7 @@
                     <i class="fa-solid fa-book-bookmark"></i>
                 </span>
                 <span>系統更新紀錄 (Changelog)</span>
-                <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.7.0</span>
+                <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-mono ml-auto">v5.8.1</span>
             </button>
 
             <div class="pt-3 px-3 py-1 text-[11px] font-black tracking-wider text-amber-800/70 uppercase">系統與顯示</div>
@@ -457,19 +457,7 @@
 
                 <!-- 右側：功能按鈕列 (黃金比例精簡收納，乾淨清爽) -->
                 <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                    <!-- 家長端直達按鈕 (桌面端展示，行動端收納於選單) -->
-                    <a href="parent.html" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex text-xs sm:text-sm font-bold text-indigo-700 bg-white/70 hover:bg-white/95 border border-indigo-200/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往家長端即時查核看板">
-                        <i class="fa-solid fa-house-chimney-user text-indigo-600"></i>
-                        <span>家長端</span>
-                    </a>
-
-                    <!-- 學生端直達按鈕 (桌面端展示，行動端收納於選單) -->
-                    <a href="student.html" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex text-xs sm:text-sm font-bold text-emerald-800 bg-white/70 hover:bg-white/95 border border-emerald-300/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="前往學生端數位聯絡簿">
-                        <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
-                        <span>學生端</span>
-                    </a>
-
-                    <!-- 說明與日誌下拉選單 (收納：家長端/學生端快捷、給老師的話、意見回饋、更新日誌、教學影片) -->
+                    <!-- 說明與日誌下拉選單 (收納：給老師的話、意見回饋、更新日誌、教學影片) -->
                     <div class="relative inline-block text-left" id="portal-nav-more-dropdown-container">
                         <button type="button" id="portal-nav-more-menu-btn" class="text-xs sm:text-sm font-bold text-stone-700 bg-white/75 hover:bg-white border border-stone-200/80 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統說明、教學影片與更新紀錄" aria-expanded="false">
                             <i class="fa-solid fa-circle-info text-amber-600"></i>
@@ -479,17 +467,6 @@
 
                         <!-- 浮動卡片選單 -->
                         <div id="portal-nav-more-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-white/80 py-2 z-50 transform origin-top-right transition-all duration-150">
-                            <!-- 行動端專屬直達入口 -->
-                            <a href="parent.html" target="_blank" rel="noopener noreferrer" class="sm:hidden w-full text-left px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 flex items-center gap-2.5 transition-colors cursor-pointer">
-                                <i class="fa-solid fa-house-chimney-user text-indigo-600 text-sm w-4 text-center"></i>
-                                <span>家長端即時查核看板</span>
-                            </a>
-                            <a href="student.html" target="_blank" rel="noopener noreferrer" class="sm:hidden w-full text-left px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 transition-colors cursor-pointer">
-                                <i class="fa-solid fa-graduation-cap text-emerald-600 text-sm w-4 text-center"></i>
-                                <span>學生端數位聯絡簿</span>
-                            </a>
-                            <div class="sm:hidden border-t border-stone-100 my-1"></div>
-
                             <button type="button" id="portal-nav-letter-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-amber-50 hover:text-amber-950 flex items-center gap-2.5 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-envelope-open-text text-amber-600 text-sm w-4 text-center"></i>
                                 <span>給老師的話</span>
@@ -497,7 +474,7 @@
                             <button type="button" id="portal-nav-changelog-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-stone-50 flex items-center gap-2.5 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-clock-rotate-left text-amber-600 text-sm w-4 text-center"></i>
                                 <span>系統更新日誌</span>
-                                <span class="ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">v5.7.0</span>
+                                <span class="ml-auto text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full">v5.8.1</span>
                             </button>
                             <button type="button" id="portal-nav-tutorial-btn" class="w-full text-left px-3.5 py-2 text-xs font-bold text-stone-700 hover:bg-indigo-50 hover:text-indigo-900 flex items-center gap-2.5 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-circle-play text-indigo-600 text-sm w-4 text-center"></i>
@@ -688,53 +665,19 @@
                             </div>
                         </div>
 
-                        <!-- 2. 家長端即時查核看板入口 (Parent Portal) -->
-                        <div class="bg-gradient-to-r from-indigo-50/80 via-white/80 to-purple-50/70 backdrop-blur-md rounded-2xl p-4 border border-indigo-100/90 hover:border-indigo-200 transition-all shadow-2xs group flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                    <i class="fa-solid fa-house-chimney-user"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-black text-stone-900 group-hover:text-indigo-700 transition-colors">家長端即時查核看板</h3>
-                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded">免註冊</span>
-                                    </div>
-                                    <p class="text-[11px] text-stone-500 font-medium truncate">輸入班級代碼即可查閱孩子欠繳與聯絡簿</p>
-                                </div>
+                        <!-- 2. 家長端與學生端專屬連結防偽安全保護說明 -->
+                        <div class="bg-gradient-to-r from-amber-50/90 via-white/90 to-emerald-50/70 backdrop-blur-md rounded-2xl p-4 border border-amber-200/80 transition-all shadow-2xs flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0 mt-0.5">
+                                <i class="fa-solid fa-shield-halved"></i>
                             </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <button type="button" id="portal-copy-parent-link-btn" class="w-8 h-8 rounded-xl bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200/80 flex items-center justify-center text-xs transition-colors shadow-2xs cursor-pointer" title="複製家長端直達網址分享至班群">
-                                    <i class="fa-solid fa-link"></i>
-                                </button>
-                                <a href="parent.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                                    <span>開啟看板</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- 3. 學生端數位聯絡簿入口 (Student Portal) -->
-                        <div class="bg-gradient-to-r from-emerald-50/80 via-white/80 to-teal-50/70 backdrop-blur-md rounded-2xl p-4 border border-emerald-100/90 hover:border-emerald-200 transition-all shadow-2xs group flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                    <i class="fa-solid fa-book-open-reader"></i>
+                            <div class="min-w-0 flex-1 space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-sm font-black text-stone-900">家長端與學生端採「專屬連結」免密直達</h3>
+                                    <span class="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">零密碼・防代簽防誤看</span>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-black text-stone-900 group-hover:text-emerald-700 transition-colors">學生端數位聯絡簿</h3>
-                                        <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.2 rounded">課堂投影</span>
-                                    </div>
-                                    <p class="text-[11px] text-stone-500 font-medium truncate">每日黑板作業、課表與全勤榮譽榜</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <button type="button" id="portal-copy-student-link-btn" class="w-8 h-8 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center justify-center text-xs transition-colors shadow-2xs cursor-pointer" title="複製學生端聯絡簿網址">
-                                    <i class="fa-solid fa-link"></i>
-                                </button>
-                                <a href="student.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                                    <span>開啟聯絡簿</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                                </a>
+                                <p class="text-[11px] text-stone-600 font-medium leading-relaxed">
+                                    為保障每位學生的隱私與防偽安全，家長端看板與學生端數位聯絡簿全面透過導師於「管理班級 <i class="fa-solid fa-arrow-right text-[9px] mx-0.5"></i> 專屬連結」發放之個人專屬連結直接進入，無須輸入任何認證碼或 PIN 碼。
+                                </p>
                             </div>
                         </div>
 
@@ -986,7 +929,7 @@
                             </span>
                             <div>
                                 <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
-                                <span class="text-xs text-stone-500 font-bold">最新版本 v5.7.0 • 2026/10/24</span>
+                                <span class="text-xs text-stone-500 font-bold">最新版本 v5.8.1 • 2026/10/24</span>
                             </div>
                         </div>
                         <span class="px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-black border border-emerald-300/60 shadow-2xs">最新版本</span>
@@ -995,21 +938,20 @@
                     <div class="p-4 sm:p-5 bg-gradient-to-br from-indigo-50/70 via-emerald-50/40 to-amber-50/30 rounded-2xl border border-white/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
                         <div class="font-bold text-indigo-950 flex items-center gap-1.5">
                             <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                            <span>v5.7.0 選單全功能導覽・沉浸雙背景・負分支援與管理排序：</span>
+                            <span>v5.8.1 親師生專屬連結全面無密直達・24hr 時間滾輪精準對齊・考試計時防重疊：</span>
                         </div>
                         <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
-                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>選單列 10 大功能雙分組導覽</b>：首頁完整呈現核心教學工作台（7 項）與課堂輔助工具（3 項），點擊卡片彈出真實特色說明彈窗與直達體驗。</span></li>
-                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>修復登入與註冊頁面重疊</b>：清除底端孤立重複表單，登入視圖與註冊視圖結構分明、排版乾淨俐落。</span></li>
-                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>情境雙背景自訂與透明度微調</b>：首頁套用專屬教學背景（透明度 0.25），登入後工作台套用全域沉浸式背景（透明度 0.20）。</span></li>
-                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂加扣分與總分支援負分</b>：解除 0 分底限，個人加扣分與全班總分皆支援負數，進度條具備安全防破版保險。</span></li>
-                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>管理者後台以主檔空間降序排序</b>：排除所有訪客帳號，以主檔儲存空間大小由高至低自動排列，資源佔用一目了然。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>親師生「專屬連結」全面整合至管理班級</b>：移至管理班級卡片一鍵開啟，徹底取代舊版四顆瑣碎按鈕與非專屬直達連結，開啟專屬連結免輸入任何認證碼或 PIN 碼直達個人看板。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>24hr 時間滾輪方框與數字 100% 居中對齊</b>：修正簽到與考試計時時間滾輪中心選取框偏移問題，並移除「清空時間」與簽到頁手動「應到人數」設定。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>考試計時雙時間滾輪與防重疊檢核</b>：考試開始與結束時間全面升級為 24hr 時間滾輪，強制不得早於目前時間，並自動攔截任何重疊的考試時段。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>修復學生詳情頁面排版與四大專屬手繪背景</b>：獨立切換學生詳情統計視圖不與作業清單重疊，並為家長端、安全閘門、學生端與心情小日記導入專屬插畫背景。</span></li>
                         </ul>
                     </div>
 
                     <div class="flex items-center justify-between pt-1">
                         <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                             <i class="fa-solid fa-clock-rotate-left"></i>
-                            <span>查看完整版本演進日誌 (v1.0 ~ v5.7.0)</span>
+                            <span>查看完整版本演進日誌 (v1.0 ~ v5.8.1)</span>
                         </button>
                     </div>
                 </div>
@@ -1055,7 +997,7 @@
         </footer>
 
         <!-- 首頁右下角提示：向下捲動對話框與閃爍向下箭頭 (使用者一旦向下捲動便會消失) -->
-        <div id="portal-scroll-indicator" class="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-1.5 transition-all duration-500 transform pointer-events-auto select-none cursor-pointer group" title="點擊向下捲動瀏覽更多">
+        <div id="portal-scroll-indicator" class="fixed bottom-4 right-20 sm:bottom-6 sm:right-22 z-50 flex flex-col items-center gap-1.5 transition-all duration-500 transform pointer-events-auto select-none cursor-pointer group" title="點擊向下捲動瀏覽更多">
             <!-- 上方對話框 -->
             <div class="relative bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs sm:text-sm px-3.5 py-1.5 rounded-2xl shadow-lg shadow-amber-500/30 flex items-center gap-1.5 tracking-wide animate-pulse">
                 <span>向下捲動！</span>
@@ -1731,6 +1673,7 @@
     <!-- 1. 作業點收專屬全畫面頁面 (Homework Checking & Management)           -->
     <!-- ============================================================== -->
     <div id="main-page" class="container mx-auto w-[96%] max-w-[1600px] p-4 sm:p-6 lg:p-8 min-h-screen hidden page-section select-none pb-24">
+        <div id="main-homework-workplace" class="space-y-4">
         <!-- 頂部功能列 Header -->
         <header class="flex-shrink-0 relative z-10 p-4 sm:p-5 bg-white/95 backdrop-blur-md rounded-3xl border border-[#EBDCCB] shadow-sm mb-4">
             <div class="flex items-center justify-between gap-3 sm:gap-4 w-full flex-wrap">
@@ -1805,10 +1748,11 @@
             <!-- 作業卡片網格 -->
             <div id="homework-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
         </div>
+        </div>
 
         <!-- 學生詳情統計容器 (內嵌於作業點收頁面，點選頂部「學生詳情」按鈕即時切換) -->
         <div id="main-student-details-container" class="hidden flex-1 flex flex-col min-h-0 space-y-4">
-            <header class="p-4 sm:p-5 storybook-banner-card rounded-3xl border border-[#EBDCCB] shadow-sm relative overflow-hidden bg-white/95">
+            <header class="p-4 sm:p-5 pl-14 sm:pl-16 storybook-banner-card rounded-3xl border border-[#EBDCCB] shadow-sm relative overflow-hidden bg-white/95">
                 <div class="flex items-center justify-between mb-3">
                     <button type="button" id="back-from-main-student-details-btn" class="text-stone-700 hover:text-amber-800 font-black cursor-pointer flex items-center gap-1.5 text-xs sm:text-sm tracking-wide bg-white/90 px-3.5 py-1.5 rounded-full border border-[#EBDCCB] shadow-xs active:scale-95 transition-all">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -1838,7 +1782,7 @@
                     </select>
                 </div>
             </header>
-            <div id="student-details-list" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12 pr-1"></div>
+            <div id="student-details-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-12"></div>
         </div>
     </div>
 
@@ -2213,23 +2157,11 @@
                 </div>
             </div>
 
-            <!-- 出勤數值與應到實到調整看板 -->
+            <!-- 出勤數值與實到調整看板 -->
             <div class="p-4 sm:p-6 rounded-3xl bg-white/85 backdrop-blur-xl border border-slate-200/90 shadow-lg space-y-4">
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-100">
-                    <!-- 應到人數自訂微調器與實到統計 -->
+                    <!-- 實到統計 -->
                     <div class="flex flex-wrap items-center gap-4">
-                        <div class="flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-2xl border border-slate-200">
-                            <span class="text-xs font-black text-slate-600 flex items-center gap-1.5">
-                                <i class="fa-solid fa-users text-indigo-600"></i>
-                                <span>應到人數:</span>
-                            </span>
-                            <div class="flex items-center gap-1">
-                                <button type="button" id="att-expected-minus-btn" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-700 font-black text-sm border border-slate-200 flex items-center justify-center cursor-pointer active:scale-95 transition-all" title="減少應到人數">-</button>
-                                <input type="number" id="att-expected-input" min="0" max="100" class="w-14 text-center font-mono font-black text-base py-0.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-500">
-                                <button type="button" id="att-expected-plus-btn" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-700 font-black text-sm border border-slate-200 flex items-center justify-center cursor-pointer active:scale-95 transition-all" title="增加應到人數">+</button>
-                            </div>
-                        </div>
-
                         <!-- 實到人數與比例總結 -->
                         <div class="flex items-center gap-2.5 bg-emerald-50/80 px-4 py-2 rounded-2xl border border-emerald-200">
                             <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
@@ -2385,70 +2317,71 @@
                     <span id="att-wheel-display" class="font-mono font-black text-xs px-2.5 py-1 rounded-xl bg-white text-stone-900 border border-stone-200 shadow-2xs">-- : -- : --</span>
                 </div>
 
-                <!-- 滾輪主體容器 -->
-                <div class="relative bg-white rounded-2xl border border-stone-200/90 p-2 shadow-2xs overflow-hidden select-none">
-                    <!-- 中間高亮選取框 -->
-                    <div class="absolute inset-x-2 top-1/2 -translate-y-1/2 h-9 rounded-xl bg-amber-500/10 border-y border-amber-500/30 pointer-events-none z-0"></div>
+                <!-- 滾輪主體容器 (上下完全對稱，確保中間選取框與數字 100% 像素級對齊) -->
+                <div class="bg-white rounded-2xl border border-stone-200/90 p-2 shadow-2xs overflow-hidden select-none">
+                    <!-- 欄位標題列 (置於對稱滾輪區外，避免影響垂直置中基準) -->
+                    <div class="grid grid-cols-3 gap-2 text-center pb-1 border-b border-stone-100">
+                        <span class="text-[10px] font-black text-stone-400">時</span>
+                        <span class="text-[10px] font-black text-stone-400">分</span>
+                        <span class="text-[10px] font-black text-stone-400">秒</span>
+                    </div>
 
-                    <div class="grid grid-cols-3 gap-2 relative z-10">
-                        <!-- 時 (00 ~ 23) -->
-                        <div class="flex flex-col items-center">
-                            <button type="button" id="att-wheel-hour-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加小時">
-                                <i class="fa-solid fa-chevron-up text-[10px]"></i>
-                            </button>
-                            <div id="att-wheel-hour-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
-                                <!-- 00 ~ 23 由 JS 動態生成 -->
-                            </div>
-                            <button type="button" id="att-wheel-hour-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少小時">
-                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                            </button>
-                            <span class="text-[10px] font-bold text-stone-400 mt-0.5">時</span>
-                        </div>
+                    <div class="relative mt-1">
+                        <!-- 中間高亮選取框 (高 36px = h-9，精準對應單行數字高度) -->
+                        <div class="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-xl bg-amber-500/15 border border-amber-500/45 pointer-events-none z-0"></div>
 
-                        <!-- 分 (00 ~ 59) -->
-                        <div class="flex flex-col items-center">
-                            <button type="button" id="att-wheel-minute-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加分鐘">
-                                <i class="fa-solid fa-chevron-up text-[10px]"></i>
-                            </button>
-                            <div id="att-wheel-minute-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
-                                <!-- 00 ~ 59 由 JS 動態生成 -->
+                        <div class="grid grid-cols-3 gap-2 relative z-10">
+                            <!-- 時 (00 ~ 23) -->
+                            <div class="flex flex-col items-center">
+                                <button type="button" id="att-wheel-hour-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加小時">
+                                    <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                </button>
+                                <div id="att-wheel-hour-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]">
+                                    <!-- 00 ~ 23 由 JS 動態生成 -->
+                                </div>
+                                <button type="button" id="att-wheel-hour-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少小時">
+                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                </button>
                             </div>
-                            <button type="button" id="att-wheel-minute-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少分鐘">
-                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                            </button>
-                            <span class="text-[10px] font-bold text-stone-400 mt-0.5">分</span>
-                        </div>
 
-                        <!-- 秒 (00 ~ 59) -->
-                        <div class="flex flex-col items-center">
-                            <button type="button" id="att-wheel-second-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加秒數">
-                                <i class="fa-solid fa-chevron-up text-[10px]"></i>
-                            </button>
-                            <div id="att-wheel-second-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
-                                <!-- 00 ~ 59 由 JS 動態生成 -->
+                            <!-- 分 (00 ~ 59) -->
+                            <div class="flex flex-col items-center">
+                                <button type="button" id="att-wheel-minute-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加分鐘">
+                                    <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                </button>
+                                <div id="att-wheel-minute-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]">
+                                    <!-- 00 ~ 59 由 JS 動態生成 -->
+                                </div>
+                                <button type="button" id="att-wheel-minute-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少分鐘">
+                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                </button>
                             </div>
-                            <button type="button" id="att-wheel-second-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少秒數">
-                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                            </button>
-                            <span class="text-[10px] font-bold text-stone-400 mt-0.5">秒</span>
+
+                            <!-- 秒 (00 ~ 59) -->
+                            <div class="flex flex-col items-center">
+                                <button type="button" id="att-wheel-second-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加秒數">
+                                    <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                </button>
+                                <div id="att-wheel-second-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]">
+                                    <!-- 00 ~ 59 由 JS 動態生成 -->
+                                </div>
+                                <button type="button" id="att-wheel-second-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少秒數">
+                                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 快速預設按鈕列 -->
-                <div class="flex items-center justify-between gap-1.5 pt-1">
-                    <div class="flex items-center gap-1.5">
-                        <button type="button" id="att-modal-now-time-btn" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs">
-                            <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[10px]"></i>
-                            <span>現在時間</span>
-                        </button>
-                        <button type="button" id="att-modal-preset-late-btn" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs">
-                            <i class="fa-solid fa-bell text-rose-500 text-[10px]"></i>
-                            <span>遲到門檻 (07:50)</span>
-                        </button>
-                    </div>
-                    <button type="button" id="att-modal-clear-time-btn" class="px-2.5 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer active:scale-95">
-                        清空時間
+                <div class="flex items-center justify-start gap-1.5 pt-1">
+                    <button type="button" id="att-modal-now-time-btn" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600 text-[10px]"></i>
+                        <span>現在時間</span>
+                    </button>
+                    <button type="button" id="att-modal-preset-late-btn" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs">
+                        <i class="fa-solid fa-bell text-rose-500 text-[10px]"></i>
+                        <span>遲到門檻 (07:50)</span>
                     </button>
                 </div>
             </div>
@@ -3117,27 +3050,88 @@
                                 <input type="text" id="exam-setup-content-input" placeholder="例如：數學第一單元" class="w-full text-sm font-bold p-3 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:border-amber-600 transition-colors">
                             </div>
 
-                            <!-- 考試時間：24h 制開始時間、結束時間與時長雙向連動 (零原生時間選擇器) -->
-                            <div class="space-y-2">
+                            <!-- 考試時間：24h 制開始時間、結束時間雙滾輪與時長雙向連動 (零原生時間選擇器) -->
+                            <div class="space-y-3">
+                                <input type="hidden" id="exam-setup-start-time">
+                                <input type="hidden" id="exam-setup-end-time">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div class="space-y-1">
+                                    <!-- 開始時間 24hr 滾輪 -->
+                                    <div class="p-3 rounded-2xl bg-stone-50/80 border border-stone-200/90 space-y-2">
                                         <div class="flex items-center justify-between">
-                                            <label for="exam-setup-start-time" class="block text-xs font-black text-stone-700">開始時間 (24h制)</label>
-                                            <span class="text-[10px] font-mono text-stone-400 font-bold">HH:mm</span>
+                                            <label class="text-xs font-black text-stone-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-clock text-amber-600"></i>
+                                                <span>開始時間</span>
+                                            </label>
+                                            <span id="exam-start-wheel-display" class="font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-white text-stone-900 border border-stone-200 shadow-2xs">08 : 40</span>
                                         </div>
-                                        <div class="relative flex items-center">
-                                            <i class="fa-solid fa-clock text-xs text-stone-400 absolute left-3 pointer-events-none"></i>
-                                            <input type="text" id="exam-setup-start-time" maxlength="5" placeholder="08:40" class="w-full text-sm font-mono font-black py-2.5 pl-8 pr-3 rounded-xl border border-stone-200 bg-white focus:border-amber-600 focus:outline-none transition-colors">
+                                        <div class="bg-white rounded-xl border border-stone-200/90 p-2 shadow-2xs overflow-hidden select-none">
+                                            <div class="grid grid-cols-2 gap-2 text-center pb-1 border-b border-stone-100">
+                                                <span class="text-[10px] font-black text-stone-400">時</span>
+                                                <span class="text-[10px] font-black text-stone-400">分</span>
+                                            </div>
+                                            <div class="relative mt-1">
+                                                <div class="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-xl bg-amber-500/15 border border-amber-500/45 pointer-events-none z-0"></div>
+                                                <div class="grid grid-cols-2 gap-2 relative z-10">
+                                                    <div class="flex flex-col items-center">
+                                                        <button type="button" id="exam-start-hour-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加開始小時">
+                                                            <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                                        </button>
+                                                        <div id="exam-start-hour-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]"></div>
+                                                        <button type="button" id="exam-start-hour-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少開始小時">
+                                                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex flex-col items-center">
+                                                        <button type="button" id="exam-start-minute-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加開始分鐘">
+                                                            <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                                        </button>
+                                                        <div id="exam-start-minute-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]"></div>
+                                                        <button type="button" id="exam-start-minute-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少開始分鐘">
+                                                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="space-y-1">
+
+                                    <!-- 結束時間 24hr 滾輪 -->
+                                    <div class="p-3 rounded-2xl bg-stone-50/80 border border-stone-200/90 space-y-2">
                                         <div class="flex items-center justify-between">
-                                            <label for="exam-setup-end-time" class="block text-xs font-black text-stone-700">結束時間 (24h制)</label>
-                                            <span class="text-[10px] font-mono text-stone-400 font-bold">HH:mm</span>
+                                            <label class="text-xs font-black text-stone-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-flag-checkered text-rose-500"></i>
+                                                <span>結束時間</span>
+                                            </label>
+                                            <span id="exam-end-wheel-display" class="font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-white text-stone-900 border border-stone-200 shadow-2xs">09 : 25</span>
                                         </div>
-                                        <div class="relative flex items-center">
-                                            <i class="fa-solid fa-flag-checkered text-xs text-stone-400 absolute left-3 pointer-events-none"></i>
-                                            <input type="text" id="exam-setup-end-time" maxlength="5" placeholder="09:25" class="w-full text-sm font-mono font-black py-2.5 pl-8 pr-3 rounded-xl border border-stone-200 bg-white focus:border-amber-600 focus:outline-none transition-colors">
+                                        <div class="bg-white rounded-xl border border-stone-200/90 p-2 shadow-2xs overflow-hidden select-none">
+                                            <div class="grid grid-cols-2 gap-2 text-center pb-1 border-b border-stone-100">
+                                                <span class="text-[10px] font-black text-stone-400">時</span>
+                                                <span class="text-[10px] font-black text-stone-400">分</span>
+                                            </div>
+                                            <div class="relative mt-1">
+                                                <div class="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-xl bg-amber-500/15 border border-amber-500/45 pointer-events-none z-0"></div>
+                                                <div class="grid grid-cols-2 gap-2 relative z-10">
+                                                    <div class="flex flex-col items-center">
+                                                        <button type="button" id="exam-end-hour-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加結束小時">
+                                                            <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                                        </button>
+                                                        <div id="exam-end-hour-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]"></div>
+                                                        <button type="button" id="exam-end-hour-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少結束小時">
+                                                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex flex-col items-center">
+                                                        <button type="button" id="exam-end-minute-up" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加結束分鐘">
+                                                            <i class="fa-solid fa-chevron-up text-[10px]"></i>
+                                                        </button>
+                                                        <div id="exam-end-minute-list" class="w-full h-[108px] overflow-y-auto no-scrollbar snap-y snap-mandatory text-center py-[36px]"></div>
+                                                        <button type="button" id="exam-end-minute-down" class="w-full h-7 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少結束分鐘">
+                                                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3998,27 +3992,17 @@
                         </span>
                         <div>
                             <h4 class="font-black text-stone-900 text-sm sm:text-base">新增班級</h4>
-                            <p class="text-[11px] text-stone-500 font-medium">請填寫班級名稱、家長權限碼並完成名單設定以建立新班級</p>
+                            <p class="text-[11px] text-stone-500 font-medium">請填寫班級名稱並完成名單設定，系統將自動為全班學生配發專屬安全連結</p>
                         </div>
                     </div>
 
-                    <!-- 基本資料行：班級名稱 + 家長權限碼 -->
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                        <div class="sm:col-span-7 space-y-1">
-                            <label for="class-name" class="block text-xs font-black text-stone-700">
-                                班級名稱 <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="text" id="class-name" class="block w-full rounded-xl border-[#EBDCCB] bg-white shadow-xs p-2.5 text-sm font-bold text-stone-800 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600" required placeholder="例如：七賢107班、六年三班">
-                        </div>
-                        <div class="sm:col-span-5 space-y-1">
-                            <label for="class-access-code" class="block text-xs font-black text-stone-700">
-                                家長權限碼 <span class="text-rose-500">*</span>
-                            </label>
-                            <div class="flex gap-1.5">
-                                <input type="text" id="class-access-code" class="w-full rounded-xl border-[#EBDCCB] bg-white shadow-xs p-2.5 text-xs font-mono font-bold text-amber-700 uppercase tracking-wider placeholder:text-stone-400 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600" required placeholder="家長查核權限碼" maxlength="16">
-                                <button type="button" id="gen-code-btn" title="隨機產生家長權限碼" class="px-3.5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-dice"></i></button>
-                            </div>
-                        </div>
+                    <!-- 基本資料行：班級名稱 (自動生成隱藏代碼) -->
+                    <div class="space-y-1">
+                        <label for="class-name" class="block text-xs font-black text-stone-700">
+                            班級名稱 <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="class-name" class="block w-full rounded-xl border-[#EBDCCB] bg-white shadow-xs p-2.5 text-sm font-bold text-stone-800 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600" required placeholder="例如：七賢107班、六年三班">
+                        <input type="hidden" id="class-access-code" value="">
                     </div>
 
                     <!-- 名單設定區塊（格式與名單設定彈窗完全一致，支援座號雙輸入框與名字模式） -->
@@ -4102,7 +4086,7 @@
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
                         <div class="text-[11px] text-stone-500 font-medium flex items-center gap-1.5">
                             <i class="fa-solid fa-circle-info text-amber-600 shrink-0"></i>
-                            <span>建立後家長與學生輸入「家長權限碼」即可免密碼直達專屬查核看板</span>
+                            <span>建立後可點擊班級卡片右側「專屬連結」一鍵複製發放給家長與學生免密直達</span>
                         </div>
                         <button type="submit" class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 px-7 text-sm rounded-xl shadow-md shadow-amber-600/20 transition-all cursor-pointer whitespace-nowrap active:scale-95 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-plus"></i>
@@ -4118,34 +4102,34 @@
                             <i class="fa-solid fa-list-check text-amber-600"></i>
                             <span>現有班級清單</span>
                         </h3>
-                        <span class="text-xs text-stone-400 font-medium">支援隨時改名、設定座號與缺號、權限碼或一鍵複製專屬連結</span>
+                        <span class="text-xs text-stone-400 font-medium">支援隨時改名、設定座號與缺號、一鍵管理親師生專屬連結</span>
                     </div>
                     <div id="class-list" class="space-y-3"></div>
                 </div>
 
-                <!-- 親師生雙端專區 (家長端 & 學生端) -->
+                <!-- 親師生專屬連結安全機制說明 -->
                 <div class="p-4 sm:p-5 bg-gradient-to-br from-amber-50/70 via-orange-50/40 to-stone-50/50 rounded-2xl border border-amber-100/90 shadow-xs">
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-between mb-1.5">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-people-roof text-lg text-amber-600"></i>
-                            <h4 class="font-black text-stone-800 text-sm">親師生雙端專區（家長端 & 學生端）</h4>
+                            <i class="fa-solid fa-link text-lg text-amber-600"></i>
+                            <h4 class="font-black text-stone-800 text-sm">親師生專屬連結（家長端 & 學生端免密直達）</h4>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">免密碼直查</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">專屬連結直開</span>
                     </div>
                     <p class="text-xs text-stone-600 mb-3 leading-relaxed">
-                        家長與學生輸入班級權限碼或開啟專屬連結即可直達看板。可於上方各班清單一鍵複製專屬查核連結。
+                        請點擊上方各班級卡片右側的「<strong class="text-amber-800">專屬連結</strong>」按鈕或下方快捷入口，即可查看或一鍵複製全班每位學生的家長端與學生端專屬連結。家長與學生點擊專屬連結後無須輸入任何認證碼或 PIN 碼，即可直接進入個人專屬頁面。
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <a id="goto-parent-dashboard-btn" href="parent.html" target="_blank" rel="noopener noreferrer" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 px-4 text-xs rounded-xl shadow-md shadow-amber-600/20 transition-all flex items-center justify-center gap-1.5 text-center cursor-pointer">
+                        <button type="button" id="goto-parent-dashboard-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 text-center cursor-pointer active:scale-95">
                             <i class="fa-solid fa-house-chimney-user"></i>
-                            <span>前往家長端看板</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
-                        <a id="goto-student-dashboard-btn" href="student.html" target="_blank" rel="noopener noreferrer" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-black py-2.5 px-4 text-xs rounded-xl shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-1.5 text-center cursor-pointer">
+                            <span>查看家長端專屬連結</span>
+                            <i class="fa-solid fa-link text-[10px]"></i>
+                        </button>
+                        <button type="button" id="goto-student-dashboard-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5 text-center cursor-pointer active:scale-95">
                             <i class="fa-solid fa-graduation-cap"></i>
-                            <span>前往學生端聯絡簿</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
+                            <span>查看學生端專屬連結</span>
+                            <i class="fa-solid fa-link text-[10px]"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -4230,21 +4214,21 @@
         </div>
     </div>
 
-    <!-- 學生親師專屬安全防偽連結與令牌管理 (徹底取代 PIN 碼) Modal -->
+    <!-- 親師生專屬連結管理 Modal -->
     <div id="student-pins-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-4 hidden modal z-[160]">
         <div class="modal-content glass-card rounded-3xl shadow-2xl p-6 sm:p-8 md:p-9 w-full max-w-4xl lg:max-w-5xl transform scale-95 border border-slate-100 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden">
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl border border-emerald-200/80 shadow-xs">
-                        <i class="fa-solid fa-shield-halved"></i>
+                    <span class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl border border-amber-200/80 shadow-xs">
+                        <i class="fa-solid fa-link"></i>
                     </span>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h2 class="text-xl sm:text-2xl font-black text-slate-900">學生親師專屬安全防偽連結與令牌管理</h2>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-900">專屬連結管理</h2>
                             <span id="pin-modal-class-badge" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">班級</span>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">全面啟用親師專屬防偽安全令牌，三端徹底取代 PIN 碼！每位學生擁有專屬家長端與學生端免密直開短網址。</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">每位學生皆擁有獨立的家長端與學生端專屬連結，點擊後免輸入任何認證碼或 PIN 碼即可直達個人頁面。</p>
                     </div>
                 </div>
                 <button type="button" id="close-student-pins-modal-btn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer">
@@ -4257,41 +4241,32 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <button type="button" id="btn-batch-random-pins" class="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>隨機換發全班防偽安全令牌</span>
-                    </button>
-                    <button type="button" id="btn-batch-clear-pins" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95">
-                        <i class="fa-solid fa-ban"></i>
-                        <span>全部重設清除</span>
+                        <span>重新換發全班專屬連結</span>
                     </button>
                 </div>
-                <button type="button" id="btn-copy-pins-roster" class="py-2 px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="複製全班學生與家長兩端專屬安全連結總表，方便一次發給全體家長">
+                <button type="button" id="btn-copy-pins-roster" class="py-2 px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="複製全班學生與家長兩端專屬連結總表，方便一次發給全體家長">
                     <i class="fa-solid fa-table-list"></i>
-                    <span>複製全班親師連結總表</span>
+                    <span>複製全班專屬連結總表</span>
                 </button>
             </div>
 
             <!-- Scrollable Seat Table -->
             <div class="flex-grow overflow-y-auto custom-scrollbar py-3 pr-1">
                 <div id="student-pins-list-container" class="space-y-2.5">
-                    <!-- 由 JS 動態生成：座號、學生姓名、專屬令牌徽章、複製家長端、複製學生端、一次複製該學生兩端連結、換發令牌 -->
+                    <!-- 由 JS 動態生成：座號、學生姓名、專屬令牌徽章、複製家長端、複製學生端、一次複製該學生兩端連結、換發連結 -->
                 </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between flex-shrink-0">
                 <div class="text-xs text-slate-500 font-bold">
-                    <span>已配發安全防偽令牌：<strong id="pins-enabled-count" class="text-emerald-600 font-black">0</strong> / <span id="pins-total-count">0</span> 位學生</span>
+                    <span>已啟用專屬連結：<strong id="pins-enabled-count" class="text-emerald-600 font-black">0</strong> / <span id="pins-total-count">0</span> 位學生</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" id="cancel-student-pins-btn" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs sm:text-sm transition-colors cursor-pointer">關閉</button>
                     <button type="button" id="save-student-pins-btn" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <span>儲存並同步至雲端</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
                     </button>
                 </div>
             </div>
@@ -4773,6 +4748,35 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
+                    <!-- v5.8.1 親師生專屬連結全面無密直達・24hr 時間滾輪精準對齊・考試計時防重疊 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-emerald-50/80 to-indigo-50/60 border-2 border-amber-500 shadow-xl relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.8.1 親師生專屬連結免密直達版</span>
+                                <span class="text-xs font-bold text-amber-950">專屬連結整合至管理班級・三端免認證碼免 PIN 碼直開・24hr 時間滾輪 100% 居中對齊・考試計時防重疊</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-amber-800">2026-10-24</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>親師生「專屬連結」整合至管理班級</b>：自成績頁面移至管理班級卡片右側，單一「專屬連結」按鈕取代舊版四顆按鈕，全站全面採用專屬連結進入家長端與學生端，開啟後免輸入任何認證碼或 PIN 碼直達個人看板。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>24hr 時間滾輪方框與數字 100% 居中對齊</b>：修正簽到與考試計時時間滾輪中心選取框偏移問題，並移除「清空時間」按鈕與簽到頁手動「應到人數」設定。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>考試計時雙時間滾輪與防重疊檢核</b>：考試開始與結束時間全面升級為 24hr 時間滾輪，強制不得早於目前時間，並自動攔截任何重疊的考試時段。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>修復學生詳情排版、雙人併桌視覺化與右下角常駐靜音</b>：獨立切換學生詳情統計視圖不與作業清單重疊；座位表「雙人併桌」模式呈現實體雙人桌外框與走道間距；常駐靜音按鈕移至畫面右下角；並為家長端、安全閘門、學生端與心情小日記導入專屬插畫背景。</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     <!-- v5.8.0 全新親師防偽安全令牌・全站零原生控件・出勤智慧重歸類・右上角常駐音效・AI 柔和雙端背景 -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/95 via-teal-50/80 to-amber-50/60 border-2 border-emerald-600 shadow-xl relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -6335,19 +6339,7 @@
                         <span>新增考試</span>
                     </button>
 
-                    <!-- 2. 學生端直達連結 -->
-                    <button type="button" id="btn-copy-student-link-from-scores" class="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-xs sm:text-sm py-2 px-3 sm:px-3.5 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer" title="複製此班級專屬學生端數位聯絡簿連結">
-                        <i class="fa-solid fa-graduation-cap text-sky-600"></i>
-                        <span>學生端直達連結</span>
-                    </button>
-
-                    <!-- 3. PIN 碼設定 -->
-                    <button type="button" id="btn-open-pins-from-scores" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs sm:text-sm py-2 px-3 sm:px-3.5 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer" title="設定與管理學生 6 位數成績專屬 PIN 碼">
-                        <i class="fa-solid fa-key text-amber-600"></i>
-                        <span>PIN碼設定</span>
-                    </button>
-
-                    <!-- 4. 匯出成績 -->
+                    <!-- 2. 匯出成績 -->
                     <button type="button" id="btn-open-export-modal" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs sm:text-sm py-2 px-3 sm:px-3.5 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer" title="一鍵匯出成績 (Word, HTML, PDF, Excel, CSV)">
                         <i class="fa-solid fa-file-export text-indigo-600"></i>
                         <span>匯出成績</span>

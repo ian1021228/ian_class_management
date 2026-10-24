@@ -102,64 +102,55 @@
   </div>
 
   <!-- =============================== -->
-  <!-- 1. LOGIN / ACCESS CODE VIEW -->
+  <!-- 1. EXCLUSIVE LINK GATEWAY VIEW  -->
   <!-- =============================== -->
-  <div id="login-view" class="min-h-full flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8">
-    <div class="w-full max-w-md">
+  <div id="login-view" class="min-h-full flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <!-- Security Gateway Background Layer -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+      <img src="assets/images/bg_security_gateway.png" alt="" class="w-full h-full object-cover object-center opacity-40" onerror="this.style.display='none'">
+      <div class="absolute inset-0 bg-gradient-to-b from-[#FFFDF9]/80 via-[#FDFBF7]/85 to-[#FAF6EE]/90 backdrop-blur-[2px]"></div>
+    </div>
+
+    <div class="w-full max-w-md relative z-10">
       <!-- App Header Icon -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl shadow-xl shadow-indigo-500/25 mb-4 overflow-hidden">
-          <img src="homework-checker-icon.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" class="w-full h-full object-cover" alt="班級經營系統">
+          <img src="homework-checker-icon.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" class="w-full h-full object-cover" alt="PalClass">
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">班級經營系統</h1>
-        <p class="mt-2 text-sm text-slate-500 font-medium">家長端即時查詢儀表板 · 掌握孩子學習每一刻</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">PalClass 家長端看板</h1>
+        <p class="mt-2 text-sm text-slate-500 font-medium">親師生專屬連結直達 · 免認證碼免密碼安全保護</p>
       </div>
 
-      <!-- Access Code Card -->
-      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80">
-        <form id="access-code-form" class="space-y-5">
-          <div>
-            <label for="input-access-code" class="block text-sm font-semibold text-slate-700 mb-2">
-              <i class="fa-solid fa-key text-indigo-500 mr-1.5"></i> 請輸入班級權限碼
-            </label>
-            <div class="relative">
-              <input
-                type="text"
-                id="input-access-code"
-                name="accessCode"
-                placeholder="例如：6A89F2"
-                maxlength="12"
-                autocomplete="off"
-                spellcheck="false"
-                class="w-full uppercase font-mono tracking-widest text-center text-xl sm:text-2xl font-bold py-3.5 px-4 bg-slate-50 border border-slate-300 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400 placeholder:font-normal placeholder:tracking-normal placeholder:text-base"
-                required
-              />
-            </div>
-            <p class="mt-2 text-xs text-slate-500 flex items-center justify-between">
-              <span>* 請向班級導師取得專屬權限碼</span>
-              <span class="text-slate-400">不分大小寫</span>
-            </p>
-          </div>
+      <!-- Exclusive Link Notice Card -->
+      <div class="bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-lg border border-amber-200/80 text-center space-y-4">
+        <div class="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200/80 shadow-xs text-2xl">
+          <i class="fa-solid fa-link"></i>
+        </div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>專屬連結免密保護機制</span>
+        </div>
+        <h2 class="text-lg sm:text-xl font-black text-slate-900">請透過導師發放的「專屬連結」進入</h2>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          為保護每位學生的學習隱私，家長端全面採用<strong>個人專屬連結</strong>直達，無須輸入任何班級代碼、認證碼或 PIN 碼。<br>
+          請點擊導師提供給您的<strong>家長端專屬連結</strong>即可直接進入孩子的個人看板！
+        </p>
 
-          <!-- Error Alert inside Login Card -->
-          <div id="login-error-box" class="hidden p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-2.5">
-            <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500 flex-shrink-0"></i>
-            <span id="login-error-msg" class="leading-snug">找不到此班級權限碼，請確認後重新輸入！</span>
-          </div>
+        <!-- Error Alert inside Gateway Card -->
+        <div id="login-error-box" class="hidden p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-start gap-2.5 text-left">
+          <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500 flex-shrink-0"></i>
+          <span id="login-error-msg" class="leading-snug">專屬連結無效或已更新，請向班級導師索取最新專屬連結！</span>
+        </div>
 
-          <button
-            type="submit"
-            id="login-submit-btn"
-            class="touch-target w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-base shadow-lg shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span id="login-btn-text">進入班級看板</span>
-            <i id="login-btn-icon" class="fa-solid fa-arrow-right text-sm"></i>
-          </button>
+        <!-- Hidden legacy form elements to keep JS references safe -->
+        <form id="access-code-form" class="hidden">
+          <input type="hidden" id="input-access-code" name="accessCode" />
+          <button type="submit" id="login-submit-btn"><span id="login-btn-text"></span><i id="login-btn-icon"></i></button>
         </form>
 
-        <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
           <span class="flex items-center gap-1.5">
-            <i class="fa-solid fa-shield-halved text-slate-400"></i> 安全加密即時同步
+            <i class="fa-solid fa-shield-halved text-emerald-500"></i> 專屬連結加密即時同步
           </span>
           <a
             href="https://docs.google.com/forms/d/19BPzX6vMrSnvW3j2s4OOvaiP3p1gS8auGbRt3f9aFkM/edit"
@@ -221,16 +212,14 @@
 
           <!-- Right: Actions -->
           <div class="flex items-center gap-2">
-            <!-- Seat Selector Pill on Navbar (Quick Switch) -->
-            <button
+            <!-- Exclusive Seat Badge on Navbar (Read-only) -->
+            <div
               id="nav-seat-btn"
-              title="切換座號"
-              class="touch-target px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors border border-indigo-100"
+              class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-indigo-50 text-indigo-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 border border-indigo-100 select-none"
             >
-              <i class="fa-solid fa-user text-xs text-indigo-500"></i>
-              <span id="nav-seat-label">選擇座號</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-indigo-400"></i>
-            </button>
+              <i class="fa-solid fa-user-shield text-xs text-indigo-500"></i>
+              <span id="nav-seat-label">專屬座號</span>
+            </div>
 
             <!-- Settings Button -->
             <button
@@ -442,13 +431,9 @@
                 <div>
                   <div class="flex items-center gap-2">
                     <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">座號 <span id="student-seat-title">--</span> 號 學習進度概況</h2>
-                    <button id="change-seat-quick-btn" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
-                      更換座號
-                    </button>
-                    <span id="hw-scores-relock-divider" class="text-slate-300 hidden">·</span>
-                    <button id="relock-seat-btn" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hidden items-center gap-1 transition-colors cursor-pointer" title="重新鎖定學生隱私防護">
-                      <i class="fa-solid fa-lock text-[10px]"></i> 鎖定隱私
-                    </button>
+                    <button id="change-seat-quick-btn" class="hidden"></button>
+                    <span id="hw-scores-relock-divider" class="hidden">·</span>
+                    <button id="relock-seat-btn" class="hidden"></button>
                   </div>
                   <p id="student-status-summary" class="text-xs text-slate-500 mt-0.5">點選下方標籤可快速篩選相關作業</p>
                 </div>
@@ -671,7 +656,7 @@
               </div>
             </div>
 
-            <!-- Actions: 登記小考成績 & 重新上鎖 -->
+            <!-- Actions: 登記小考成績 -->
             <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-center">
               <button
                 type="button"
@@ -681,9 +666,7 @@
                 <i class="fa-solid fa-plus"></i>
                 <span>登記小考成績</span>
               </button>
-              <button id="scores-view-relock-btn" class="touch-target px-3 py-2.5 rounded-2xl border border-slate-200 hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer" title="重新鎖定並保護學生個人隱私">
-                <i class="fa-solid fa-lock text-[10px]"></i> 重新上鎖
-              </button>
+              <button id="scores-view-relock-btn" class="hidden"></button>
             </div>
           </div>
 
@@ -917,11 +900,9 @@
       <button id="footer-switch-class-btn" class="hidden"></button>
       <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div class="flex flex-wrap items-center justify-center gap-y-1">
-          <span>班級經營系統 — 家長端 v2.1</span>
+          <span>PalClass — 家長端專屬看板</span>
           <span class="mx-2 text-slate-300">|</span>
           <a href="https://docs.google.com/forms/d/19BPzX6vMrSnvW3j2s4OOvaiP3p1gS8auGbRt3f9aFkM/edit" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-bold">回報問題/提供建議</a>
-          <span class="mx-2 text-slate-300">|</span>
-          <a href="student.html" class="text-indigo-600 hover:underline font-bold">學生端</a>
           <span class="mx-2 text-slate-300">|</span>
           <a href="index.html" class="text-slate-600 hover:underline font-semibold">教師端首頁</a>
         </div>
@@ -959,53 +940,25 @@
           <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-90 shrink-0 ml-1"></i>
         </a>
 
-        <!-- 1. Student Seat Binding -->
-        <div>
-          <label for="modal-seat-select" class="block text-sm font-bold text-slate-800 mb-1.5">
-            <i class="fa-solid fa-user-check text-indigo-600 mr-1"></i> 綁定學生座號
-          </label>
-          <p class="text-xs text-slate-500 mb-3">綁定後首頁將自動計算該座號的完成、待訂正與未交狀態。</p>
-          
-          <div class="flex gap-2">
-            <select
-              id="modal-seat-select"
-              class="flex-1 py-2.5 px-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">-- 請選擇座號 --</option>
-            </select>
-            <button
-              id="save-seat-btn"
-              class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-500/20 transition-all"
-            >
-              儲存綁定
-            </button>
-          </div>
-          
-          <button
-            id="clear-seat-btn"
-            class="mt-2 text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1"
-          >
-            <i class="fa-solid fa-trash-can text-[10px]"></i> 清除座號綁定（切換為班級全景視角）
-          </button>
+        <!-- 1. Student Seat Binding (Hidden in Exclusive Link Mode) -->
+        <div class="hidden">
+          <select id="modal-seat-select"><option value="">-- 請選擇座號 --</option></select>
+          <button id="save-seat-btn"></button>
+          <button id="clear-seat-btn"></button>
         </div>
 
-        <!-- 2. Current Class Info & Switch -->
-        <div class="pt-5 border-t border-slate-100">
+        <!-- 2. Current Class Info -->
+        <div class="pt-2">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-bold text-slate-500 uppercase">當前班級資訊</span>
-            <span id="modal-access-code-badge" class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">CODE</span>
+            <span id="modal-access-code-badge" class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">專屬連結已驗證</span>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
             <div>
               <div id="modal-class-name" class="font-bold text-slate-900 text-sm">--</div>
               <div id="modal-teacher-name" class="text-xs text-slate-500">導師：--</div>
             </div>
-            <button
-              id="switch-class-modal-btn"
-              class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs shadow-sm transition-all"
-            >
-              切換班級
-            </button>
+            <button id="switch-class-modal-btn" class="hidden"></button>
           </div>
         </div>
 

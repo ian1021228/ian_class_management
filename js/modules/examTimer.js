@@ -44,6 +44,24 @@ function ensureClassExamData(classObj) {
             !classObj.examSchedules[0].isCustomCreated) {
             classObj.examSchedules = [];
         }
+        // 自動清理既有重複或時間重疊之異常考程
+        const cleanSchedules = [];
+        for (const sch of classObj.examSchedules) {
+            const sMin = timeToMinutes(sch.startTime);
+            const eMin = timeToMinutes(sch.endTime);
+            if (eMin <= sMin) continue;
+            const hasOverlap = cleanSchedules.some(existing => {
+                const exS = timeToMinutes(existing.startTime);
+                const exE = timeToMinutes(existing.endTime);
+                return sMin < exE && eMin > exS;
+            });
+            if (!hasOverlap) {
+                cleanSchedules.push(sch);
+            }
+        }
+        if (cleanSchedules.length !== classObj.examSchedules.length) {
+            classObj.examSchedules = cleanSchedules;
+        }
     }
     if (typeof classObj.examNotes !== 'string') {
         classObj.examNotes = '';
@@ -105,18 +123,187 @@ export function minutesToTime(totalMins) {
 }
 
 /**
- * 依現有考程智慧推算下一場建議開始時間 (上一場結束 + 10 分鐘下課休息)
+ * 依現有考程智慧推算下一場建議開始時間 (上一場結束 + 10 分鐘下課休息，且絕不早於目前時間)
  */
 export function getNextSuggestedStartTime(schedules) {
+    const now = new Date();
+    const curMins = now.getHours() * 60 + now.getMinutes();
     if (!schedules || schedules.length === 0) {
-        const now = new Date();
-        const curMins = now.getHours() * 60 + now.getMinutes();
-        const rounded = Math.ceil(curMins / 5) * 5;
-        return minutesToTime(rounded);
+        return minutesToTime(curMins);
     }
     const endMinutesList = schedules.map(s => timeToMinutes(s.endTime));
     const maxEnd = Math.max(...endMinutesList);
-    return minutesToTime(maxEnd + 10);
+    const nextMins = Math.max(curMins, maxEnd + 10);
+    return minutesToTime(Math.min(1430, nextMins));
+}
+
+// ==========================================
+// 考試計時雙 24hr 時間滾輪 (開始時間 & 結束時間)
+// ==========================================
+let examStartHour = 8;
+let examStartMinute = 40;
+let examEndHour = 9;
+let examEndMinute = 25;
+let isExamWheelsInitialized = false;
+let isExamWheelProgrammatic = false;
+
+function getCurrentNowMinutes() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+}
+
+export function initExamTimeWheels() {
+    const sHourList = document.getElementById('exam-start-hour-list');
+    const sMinList = document.getElementById('exam-start-minute-list');
+    const eHourList = document.getElementById('exam-end-hour-list');
+    const eMinList = document.getElementById('exam-end-minute-list');
+    if (!sHourList || !sMinList || !eHourList || !eMinList) return;
+    if (isExamWheelsInitialized && sHourList.children.length > 0) return;
+
+    const populateWheel = (list, count, onClickVal) => {
+        list.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const item = document.createElement('div');
+            item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-amber-800 cursor-pointer snap-center transition-colors select-none';
+            item.dataset.val = i;
+            item.textContent = String(i).padStart(2, '0');
+            item.addEventListener('click', () => onClickVal(i));
+            list.appendChild(item);
+        }
+    };
+
+    populateWheel(sHourList, 24, (h) => onUserChangeStartWheel(h, examStartMinute, true));
+    populateWheel(sMinList, 60, (m) => onUserChangeStartWheel(examStartHour, m, true));
+    populateWheel(eHourList, 24, (h) => onUserChangeEndWheel(h, examEndMinute, true));
+    populateWheel(eMinList, 60, (m) => onUserChangeEndWheel(examEndHour, m, true));
+
+    const bindScroll = (container, onSnap) => {
+        let scrollTimeout = null;
+        container.addEventListener('scroll', () => {
+            if (isExamWheelProgrammatic) return;
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const itemHeight = 36;
+                const idx = Math.max(0, Math.min(container.children.length - 1, Math.round(container.scrollTop / itemHeight)));
+                container.scrollTop = idx * itemHeight;
+                onSnap(idx);
+            }, 90);
+        }, { passive: true });
+    };
+
+    bindScroll(sHourList, (h) => onUserChangeStartWheel(h, examStartMinute, false));
+    bindScroll(sMinList, (m) => onUserChangeStartWheel(examStartHour, m, false));
+    bindScroll(eHourList, (h) => onUserChangeEndWheel(h, examEndMinute, false));
+    bindScroll(eMinList, (m) => onUserChangeEndWheel(examEndHour, m, false));
+
+    isExamWheelsInitialized = true;
+}
+
+function renderExamWheelActiveUI(scrollUI = true) {
+    const sHourList = document.getElementById('exam-start-hour-list');
+    const sMinList = document.getElementById('exam-start-minute-list');
+    const eHourList = document.getElementById('exam-end-hour-list');
+    const eMinList = document.getElementById('exam-end-minute-list');
+    const sDisplay = document.getElementById('exam-start-wheel-display');
+    const eDisplay = document.getElementById('exam-end-wheel-display');
+    const sInput = document.getElementById('exam-setup-start-time');
+    const eInput = document.getElementById('exam-setup-end-time');
+
+    const shStr = String(examStartHour).padStart(2, '0');
+    const smStr = String(examStartMinute).padStart(2, '0');
+    const ehStr = String(examEndHour).padStart(2, '0');
+    const emStr = String(examEndMinute).padStart(2, '0');
+
+    if (sDisplay) sDisplay.textContent = `${shStr} : ${smStr}`;
+    if (eDisplay) eDisplay.textContent = `${ehStr} : ${emStr}`;
+    if (sInput) sInput.value = `${shStr}:${smStr}`;
+    if (eInput) eInput.value = `${ehStr}:${emStr}`;
+
+    const updateList = (list, activeVal) => {
+        if (!list || list.children.length === 0) return;
+        Array.from(list.children).forEach(child => {
+            const val = Number(child.dataset.val);
+            if (val === activeVal) {
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-black text-base text-amber-950 snap-center transition-colors select-none';
+            } else {
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-stone-700 snap-center transition-colors select-none';
+            }
+        });
+        if (scrollUI) {
+            list.scrollTop = activeVal * 36;
+        }
+    };
+
+    if (scrollUI) {
+        isExamWheelProgrammatic = true;
+    }
+    updateList(sHourList, examStartHour);
+    updateList(sMinList, examStartMinute);
+    updateList(eHourList, examEndHour);
+    updateList(eMinList, examEndMinute);
+    if (scrollUI) {
+        setTimeout(() => {
+            isExamWheelProgrammatic = false;
+        }, 60);
+    }
+}
+
+export function setExamWheelTimes(startStr, endStr, scrollUI = true) {
+    initExamTimeWheels();
+    const sParts = (startStr || '08:40').split(':');
+    const eParts = (endStr || '09:25').split(':');
+    examStartHour = Math.max(0, Math.min(23, parseInt(sParts[0], 10) || 0));
+    examStartMinute = Math.max(0, Math.min(59, parseInt(sParts[1], 10) || 0));
+    examEndHour = Math.max(0, Math.min(23, parseInt(eParts[0], 10) || 0));
+    examEndMinute = Math.max(0, Math.min(59, parseInt(eParts[1], 10) || 0));
+    renderExamWheelActiveUI(scrollUI);
+}
+
+function onUserChangeStartWheel(newH, newM, scrollUI = true) {
+    let targetStartMins = Math.max(0, Math.min(1438, newH * 60 + newM));
+    const nowMins = getCurrentNowMinutes();
+    if (targetStartMins < nowMins) {
+        targetStartMins = nowMins;
+        showToast('考試開始時間不得早於目前時間，已自動對齊目前時間', 'warning');
+        scrollUI = true;
+    }
+    examStartHour = Math.floor(targetStartMins / 60);
+    examStartMinute = targetStartMins % 60;
+
+    const customDurationInput = document.getElementById('exam-setup-duration-input');
+    const dur = Math.max(1, parseInt(customDurationInput?.value, 10) || 45);
+    const targetEndMins = Math.min(1439, targetStartMins + dur);
+    examEndHour = Math.floor(targetEndMins / 60);
+    examEndMinute = targetEndMins % 60;
+
+    const actualDiff = Math.max(1, targetEndMins - targetStartMins);
+    if (customDurationInput) customDurationInput.value = actualDiff;
+    updatePresetDurationUI(actualDiff);
+
+    renderExamWheelActiveUI(scrollUI);
+}
+
+function onUserChangeEndWheel(newH, newM, scrollUI = true) {
+    let targetEndMins = Math.max(1, Math.min(1439, newH * 60 + newM));
+    const startMins = examStartHour * 60 + examStartMinute;
+    const nowMins = getCurrentNowMinutes();
+    const minValidEnd = Math.max(startMins + 1, nowMins + 1);
+
+    if (targetEndMins < minValidEnd) {
+        targetEndMins = Math.min(1439, Math.max(minValidEnd, startMins + 5));
+        showToast('考試結束時間不得早於開始時間或目前時間！', 'warning');
+        scrollUI = true;
+    }
+
+    examEndHour = Math.floor(targetEndMins / 60);
+    examEndMinute = targetEndMins % 60;
+
+    const diff = Math.max(1, targetEndMins - startMins);
+    const customDurationInput = document.getElementById('exam-setup-duration-input');
+    if (customDurationInput) customDurationInput.value = diff;
+    updatePresetDurationUI(diff);
+
+    renderExamWheelActiveUI(scrollUI);
 }
 
 /**
@@ -266,13 +453,20 @@ export function renderExamTimerSetup() {
                 item.querySelector('.btn-edit-schedule')?.addEventListener('click', () => {
                     editingScheduleId = sch.id;
                     const contentInput = document.getElementById('exam-setup-content-input');
-                    const startInput = document.getElementById('exam-setup-start-time');
-                    const endInput = document.getElementById('exam-setup-end-time');
+                    const customDurationInput = document.getElementById('exam-setup-duration-input');
                     const addBtn = document.getElementById('exam-add-schedule-btn');
 
                     if (contentInput) contentInput.value = sch.content;
-                    if (startInput) startInput.value = sch.startTime;
-                    if (endInput) endInput.value = sch.endTime;
+                    const nowMins = getCurrentNowMinutes();
+                    let sMin = timeToMinutes(sch.startTime);
+                    let dur = sch.durationMins || getMinutesBetween(sch.startTime, sch.endTime) || 45;
+                    if (sMin < nowMins) {
+                        sMin = nowMins;
+                    }
+                    const eMin = Math.min(1439, sMin + dur);
+                    setExamWheelTimes(minutesToTime(sMin), minutesToTime(eMin), true);
+                    if (customDurationInput) customDurationInput.value = eMin - sMin;
+                    updatePresetDurationUI(eMin - sMin);
                     if (addBtn) addBtn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i><span>儲存修改考程</span>`;
                     contentInput?.focus();
                 });
@@ -328,6 +522,12 @@ export function renderExamTimerSetup() {
     if (prevNotes) {
         prevNotes.textContent = currentClass.examNotes || '請專心作答';
     }
+
+    // 確保 24hr 時間滾輪已初始化並對齊中心位置
+    initExamTimeWheels();
+    setTimeout(() => {
+        renderExamWheelActiveUI(true);
+    }, 30);
 }
 
 /**
@@ -569,34 +769,60 @@ export function initExamTimer() {
     const endInput = document.getElementById('exam-setup-end-time');
     const customDurationInput = document.getElementById('exam-setup-duration-input');
 
-    // 預設當前時間與 +45 分鐘
-    if (startInput && !startInput.value) {
-        const now = new Date();
-        startInput.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        if (endInput && !endInput.value) {
-            endInput.value = addMinutesToTime(startInput.value, 45);
-        }
-    }
+    initExamTimeWheels();
+
+    // 預設當前時間與 +45 分鐘 (絕不早於目前時間)
+    const now = new Date();
+    const initStartStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const initDur = parseInt(customDurationInput?.value, 10) || 45;
+    const initEndStr = minutesToTime(Math.min(1439, timeToMinutes(initStartStr) + initDur));
+    setExamWheelTimes(initStartStr, initEndStr, true);
     updatePresetDurationUI(initDur);
 
-    // 1. 開始時間修改 -> 自動連動結束時間
-    startInput?.addEventListener('change', () => {
-        const dur = parseInt(customDurationInput?.value, 10) || 45;
-        if (endInput) {
-            endInput.value = addMinutesToTime(startInput.value, dur);
-        }
-        renderExamTimerSetup();
+    // 1. 開始與結束時間滾輪上下微調按鈕
+    document.getElementById('exam-start-hour-up')?.addEventListener('click', () => {
+        onUserChangeStartWheel((examStartHour + 1) % 24, examStartMinute, true);
+    });
+    document.getElementById('exam-start-hour-down')?.addEventListener('click', () => {
+        onUserChangeStartWheel((examStartHour + 23) % 24, examStartMinute, true);
+    });
+    document.getElementById('exam-start-minute-up')?.addEventListener('click', () => {
+        onUserChangeStartWheel(examStartHour, (examStartMinute + 1) % 60, true);
+    });
+    document.getElementById('exam-start-minute-down')?.addEventListener('click', () => {
+        onUserChangeStartWheel(examStartHour, (examStartMinute + 59) % 60, true);
     });
 
-    // 2. 結束時間修改 -> 自動計算時長
-    endInput?.addEventListener('change', () => {
-        if (startInput && endInput) {
-            const diff = getMinutesBetween(startInput.value, endInput.value);
-            if (customDurationInput) customDurationInput.value = diff;
-            updatePresetDurationUI(diff);
-        }
-        renderExamTimerSetup();
+    document.getElementById('exam-end-hour-up')?.addEventListener('click', () => {
+        onUserChangeEndWheel((examEndHour + 1) % 24, examEndMinute, true);
+    });
+    document.getElementById('exam-end-hour-down')?.addEventListener('click', () => {
+        onUserChangeEndWheel((examEndHour + 23) % 24, examEndMinute, true);
+    });
+    document.getElementById('exam-end-minute-up')?.addEventListener('click', () => {
+        onUserChangeEndWheel(examEndHour, (examEndMinute + 1) % 60, true);
+    });
+    document.getElementById('exam-end-minute-down')?.addEventListener('click', () => {
+        onUserChangeEndWheel(examEndHour, (examEndMinute + 59) % 60, true);
+    });
+
+    // 2. 快速輔助按鈕：接續上一場 / 現在時間
+    document.getElementById('exam-auto-next-time-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const nextStart = getNextSuggestedStartTime(currentClass?.examSchedules || []);
+        const dur = parseInt(customDurationInput?.value, 10) || 45;
+        const nextEnd = minutesToTime(Math.min(1439, timeToMinutes(nextStart) + dur));
+        setExamWheelTimes(nextStart, nextEnd, true);
+        showToast(`已設定為接續時段：${nextStart} ~ ${nextEnd}`, 'info');
+    });
+
+    document.getElementById('exam-current-time-btn')?.addEventListener('click', () => {
+        const curNow = new Date();
+        const curStart = `${String(curNow.getHours()).padStart(2, '0')}:${String(curNow.getMinutes()).padStart(2, '0')}`;
+        const dur = parseInt(customDurationInput?.value, 10) || 45;
+        const curEnd = minutesToTime(Math.min(1439, timeToMinutes(curStart) + dur));
+        setExamWheelTimes(curStart, curEnd, true);
+        showToast(`已對齊目前時間：${curStart} ~ ${curEnd}`, 'info');
     });
 
     // 3. 快捷時長按鈕 (40, 45, 50)
@@ -605,32 +831,26 @@ export function initExamTimer() {
             const mins = parseInt(btn.dataset.mins, 10);
             if (customDurationInput) customDurationInput.value = mins;
             updatePresetDurationUI(mins);
-            if (startInput && endInput) {
-                endInput.value = addMinutesToTime(startInput.value, mins);
-            }
+            const sMins = Math.max(getCurrentNowMinutes(), examStartHour * 60 + examStartMinute);
+            const eMins = Math.min(1439, sMins + mins);
+            setExamWheelTimes(minutesToTime(sMins), minutesToTime(eMins), true);
             renderExamTimerSetup();
         });
     });
 
     // 4. 自訂時長輸入
-    customDurationInput?.addEventListener('input', () => {
-        const mins = parseInt(customDurationInput.value, 10) || 45;
+    const handleDurationChange = () => {
+        const mins = Math.max(1, parseInt(customDurationInput.value, 10) || 45);
         updatePresetDurationUI(mins);
-        if (startInput && endInput) {
-            endInput.value = addMinutesToTime(startInput.value, mins);
-        }
+        const sMins = Math.max(getCurrentNowMinutes(), examStartHour * 60 + examStartMinute);
+        const eMins = Math.min(1439, sMins + mins);
+        setExamWheelTimes(minutesToTime(sMins), minutesToTime(eMins), true);
         renderExamTimerSetup();
-    });
-    customDurationInput?.addEventListener('change', () => {
-        const mins = parseInt(customDurationInput.value, 10) || 45;
-        updatePresetDurationUI(mins);
-        if (startInput && endInput) {
-            endInput.value = addMinutesToTime(startInput.value, mins);
-        }
-        renderExamTimerSetup();
-    });
+    };
+    customDurationInput?.addEventListener('input', handleDurationChange);
+    customDurationInput?.addEventListener('change', handleDurationChange);
 
-    // 5. 新增/儲存考程按鈕
+    // 5. 新增/儲存考程按鈕 (強制驗證：1. 不得早於目前時間 2. 考試時間不得重疊)
     document.getElementById('exam-add-schedule-btn')?.addEventListener('click', () => {
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
@@ -638,9 +858,37 @@ export function initExamTimer() {
 
         const contentInput = document.getElementById('exam-setup-content-input');
         const content = contentInput?.value.trim() || '測驗考程';
-        const sTime = startInput?.value || '08:40';
-        const eTime = endInput?.value || '09:25';
-        const dur = parseInt(customDurationInput?.value, 10) || getMinutesBetween(sTime, eTime);
+        const sTime = startInput?.value || `${String(examStartHour).padStart(2, '0')}:${String(examStartMinute).padStart(2, '0')}`;
+        const eTime = endInput?.value || `${String(examEndHour).padStart(2, '0')}:${String(examEndMinute).padStart(2, '0')}`;
+        const sMin = timeToMinutes(sTime);
+        const eMin = timeToMinutes(eTime);
+        const nowMins = getCurrentNowMinutes();
+
+        // 驗證 1：開始與結束時間不得早於目前時間，且結束必須晚於開始
+        if (sMin < nowMins) {
+            showToast(`開始時間 (${sTime}) 不得早於目前時間 (${minutesToTime(nowMins)})！`, 'warning');
+            onUserChangeStartWheel( Math.floor(nowMins / 60), nowMins % 60, true);
+            return;
+        }
+        if (eMin <= sMin || eMin <= nowMins) {
+            showToast('結束時間必須晚於開始時間與目前時間！', 'warning');
+            return;
+        }
+
+        // 驗證 2：考試時間不得與任何既有考程重疊
+        const conflict = currentClass.examSchedules.find(sch => {
+            if (editingScheduleId && sch.id === editingScheduleId) return false;
+            const exStart = timeToMinutes(sch.startTime);
+            const exEnd = timeToMinutes(sch.endTime);
+            return sMin < exEnd && eMin > exStart;
+        });
+
+        if (conflict) {
+            showToast(`考試時間不得重疊！與已排定的「${conflict.content} (${conflict.startTime} ~ ${conflict.endTime})」時段衝突`, 'warning');
+            return;
+        }
+
+        const dur = eMin - sMin;
 
         if (editingScheduleId) {
             const target = currentClass.examSchedules.find(s => s.id === editingScheduleId);
@@ -649,7 +897,8 @@ export function initExamTimer() {
                 target.startTime = sTime;
                 target.endTime = eTime;
                 target.durationMins = dur;
-                showToast(`已更新考程「${content}」`, 'success');
+                target.isCustomCreated = true;
+                showToast(`已更新考程「${content}」(${sTime} ~ ${eTime})`, 'success');
             }
             editingScheduleId = null;
             const addBtn = document.getElementById('exam-add-schedule-btn');
@@ -660,10 +909,19 @@ export function initExamTimer() {
                 content,
                 startTime: sTime,
                 endTime: eTime,
-                durationMins: dur
+                durationMins: dur,
+                isCustomCreated: true
             });
-            showToast(`已新增考程「${content}」(${dur}分鐘)`, 'success');
+            showToast(`已新增考程「${content}」(${sTime} ~ ${eTime}，${dur}分鐘)`, 'success');
         }
+
+        // 依開始時間排序考程清單
+        currentClass.examSchedules.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+
+        // 自動推進滾輪時間至下一場建議不重疊時段 (上一場結束 + 10 分鐘)
+        const nextSuggestedStart = getNextSuggestedStartTime(currentClass.examSchedules);
+        const nextSuggestedEnd = minutesToTime(Math.min(1439, timeToMinutes(nextSuggestedStart) + dur));
+        setExamWheelTimes(nextSuggestedStart, nextSuggestedEnd, true);
 
         if (contentInput) contentInput.value = '';
         saveData();
@@ -744,3 +1002,5 @@ export function initExamTimer() {
 }
 
 window.renderExamTimerModal = renderExamTimerSetup;
+window.initExamTimeWheels = initExamTimeWheels;
+window.setExamWheelTimes = setExamWheelTimes;

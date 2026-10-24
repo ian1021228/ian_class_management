@@ -490,20 +490,28 @@ const ENABLE_SCORES_FEATURE = true;
         localStorage.removeItem("parent_student_seat");
       } catch (e) {}
 
-      // Check URL parameters for ?code=XXXX & ?seat=XX
+      // Check URL parameters for Exclusive Link (?code=XXXX&seat=XX&token=XXXX)
       const urlParams = new URLSearchParams(window.location.search);
       const codeFromUrl = urlParams.get("code");
       const seatFromUrl = urlParams.get("seat");
+      const tokenFromUrl = (urlParams.get("token") || urlParams.get("t") || "").trim();
 
       const savedCode = localStorage.getItem(LS_ACCESS_CODE_KEY);
+      const savedSeatKey = savedCode ? getParentSeatStorageKey(savedCode) : null;
+      const savedSeat = savedSeatKey ? localStorage.getItem(savedSeatKey) : null;
 
-      if (codeFromUrl) {
+      if (codeFromUrl && seatFromUrl && parseInt(seatFromUrl, 10) > 0) {
         const clean = codeFromUrl.trim().toUpperCase();
+        const seatNum = parseInt(seatFromUrl, 10);
+        if (tokenFromUrl) {
+          localStorage.setItem(`parent_token_${clean}_seat${seatNum}`, tokenFromUrl);
+        }
+        localStorage.setItem(`parent_unlocked_${clean}_seat${seatNum}`, "true");
         elements.inputAccessCode.value = clean;
-        connectToClass(clean, seatFromUrl);
-      } else if (savedCode) {
+        connectToClass(clean, seatNum);
+      } else if (savedCode && savedSeat && parseInt(savedSeat, 10) > 0) {
         elements.inputAccessCode.value = savedCode;
-        connectToClass(savedCode, seatFromUrl);
+        connectToClass(savedCode, parseInt(savedSeat, 10));
       } else {
         showLoginView();
       }
@@ -733,11 +741,13 @@ const ENABLE_SCORES_FEATURE = true;
           renderParentDashboard(data);
           elements.syncAlertBanner.classList.add("hidden");
         } else {
-          // Document does not exist
-          showLoginView();
-          elements.loginErrorBox.classList.remove("hidden");
-          elements.loginErrorMsg.textContent = "找不到此班級權限碼（" + cleanCode + "），請確認後重新輸入！";
-          localStorage.removeItem(LS_ACCESS_CODE_KEY);
+          if (!resolvedByFastRest && !state.classData) {
+            // Document does not exist
+            showLoginView();
+            elements.loginErrorBox.classList.remove("hidden");
+            elements.loginErrorMsg.textContent = "找不到此班級權限碼（" + cleanCode + "），請確認後重新輸入！";
+            localStorage.removeItem(LS_ACCESS_CODE_KEY);
+          }
         }
       }, (err) => {
         if (!state.classData) {
@@ -848,34 +858,8 @@ const ENABLE_SCORES_FEATURE = true;
 
     function isSeatUnlocked(seat) {
       if (!seat || !state.accessCode) return false;
-      const s = String(seat);
-      const configuredToken = state.classData?.studentTokens?.[s];
-      const tokenKey = `parent_token_${state.accessCode}_seat${s}`;
-      const legacyKey = `parent_unlocked_${state.accessCode}_seat${s}`;
-
-      // Case 1: 網址中帶有專屬防偽安全令牌 (URL Token)
-      if (configuredToken) {
-        if (urlToken && urlToken === configuredToken) {
-          localStorage.setItem(tokenKey, urlToken);
-          localStorage.setItem(legacyKey, "true");
-          return true;
-        }
-        // Case 2: 檢查本機先前已驗證過的防偽令牌 (LocalStorage Token)
-        const storedToken = localStorage.getItem(tokenKey);
-        if (storedToken && storedToken === configuredToken) {
-          return true;
-        }
-      }
-
-      // 相容舊模式 (若班級尚未換發 Token，且先前本機已驗證)
-      const isLegacyUnlocked = localStorage.getItem(legacyKey) === "true";
-      const teacherPin = getTeacherConfiguredPin(seat);
-      const storedPin = localStorage.getItem(`parent_unlocked_pin_${state.accessCode}_seat${s}`);
-      if (!configuredToken && isLegacyUnlocked && storedPin && storedPin === teacherPin) {
-        return true;
-      }
-
-      return false;
+      // 進入專屬連結後完全免輸入任何認證碼或 PIN 碼
+      return true;
     }
 
     function unlockSeat(seat, pin) {
@@ -1594,46 +1578,13 @@ const ENABLE_SCORES_FEATURE = true;
         return;
       }
 
-      // Check if teacher configured PIN for this seat
-      let teacherPin = getTeacherConfiguredPin(seat);
-      if (!teacherPin && state.accessCode) {
-        try {
-          const studentDocId = `studentScores_${state.accessCode}_seat${seat}`;
-          const url = `https://firestore.googleapis.com/v1/projects/cheker-barcode/databases/(default)/documents/artifacts/${APP_COLLECTION_ID}/public/data/userProfiles/${studentDocId}`;
-          const resp = await fetch(url);
-          if (resp.status === 200) {
-            const json = await resp.json();
-            state.cloudStudentData = parseRestDocument(json);
-            teacherPin = getTeacherConfiguredPin(seat);
-          }
-        } catch (e) {}
-      }
-
-      // 2. Unconfigured PIN check
-      if (!teacherPin) {
-        elements.parentScoresUnboundView?.classList.add('hidden');
-        elements.parentScoresUnconfiguredView?.classList.remove('hidden');
-        elements.parentScoresLockedView?.classList.add('hidden');
-        elements.parentScoresUnlockedView?.classList.add('hidden');
-        return;
-      }
-
-      // 3. Locked view check
-      if (!isSeatUnlocked(seat)) {
-        elements.parentScoresUnboundView?.classList.add('hidden');
-        elements.parentScoresUnconfiguredView?.classList.add('hidden');
-        elements.parentScoresLockedView?.classList.remove('hidden');
-        elements.parentScoresUnlockedView?.classList.add('hidden');
-        if (elements.scoresViewSeatBadge) elements.scoresViewSeatBadge.textContent = `${seat} 號`;
-        if (elements.scoresViewSeatTitle) elements.scoresViewSeatTitle.textContent = `${seat} 號 學生專屬成績分析`;
-        return;
-      }
-
-      // 4. Unlocked View
+      // 2. Exclusive link direct unlocked view (no PIN or auth code required)
       elements.parentScoresUnboundView?.classList.add('hidden');
       elements.parentScoresUnconfiguredView?.classList.add('hidden');
       elements.parentScoresLockedView?.classList.add('hidden');
       elements.parentScoresUnlockedView?.classList.remove('hidden');
+      if (elements.scoresViewSeatBadge) elements.scoresViewSeatBadge.textContent = `${seat}`;
+      if (elements.scoresViewSeatTitle) elements.scoresViewSeatTitle.textContent = `${seat}`;
 
       // Fetch latest student scores if needed
       if (!state.cloudStudentData && state.accessCode) {

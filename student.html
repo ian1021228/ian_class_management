@@ -102,79 +102,60 @@
   </div>
 
   <!-- =============================== -->
-  <!-- 1. LOGIN / ACCESS CODE VIEW     -->
+  <!-- 1. EXCLUSIVE LINK GATEWAY VIEW  -->
   <!-- =============================== -->
-  <div id="login-view" class="min-h-full flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8">
+  <div id="login-view" class="min-h-full flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden" aria-hidden="true">
+      <img src="assets/images/bg_security_gateway.png" alt="" class="w-full h-full object-cover object-center opacity-45 mix-blend-multiply" onerror="this.style.display='none'">
+      <div class="absolute inset-0 bg-gradient-to-b from-white/80 via-[#F4F9F6]/85 to-[#EDF6F1]/90 backdrop-blur-[2px]"></div>
+    </div>
+
     <div class="w-full max-w-md">
       <!-- App Header Badge -->
       <div class="text-center">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-xl shadow-emerald-500/20 mb-5">
-          <i class="fa-solid fa-graduation-cap text-3xl"></i>
+          <i class="fa-solid fa-link text-3xl"></i>
         </div>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">班級經營系統 — 學生端</h1>
-        <p class="mt-2 text-sm text-slate-500">學生數位聯絡簿 · 自主檢核與完成今日作業</p>
+        <p class="mt-2 text-sm text-slate-500">學生數位聯絡簿 · 專屬連結直達模式</p>
       </div>
 
-      <!-- Access Form Card -->
-      <div class="mt-8 bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-        <form id="access-code-form" class="space-y-5" onsubmit="return false;">
-          <div>
-            <label for="input-access-code" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              班級代碼 (Class Code)
-            </label>
-            <div class="relative rounded-2xl shadow-xs">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <i class="fa-solid fa-hashtag text-base"></i>
-              </div>
-              <input
-                id="input-access-code"
-                name="accessCode"
-                type="text"
-                required
-                autocomplete="off"
-                placeholder="例如：107 或 701"
-                class="block w-full pl-11 pr-4 py-3.5 text-base font-bold tracking-wider text-slate-900 placeholder:text-slate-400 rounded-2xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all uppercase"
-              >
-            </div>
-            <p class="mt-2 text-xs text-slate-400">
-              * 班級代碼由導師提供，通常為班級名稱或專屬代碼。
-            </p>
-          </div>
+      <!-- Exclusive Link Notice Card -->
+      <div class="mt-8 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-emerald-100 text-center space-y-5">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center text-2xl border border-emerald-100 shadow-xs">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">請透過導師發放的「專屬連結」進入</h2>
+          <p class="mt-2 text-xs sm:text-sm text-slate-500 leading-relaxed">
+            本系統全面採用<strong>「學生個人專屬連結」</strong>保護個人資料與測驗成績。<br>
+            點開導師提供的學生專屬連結後，<strong>免輸入班級代碼或 PIN 碼</strong>即可直接進入您的數位聯絡簿！
+          </p>
+        </div>
 
-          <!-- Error Alert Container -->
-          <div id="login-error-box" class="hidden p-3.5 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
-            <i class="fa-solid fa-circle-exclamation text-rose-500 flex-shrink-0 text-sm"></i>
-            <span id="login-error-msg">找不到此班級權限碼，請確認後重試！</span>
-          </div>
+        <!-- Error Alert Container -->
+        <div id="login-error-box" class="hidden p-3.5 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-2.5 text-left">
+          <i class="fa-solid fa-circle-exclamation text-rose-500 flex-shrink-0 text-sm"></i>
+          <span id="login-error-msg">專屬連結無效或已失效，請向班級導師索取最新專屬連結！</span>
+        </div>
 
-          <button
-            id="login-submit-btn"
-            type="submit"
-            class="touch-target w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 shadow-lg shadow-emerald-500/25 transition-all focus:outline-hidden cursor-pointer"
-          >
-            <span id="login-btn-text">進入我的數位聯絡簿</span>
-            <i id="login-btn-icon" class="fa-solid fa-arrow-right text-sm"></i>
-          </button>
+        <!-- 隱藏相容表單節點 -->
+        <form id="access-code-form" class="hidden" onsubmit="return false;">
+          <input id="input-access-code" name="accessCode" type="hidden">
+          <button id="login-submit-btn" type="submit"><span id="login-btn-text"></span><i id="login-btn-icon"></i></button>
         </form>
 
-        <div class="mt-6 pt-5 border-t border-slate-100 text-center space-y-2">
-          <a href="parent.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors">
-            <i class="fa-solid fa-user-group text-slate-400"></i>
-            <span>切換至家長即時查核看板</span>
-            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        <div class="pt-4 border-t border-slate-100 text-center">
+          <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+            <i class="fa-solid fa-chalkboard-user text-slate-400"></i>
+            <span>返回班級經營系統首頁（教師端）</span>
           </a>
-          <div>
-            <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">
-              <i class="fa-solid fa-chalkboard-user text-slate-400"></i>
-              <span>班級經營系統首頁（教師端）</span>
-            </a>
-          </div>
         </div>
       </div>
 
       <!-- Footer Info -->
       <div class="mt-8 text-center text-xs text-slate-400 space-y-1">
-        <p>班級經營系統 — 學生端 v2.1</p>
+        <p>班級經營系統 — 學生端 v2.2</p>
         <p>Created by 王禹硯（<a href="mailto:ianw.solar@gmail.com" class="text-emerald-600 hover:underline">ianw.solar@gmail.com</a>）</p>
       </div>
     </div>
@@ -212,16 +193,15 @@
 
         <!-- Action Buttons -->
         <div class="flex items-center gap-2 flex-shrink-0">
-          <!-- Switch Seat Button -->
-          <button
+          <!-- Locked Exclusive Seat Badge -->
+          <div
             id="nav-seat-btn"
-            type="button"
-            class="touch-target inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-            title="切換座號"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-xs font-extrabold select-none"
+            title="已由專屬連結綁定座號"
           >
-            <i class="fa-solid fa-user-tag text-emerald-600"></i>
-            <span id="nav-seat-label" class="hidden sm:inline">選擇座號</span>
-          </button>
+            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+            <span id="nav-seat-label" class="hidden sm:inline">專屬座號</span>
+          </div>
 
           <!-- Settings Button -->
           <button
@@ -424,7 +404,7 @@
                   <p class="text-xs text-slate-400">填寫小考成績、檢視全班 6 大分數區段分析與學科進步走勢</p>
                 </div>
               </div>
-              <button id="btn-relock-scores" type="button" class="text-xs font-semibold text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors cursor-pointer self-start sm:self-auto" title="重新鎖定並保護個人隱私">
+              <button id="btn-relock-scores" type="button" class="hidden text-xs font-semibold text-slate-400 hover:text-rose-600 items-center gap-1 transition-colors cursor-pointer self-start sm:self-auto" title="重新鎖定並保護個人隱私">
                 <i class="fa-solid fa-lock text-[10px]"></i> 重新上鎖
               </button>
             </div>
@@ -619,8 +599,12 @@
           </div>
 
           <!-- Mood Diary / Today's Reflection (今日心情札記) -->
-          <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-sm space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-sm space-y-4 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+              <img src="assets/images/bg_student_diary.png" alt="" class="w-full h-full object-cover object-center opacity-20 mix-blend-multiply" onerror="this.style.display='none'">
+              <div class="absolute inset-0 bg-gradient-to-br from-white/85 via-white/90 to-emerald-50/80"></div>
+            </div>
+            <div class="relative z-10 flex items-center justify-between border-b border-slate-100 pb-3">
               <div class="flex items-center gap-2">
                 <i class="fa-solid fa-pen-nib text-teal-600"></i>
                 <h3 class="text-sm sm:text-base font-extrabold text-slate-900">今日心情札記 / 生活隨筆</h3>
@@ -629,7 +613,7 @@
             </div>
 
             <!-- Mood Selector -->
-            <div>
+            <div class="relative z-10">
               <label class="block text-xs font-bold text-slate-500 mb-2">今天的心情狀態：</label>
               <div id="mood-picker-group" class="grid grid-cols-5 gap-2 max-w-md">
                 <button type="button" data-mood="雀躍" class="mood-btn touch-target p-2.5 rounded-2xl border border-slate-200 text-center hover:bg-amber-50 hover:border-amber-300 transition-all cursor-pointer text-xs font-bold bg-white">
@@ -651,17 +635,17 @@
             </div>
 
             <!-- Mood Journal Text Area -->
-            <div>
+            <div class="relative z-10">
               <label for="mood-journal-textarea" class="block text-xs font-bold text-slate-500 mb-2">今日生活心得隨筆（給老師與爸媽的一句話）：</label>
               <textarea
                 id="mood-journal-textarea"
                 rows="3"
                 placeholder="寫下今天最開心的事、新學會的觀念，或是想和老師分享的心情..."
-                class="w-full p-3.5 text-sm text-slate-800 bg-slate-50 rounded-2xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                class="w-full p-3.5 text-sm text-slate-800 bg-slate-50/90 rounded-2xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               ></textarea>
             </div>
 
-            <div class="flex justify-end">
+            <div class="relative z-10 flex justify-end">
               <button id="btn-save-mood-journal" type="button" class="touch-target inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
                 <i class="fa-solid fa-floppy-disk"></i>
                 <span>儲存今日心情札記</span>
@@ -678,11 +662,9 @@
     <footer class="mt-auto bg-white border-t border-slate-200/80 py-4 px-4 text-center">
       <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div class="flex flex-wrap items-center justify-center gap-y-1">
-          <span>班級經營系統 — 學生端 v2.1</span>
+          <span>班級經營系統 — 學生端 v2.2</span>
           <span class="mx-2 text-slate-300">|</span>
           <a href="https://docs.google.com/forms/d/19BPzX6vMrSnvW3j2s4OOvaiP3p1gS8auGbRt3f9aFkM/edit" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-bold">回報問題/提供建議</a>
-          <span class="mx-2 text-slate-300">|</span>
-          <a href="parent.html" class="text-emerald-600 hover:underline font-bold">家長端</a>
           <span class="mx-2 text-slate-300">|</span>
           <a href="index.html" class="text-slate-600 hover:underline font-semibold">教師端首頁</a>
         </div>
@@ -964,8 +946,8 @@
           </div>
         </div>
 
-        <!-- Seat Selector -->
-        <div>
+        <!-- Seat Selector (已由專屬連結鎖定，隱藏手動切換) -->
+        <div class="hidden">
           <label for="modal-seat-select" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">切換我的座號</label>
           <select id="modal-seat-select" class="block w-full py-3 px-3.5 text-sm font-bold text-slate-800 bg-slate-50 rounded-2xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500">
             <option value="">-- 請選擇座號 --</option>
@@ -1011,26 +993,16 @@
           </p>
         </div>
 
-        <!-- 5. Class Navigation & Switch -->
-        <div class="pt-3 border-t border-slate-100 space-y-2">
-          <a href="https://ian1021228.github.io/ian_homework_checker2.0_online_parent_dashboard/" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-xs transition-colors">
-            <span class="flex items-center gap-2">
-              <i class="fa-solid fa-users text-emerald-600"></i>
-              <span>前往家長端即時查核看板</span>
-            </span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-          </a>
-          <button id="switch-class-modal-btn" type="button" class="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors cursor-pointer">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>退出目前班級（更換班級代碼）</span>
-          </button>
+        <!-- 5. Class Navigation & Switch (專屬連結模式隱藏非專屬連結與手動切換) -->
+        <div class="hidden">
+          <button id="switch-class-modal-btn" type="button"></button>
         </div>
       </div>
 
       <!-- Footer -->
       <div class="px-6 py-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50/50 flex-shrink-0">
         <button id="save-settings-btn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 cursor-pointer">
-          確認儲存
+          關閉視窗
         </button>
       </div>
     </div>

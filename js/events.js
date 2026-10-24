@@ -2783,7 +2783,7 @@ export function setupButtonEvents() {
         const nameInput = document.getElementById('class-name');
         const codeInput = document.getElementById('class-access-code');
         const className = nameInput ? nameInput.value.trim() : '';
-        const enteredCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
+        let enteredCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
 
         // 1. 驗證班級名稱
         if (!className) {
@@ -2792,18 +2792,9 @@ export function setupButtonEvents() {
             return;
         }
 
-        // 2. 驗證家長權限碼 (必填)
-        if (!enteredCode) {
-            showToast('請填寫家長權限碼（可點擊右側骰子隨機產生）！', 'warning');
-            if (codeInput) codeInput.focus();
-            return;
-        }
-
-        // 檢查權限碼是否與現有班級重複
-        if (state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === enteredCode)) {
-            showToast(`家長權限碼「${enteredCode}」已被其他班級使用，請更換其他代碼！`, 'error');
-            if (codeInput) { codeInput.focus(); codeInput.select(); }
-            return;
+        // 2. 若未指定權限碼則自動產生不重複代碼
+        while (!enteredCode || state.appData.classes.some(c => c.accessCode && c.accessCode.toUpperCase() === enteredCode)) {
+            enteredCode = generateRandomAccessCode();
         }
 
         // 3. 驗證名單設定 (必須填寫且人數 > 0)
@@ -2813,7 +2804,11 @@ export function setupButtonEvents() {
             return;
         }
 
-        // 4. 建立新班級物件
+        // 4. 建立新班級物件並為每位學生預先配發專屬連結令牌
+        const initialTokens = {};
+        for (let s = 1; s <= roster.maxSeat; s++) {
+            initialTokens[s] = generateStudentToken();
+        }
         const newClass = { 
             id: generateId(), 
             name: className, 
@@ -2822,6 +2817,7 @@ export function setupButtonEvents() {
             skippedSeats: roster.skippedSeats,
             lastMissingSeats: (roster.skippedSeats || []).join(', '),
             studentNames: roster.studentNames || {},
+            studentTokens: initialTokens,
             hasConfiguredMaxSeat: true,
             contactBook: {}, 
             studentBarcodes: {},
@@ -2865,7 +2861,7 @@ export function setupButtonEvents() {
         renderClassList(); 
         renderHomeworkList(); 
 
-        showToast(`已成功建立「${className}」班級（家長權限碼：${enteredCode}，學生共 ${roster.count} 位）！`, 'success'); 
+        showToast(`已成功建立「${className}」班級（學生共 ${roster.count} 位，可點擊「專屬連結」一鍵複製發放）！`, 'success'); 
     });
 
     // 一鍵複製未交催繳純文字
@@ -3247,7 +3243,10 @@ export function setupButtonEvents() {
     }
 
     function getStudentPortalUrls(cls, seat) {
-        const code = String(cls.accessCode || '').trim();
+        if (!cls.accessCode || !String(cls.accessCode).trim()) {
+            cls.accessCode = generateRandomAccessCode();
+        }
+        const code = String(cls.accessCode).trim();
         cls.studentTokens = cls.studentTokens || {};
         if (!cls.studentTokens[seat]) {
             cls.studentTokens[seat] = generateStudentToken();
@@ -3345,7 +3344,7 @@ export function setupButtonEvents() {
         if (totalCountEl) totalCountEl.textContent = maxSeat;
     }
 
-    function openStudentPinsModal(classId) {
+    async function openStudentPinsModal(classId) {
         const cls = state.appData.classes.find(c => c.id === classId);
         if (!cls) return;
         currentEditingPinsClassId = classId;
@@ -3356,8 +3355,27 @@ export function setupButtonEvents() {
         const badge = document.getElementById('pin-modal-class-badge');
         if (badge) badge.textContent = cls.name;
 
+        let needsSync = false;
+        if (!cls.accessCode || !String(cls.accessCode).trim()) {
+            cls.accessCode = generateRandomAccessCode();
+            needsSync = true;
+        }
+        const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
+        cls.studentTokens = cls.studentTokens || {};
+        for (let s = 1; s <= maxSeat; s++) {
+            if (!cls.studentTokens[s]) {
+                cls.studentTokens[s] = generateStudentToken();
+                needsSync = true;
+            }
+        }
+
         renderStudentPinsList(cls);
         openModal(modal);
+
+        if (needsSync) {
+            await saveData();
+            await syncClassStudentPinsToCloud(cls);
+        }
     }
     window.openStudentPinsModal = openStudentPinsModal;
 
@@ -3372,7 +3390,7 @@ export function setupButtonEvents() {
         });
 
         // 批次隨機換發全班防偽安全令牌
-        document.getElementById('btn-batch-random-pins')?.addEventListener('click', () => {
+        document.getElementById('btn-batch-random-pins')?.addEventListener('click', async () => {
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
             const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
@@ -3381,21 +3399,9 @@ export function setupButtonEvents() {
                 cls.studentTokens[s] = generateStudentToken();
             }
             renderStudentPinsList(cls);
-            showToast("已為全班換發全新安全防偽令牌！請點擊「儲存並同步至雲端」。", "info");
-        });
-
-        // 批次清除重設全部令牌
-        document.getElementById('btn-batch-clear-pins')?.addEventListener('click', async () => {
-            const ok = await showConfirmModal(
-                '重設防偽令牌',
-                '確定要重設全班的防偽令牌嗎？重設後將重新生成新令牌，既有的舊連結將失效。'
-            );
-            if (!ok) return;
-            const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
-            if (!cls) return;
-            cls.studentTokens = {};
-            renderStudentPinsList(cls);
-            showToast("已重設全班防偽令牌，請點擊「儲存並同步至雲端」！", "info");
+            await saveData();
+            await syncClassStudentPinsToCloud(cls);
+            showToast("已為全班換發全新專屬連結並同步至雲端！", "success");
         });
 
         // 複製全班親師連結總表
@@ -3403,14 +3409,16 @@ export function setupButtonEvents() {
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
             const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
-            let rosterText = `【${cls.name}】全班親師專屬安全防偽連結總表：\n班級代碼：${cls.accessCode || '未設定'}\n==================================================\n`;
+            const skippedSet = new Set(Array.isArray(cls.skippedSeats) ? cls.skippedSeats.map(Number) : []);
+            let rosterText = `【${cls.name}】全班親師生專屬連結總表：\n==================================================\n`;
             for (let s = 1; s <= maxSeat; s++) {
+                if (skippedSet.has(s)) continue;
                 const urls = getStudentPortalUrls(cls, s);
                 const sName = getStudentDisplayName(cls, s, false) || `學生 ${s} 號`;
-                rosterText += `\n【${String(s).padStart(2, ' ')} 號 ${sName}】(令牌: ${urls.token})\n👨‍👩‍👧‍👦 家長端：${urls.parentUrl}\n🎒 學生端：${urls.studentUrl}\n--------------------------------------------------\n`;
+                rosterText += `\n【${String(s).padStart(2, ' ')} 號 ${sName}】\n[家長端專屬連結]：${urls.parentUrl}\n[學生端專屬連結]：${urls.studentUrl}\n--------------------------------------------------\n`;
             }
-            rosterText += `==================================================\n※ 系統已全面啟用親師防偽安全令牌，點擊各自專屬連結即可免密直達個人專屬空間！請家長與同學妥善保存。`;
-            await safeCopyToClipboard(rosterText, "已複製全班親師專屬安全防偽連結總表至剪貼簿！");
+            rosterText += `==================================================\n※ 點擊各自專屬連結即可免輸入任何認證碼或 PIN 碼直達個人專屬頁面，請妥善保存。`;
+            await safeCopyToClipboard(rosterText, "已複製全班親師生專屬連結總表至剪貼簿！");
         });
 
         // 委派點擊處理：複製家長端、複製學生端、【一次複製該學生兩端連結】、換發個別令牌
@@ -3426,7 +3434,7 @@ export function setupButtonEvents() {
                     const seat = parentBtn.dataset.seat;
                     const urls = getStudentPortalUrls(cls, seat);
                     const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
-                    await safeCopyToClipboard(urls.parentUrl, `已複製 ${seat} 號 ${sName} 的家長端專屬安全連結！`);
+                    await safeCopyToClipboard(urls.parentUrl, `已複製 ${seat} 號 ${sName} 的家長端專屬連結！`);
                     return;
                 }
 
@@ -3436,7 +3444,7 @@ export function setupButtonEvents() {
                     const seat = studentBtn.dataset.seat;
                     const urls = getStudentPortalUrls(cls, seat);
                     const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
-                    await safeCopyToClipboard(urls.studentUrl, `已複製 ${seat} 號 ${sName} 的學生端專屬安全連結！`);
+                    await safeCopyToClipboard(urls.studentUrl, `已複製 ${seat} 號 ${sName} 的學生端專屬連結！`);
                     return;
                 }
 
@@ -3446,8 +3454,8 @@ export function setupButtonEvents() {
                     const seat = bothBtn.dataset.seat;
                     const urls = getStudentPortalUrls(cls, seat);
                     const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
-                    const copyMsg = `【${cls.name} - ${seat}號 ${sName}】親師專屬安全防偽連結\n--------------------------------------------------\n👨‍👩‍👧‍👦 家長端連結：\n${urls.parentUrl}\n\n🎒 學生端連結：\n${urls.studentUrl}\n--------------------------------------------------\n※ 安全說明：此連結包含 ${sName} 專屬防偽安全令牌 (${urls.token})，點擊即可直達個人專屬空間，免輸入密碼！請妥善保存，請勿外流轉發他人。`;
-                    await safeCopyToClipboard(copyMsg, `已一次複製 ${seat} 號 ${sName} 的兩端專屬安全防偽連結！`);
+                    const copyMsg = `【${cls.name} - ${seat}號 ${sName}】親師生專屬連結\n--------------------------------------------------\n[家長端專屬連結]：\n${urls.parentUrl}\n\n[學生端專屬連結]：\n${urls.studentUrl}\n--------------------------------------------------\n※ 點擊專屬連結即可直達 ${sName} 個人專屬空間，免輸入任何認證碼或 PIN 碼！請妥善保存，請勿轉發他人。`;
+                    await safeCopyToClipboard(copyMsg, `已一次複製 ${seat} 號 ${sName} 的家長端與學生端專屬連結！`);
                     return;
                 }
 
@@ -3458,7 +3466,9 @@ export function setupButtonEvents() {
                     cls.studentTokens = cls.studentTokens || {};
                     cls.studentTokens[seat] = generateStudentToken();
                     renderStudentPinsList(cls);
-                    showToast(`已為 ${seat} 號換發新防偽令牌：${cls.studentTokens[seat]}（請點擊儲存並同步）`, "info");
+                    await saveData();
+                    await syncClassStudentPinsToCloud(cls);
+                    showToast(`已為 ${seat} 號換發新專屬連結並同步至雲端！`, "success");
                     return;
                 }
             });
@@ -3472,20 +3482,26 @@ export function setupButtonEvents() {
             await saveData();
             await syncClassStudentPinsToCloud(cls);
 
-            showToast("已成功儲存並同步親師防偽安全令牌至雲端！三端即刻生效。", "success");
+            showToast("已成功儲存並同步專屬連結至雲端！三端即刻生效。", "success");
             closeModal(studentPinsModal);
             renderClassList();
         });
     }
 
-    bindClick('copy-parent-link-btn', async () => {
-        const baseUrl = PARENT_DASHBOARD_URL;
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-        const code = (currentClass && currentClass.accessCode) ? encodeURIComponent(currentClass.accessCode) : '';
-        const url = code ? `${baseUrl}?code=${code}` : baseUrl;
-        const msg = code ? `已複製「${currentClass.name}」家長端專屬連結 (附帶班級代碼)！` : "已複製家長端通用連結！";
-        await safeCopyToClipboard(url, msg);
-    });
+    const openCurrentClassExclusiveLinks = () => {
+        if (window.closeGlobalDrawer) window.closeGlobalDrawer();
+        const targetClassId = state.currentClassId || state.appData?.classes?.[0]?.id;
+        if (!targetClassId) {
+            showToast("請先建立班級，即可查看與複製專屬連結！", "warning");
+            return;
+        }
+        openStudentPinsModal(targetClassId);
+    };
+
+    bindClick('drawer-view-parent-links-btn', openCurrentClassExclusiveLinks);
+    bindClick('drawer-view-student-links-btn', openCurrentClassExclusiveLinks);
+    bindClick('goto-parent-dashboard-btn', openCurrentClassExclusiveLinks);
+    bindClick('goto-student-dashboard-btn', openCurrentClassExclusiveLinks);
 
     const studentDetailsList = document.getElementById('student-details-list');
     if (studentDetailsList) {

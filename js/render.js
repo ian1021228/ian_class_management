@@ -173,26 +173,10 @@ export function renderClassList() {
                         <input type="text" data-class-id="${c.id}" class="class-skipped-seats-input w-20 sm:w-24 bg-transparent text-xs font-mono font-bold text-amber-700 focus:outline-none placeholder:text-slate-300" placeholder="無" value="${Array.isArray(c.skippedSeats) ? c.skippedSeats.join(', ') : (c.lastMissingSeats || '')}" title="缺號/轉出座號（例如：5, 12）">
                         <button type="button" data-class-id="${c.id}" class="save-class-skipped-seats-btn text-xs font-bold text-amber-600 hover:text-amber-800 px-1.5 py-0.5 rounded hover:bg-amber-50 transition-colors whitespace-nowrap" title="儲存缺號設定">儲存</button>
                     </div>
-                    <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus-within:border-indigo-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">權限碼</span>
-                        <input type="text" data-class-id="${c.id}" class="class-code-input w-24 sm:w-28 bg-transparent text-xs font-mono font-black text-indigo-700 focus:outline-none uppercase" placeholder="未設定" value="${code}" maxlength="16">
-                        <button type="button" data-class-id="${c.id}" class="save-class-code-btn text-xs font-bold text-indigo-600 hover:text-indigo-800 px-1.5 py-0.5 rounded hover:bg-indigo-50 transition-colors whitespace-nowrap" title="儲存權限碼">儲存</button>
-                        <button type="button" data-class-id="${c.id}" class="regen-class-code-btn text-xs font-bold text-slate-400 hover:text-slate-700 px-1.5 py-0.5 rounded hover:bg-slate-200 transition-colors shrink-0 flex items-center justify-center" title="隨機產生權限碼"><i class="fa-solid fa-dice"></i></button>
-                    </div>
-                    ${code ? `
-                        <button type="button" data-code="${code}" data-name="${c.name}" class="copy-class-code-btn px-2.5 py-1.5 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl transition-colors font-bold flex items-center gap-1.5 shrink-0" title="複製此班級權限代碼">
-                            <i class="fa-solid fa-copy"></i>
-                            <span class="text-[11px] hidden sm:inline">複製代碼</span>
-                        </button>
-                        <button type="button" data-code="${code}" data-name="${c.name}" class="copy-parent-link-btn px-2.5 py-1.5 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl transition-colors font-bold flex items-center gap-1.5 shrink-0 shadow-2xs" title="複製此班級專屬家長端連結（已包含此班級代碼）">
-                            <i class="fa-solid fa-house-chimney-user"></i>
-                            <span class="text-[11px] hidden sm:inline">複製家長端連結</span>
-                        </button>
-                        <button type="button" data-code="${code}" data-name="${c.name}" class="copy-student-link-btn px-2.5 py-1.5 text-xs bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl transition-colors font-bold flex items-center gap-1.5 shrink-0 shadow-2xs" title="複製此班級專屬學生端數位聯絡簿連結（已包含此班級代碼）">
-                            <i class="fa-solid fa-graduation-cap"></i>
-                            <span class="text-[11px] hidden sm:inline">複製學生端連結</span>
-                        </button>
-                    ` : ''}
+                    <button type="button" data-class-id="${c.id}" class="manage-student-pins-btn px-3.5 py-1.5 text-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all font-black flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer active:scale-95" title="查看與複製此班級每位學生的家長端與學生端專屬連結">
+                        <i class="fa-solid fa-link"></i>
+                        <span>專屬連結</span>
+                    </button>
                     <button data-id="${c.id}" data-name="${c.name}" class="delete-class-btn text-slate-300 hover:text-rose-500 font-bold p-1.5 rounded-xl hover:bg-rose-50 transition-colors text-lg leading-none shrink-0 ml-0.5" title="刪除班級">&times;</button>
                 </div>
             </div>

@@ -115,8 +115,7 @@ export function getAttendanceSummaryForClass(classObj, dateStr = formatDate(new 
         else unmarked++;
     });
 
-    const customExp = dayRecords.customExpected;
-    const expected = (typeof customExp === 'number' && customExp >= 0) ? customExp : seats.length;
+    const expected = seats.length;
 
     return {
         expected,
@@ -185,6 +184,7 @@ let wheelHour = 7;
 let wheelMinute = 50;
 let wheelSecond = 0;
 let isWheelInitialized = false;
+let isProgrammaticWheelScroll = false;
 
 export function initAttendanceTimeWheel() {
     const hourList = document.getElementById('att-wheel-hour-list');
@@ -196,7 +196,7 @@ export function initAttendanceTimeWheel() {
     hourList.innerHTML = '';
     for (let h = 0; h < 24; h++) {
         const item = document.createElement('div');
-        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-amber-800 cursor-pointer snap-center transition-colors select-none';
         item.dataset.val = h;
         item.textContent = String(h).padStart(2, '0');
         item.addEventListener('click', () => setWheelTime(h, wheelMinute, wheelSecond, true));
@@ -206,7 +206,7 @@ export function initAttendanceTimeWheel() {
     minList.innerHTML = '';
     for (let m = 0; m < 60; m++) {
         const item = document.createElement('div');
-        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-amber-800 cursor-pointer snap-center transition-colors select-none';
         item.dataset.val = m;
         item.textContent = String(m).padStart(2, '0');
         item.addEventListener('click', () => setWheelTime(wheelHour, m, wheelSecond, true));
@@ -216,7 +216,7 @@ export function initAttendanceTimeWheel() {
     secList.innerHTML = '';
     for (let s = 0; s < 60; s++) {
         const item = document.createElement('div');
-        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-amber-800 cursor-pointer snap-center transition-colors select-none';
         item.dataset.val = s;
         item.textContent = String(s).padStart(2, '0');
         item.addEventListener('click', () => setWheelTime(wheelHour, wheelMinute, s, true));
@@ -226,12 +226,14 @@ export function initAttendanceTimeWheel() {
     const bindScroll = (container, onSnap) => {
         let scrollTimeout = null;
         container.addEventListener('scroll', () => {
+            if (isProgrammaticWheelScroll) return;
             if (scrollTimeout) clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
                 const itemHeight = 36;
                 const idx = Math.max(0, Math.min(container.children.length - 1, Math.round(container.scrollTop / itemHeight)));
+                container.scrollTop = idx * itemHeight;
                 onSnap(idx);
-            }, 80);
+            }, 90);
         }, { passive: true });
     };
 
@@ -252,9 +254,6 @@ export function setWheelTime(h, m, s, scrollUI = true) {
     if (h === null || h === undefined || isNaN(h)) {
         if (displayEl) displayEl.textContent = '-- : -- : --';
         if (inputEl) inputEl.value = '';
-        if (hourList) Array.from(hourList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
-        if (minList) Array.from(minList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
-        if (secList) Array.from(secList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
         return;
     }
 
@@ -274,13 +273,17 @@ export function setWheelTime(h, m, s, scrollUI = true) {
         Array.from(list.children).forEach(child => {
             const val = Number(child.dataset.val);
             if (val === activeVal) {
-                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-black text-base text-amber-900 scale-110 bg-amber-500/15 rounded-lg snap-center transition-all';
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-black text-base text-amber-950 snap-center transition-colors select-none';
             } else {
-                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-stone-700 snap-center transition-all';
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-stone-700 snap-center transition-colors select-none';
             }
         });
         if (scrollUI) {
-            list.scrollTo({ top: activeVal * 36, behavior: 'smooth' });
+            isProgrammaticWheelScroll = true;
+            list.scrollTop = activeVal * 36;
+            setTimeout(() => {
+                isProgrammaticWheelScroll = false;
+            }, 60);
         }
     };
 
@@ -591,43 +594,6 @@ export function openAttendanceHubModal() {
  * 初始化出勤中樞事件綁定
  */
 export function initAttendanceHub() {
-    // 應到人數自訂微調
-    document.getElementById('att-expected-minus-btn')?.addEventListener('click', () => {
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-        if (!currentClass) return;
-        ensureClassAttendanceData(currentClass);
-        const dayMap = currentClass.attendanceRecords[selectedAttendanceDate];
-        const seats = getActiveSeatsForClass(currentClass);
-        const curExp = (typeof dayMap.customExpected === 'number') ? dayMap.customExpected : seats.length;
-        dayMap.customExpected = Math.max(0, curExp - 1);
-        saveData();
-        renderAttendanceHub();
-    });
-
-    document.getElementById('att-expected-plus-btn')?.addEventListener('click', () => {
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-        if (!currentClass) return;
-        ensureClassAttendanceData(currentClass);
-        const dayMap = currentClass.attendanceRecords[selectedAttendanceDate];
-        const seats = getActiveSeatsForClass(currentClass);
-        const curExp = (typeof dayMap.customExpected === 'number') ? dayMap.customExpected : seats.length;
-        dayMap.customExpected = curExp + 1;
-        saveData();
-        renderAttendanceHub();
-    });
-
-    document.getElementById('att-expected-input')?.addEventListener('change', (e) => {
-        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
-        if (!currentClass) return;
-        ensureClassAttendanceData(currentClass);
-        const val = parseInt(e.target.value, 10);
-        if (!isNaN(val) && val >= 0) {
-            currentClass.attendanceRecords[selectedAttendanceDate].customExpected = val;
-            saveData();
-            renderAttendanceHub();
-        }
-    });
-
     // 初始化 24hr 時間滾輪（預先建立 DOM 項目）
     initAttendanceTimeWheel();
 
@@ -796,10 +762,6 @@ export function initAttendanceHub() {
 
     document.getElementById('att-modal-preset-late-btn')?.addEventListener('click', () => {
         setWheelTime(7, 50, 0, true);
-    });
-
-    document.getElementById('att-modal-clear-time-btn')?.addEventListener('click', () => {
-        setWheelTime(null, null, null, false);
     });
 
     document.querySelectorAll('.att-status-pick-btn').forEach(btn => {
