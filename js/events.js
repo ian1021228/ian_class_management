@@ -111,6 +111,7 @@ import {
     proceedIntoSystem,
     openCopyClassModal,
     showWelcomeStep2,
+    navigateToDefaultLaunchPage,
     fullRender
 } from './navigation.js';
 
@@ -306,6 +307,267 @@ export function setupButtonEvents() {
             });
         } else {
             showToast("瀏覽器不支援剪貼簿寫入，請手動複製", "warning");
+        }
+    });
+
+    // ==========================================
+    // 首頁選單列 10 大功能導覽卡片與詳細說明彈窗
+    // ==========================================
+    const FEATURE_MODULE_DETAILS = {
+        overview: {
+            key: 'overview',
+            group: '核心教學工作台',
+            groupClass: 'bg-indigo-50 text-indigo-700 border-indigo-200/60',
+            title: '課堂總覽',
+            icon: 'fa-solid fa-gauge-high',
+            iconWrapClass: 'bg-indigo-50 text-indigo-600 border-indigo-200/50',
+            tag: '一屏速覽',
+            summary: '全班狀態・值日生・出勤・待收速覽',
+            desc: '置頂首頁的核心控制台，無需滾動頁面即可一屏總覽今日全班出缺席概況、今日值日生輪值、待收作業進度與最新班級通告。',
+            highlights: [
+                '今日出缺席人數與請假學生名單即時聯動顯示',
+                '今日輪值值日生與班級重點公告清楚置頂',
+                '各科待收作業進度條與缺繳人數一覽無遺'
+            ],
+            scenario: '每日晨光時間、每節上課鐘響時，教師快速掌握全班整體動態。',
+            targetNav: 'overview'
+        },
+        main: {
+            key: 'main',
+            group: '核心教學工作台',
+            groupClass: 'bg-blue-50 text-blue-700 border-blue-200/60',
+            title: '作業點收',
+            icon: 'fa-solid fa-list-check',
+            iconWrapClass: 'bg-blue-50 text-blue-600 border-blue-200/50',
+            tag: '點收核心',
+            summary: '作業清單・座號矩陣・條碼登記・學生詳情',
+            desc: '專為繁複作業點收設計的高效工作台。支援 30 號高對比矩陣與藍牙/USB 條碼掃描槍雙模式，點收快且零出錯。',
+            highlights: [
+                '30 號視覺化高對比矩陣，一鍵點選即時切換繳交狀態',
+                '全面相容 USB / 藍牙無線條碼掃描槍，隨掃隨收秒速登記',
+                '即時統計缺繳名單，支援一鍵複製與歷史流轉封存'
+            ],
+            scenario: '早自習學藝股長收作業、任課教師隨堂點收作業本與學習單。',
+            targetNav: 'main'
+        },
+        points: {
+            key: 'points',
+            group: '核心教學工作台',
+            groupClass: 'bg-amber-50 text-amber-700 border-amber-200/60',
+            title: '課堂加扣分',
+            icon: 'fa-solid fa-star',
+            iconWrapClass: 'bg-amber-50 text-amber-600 border-amber-200/50',
+            tag: '激勵競賽',
+            summary: 'CLASS GOAL 共同目標・單人微調・全班+1',
+            desc: '活化課堂氛圍的正向激勵模組。支援個人微調、小組競賽積點與全班 +1 獎勵，加扣分與總分皆支援負分彈性計算。',
+            highlights: [
+                'CLASS GOAL 全班共同目標機制，凝聚班級集體向心力',
+                '支援單人點數增減與「全班 +1」團體獎勵，自動跳過請假學生',
+                '加扣分與累積總分皆支援負分運算，真實記錄各種評分規則'
+            ],
+            scenario: '課堂小組問答競賽、日常秩序與打掃表現獎勵、班級常規引導。',
+            targetNav: 'points'
+        },
+        draw: {
+            key: 'draw',
+            group: '核心教學工作台',
+            groupClass: 'bg-orange-50 text-orange-700 border-orange-200/60',
+            title: '課堂抽籤',
+            icon: 'fa-solid fa-dice',
+            iconWrapClass: 'bg-orange-50 text-orange-600 border-orange-200/50',
+            tag: '公平點名',
+            summary: '3D 籤筒・密碼級不重複隨機點名・即時評分',
+            desc: '擬真 3D 抽籤筒與密碼學級真隨機演算法，兼具視覺趣味與絕對公平。支援單人、多人與分組抽籤，抽中可立即連動加扣分。',
+            highlights: [
+                '密碼學級不重複真隨機演算法，徹底杜絕重複點名爭議',
+                '支援單人抽取、多人同時抽籤與小組代表模式',
+                '抽中座號即時提供加減分膠囊按鈕，無縫連動課堂評分'
+            ],
+            scenario: '課堂隨機抽問發言、學生上台報告順序排定、臨時差事指派。',
+            targetNav: 'draw'
+        },
+        contact: {
+            key: 'contact',
+            group: '核心教學工作台',
+            groupClass: 'bg-teal-50 text-teal-700 border-teal-200/60',
+            title: '聯絡簿與值日生',
+            icon: 'fa-solid fa-chalkboard-user',
+            iconWrapClass: 'bg-teal-50 text-teal-600 border-teal-200/50',
+            tag: '擬真黑板',
+            summary: '黑板板書・日曆膠囊・智慧輪替・課堂投影',
+            desc: '大字級深綠擬真粉筆黑板介面，專為教室投影螢幕調校。支援智慧值日生自動輪替排程與一鍵「套用昨日」聯絡事項。',
+            highlights: [
+                '深綠黑板高對比字級，教室最後一排學生依然看得清清楚楚',
+                '一鍵「套用昨日」聯絡事項，免去重複打字與排版負擔',
+                '值日生智慧日曆輪替，支援每日/自訂天數排程與臨時手動替換'
+            ],
+            scenario: '每日放學前指導抄寫聯絡簿、教室大螢幕全天常駐投影交代事項。',
+            targetNav: 'contact-book'
+        },
+        scores: {
+            key: 'scores',
+            group: '核心教學工作台',
+            groupClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+            title: '班級成績',
+            icon: 'fa-solid fa-chart-line',
+            iconWrapClass: 'bg-emerald-50 text-emerald-600 border-emerald-200/50',
+            tag: '多元評量',
+            summary: '多元評量・段考平時・統計分析',
+            desc: '直覺的學生成績登錄與可視化分析系統。支援段考、平時測驗多元科目登記，自動計算平均、極值與級距長條分佈圖。',
+            highlights: [
+                '支援段考、平時小考、平時評量分數彈性分科建檔',
+                '自動統計全班最高分、最低分、平均分與級距分佈長條圖',
+                '成績資料完全保存在本地端與私人雲端，確保隱私安全'
+            ],
+            scenario: '定期評量段考後成績登錄、平時小考學力診斷、家長面談成績檢視。',
+            targetNav: 'scores'
+        },
+        classes: {
+            key: 'classes',
+            group: '核心教學工作台',
+            groupClass: 'bg-amber-50 text-amber-800 border-amber-200/60',
+            title: '管理班級',
+            icon: 'fa-solid fa-school',
+            iconWrapClass: 'bg-amber-50 text-amber-700 border-amber-200/50',
+            tag: '跨班管理',
+            summary: '名單設定・最後座號・缺號排除',
+            desc: '班級建檔與名冊維護樞紐。支援科任教師建立多班級與一鍵切換，具備智慧缺號語法，輕鬆排除轉出學生空號。',
+            highlights: [
+                '支援多班級獨立建檔，科任教師跨年級、跨班一秒快速切換',
+                '彈性設定班級最後座號與匯入學生姓名名冊',
+                '支援「5, 12, 23-25」範圍缺號語法，一鍵自動排除轉學生空號'
+            ],
+            scenario: '學期初班級基本資料建立、科任老師跨班教學管理、學生轉學異動維護。',
+            targetNav: 'classes'
+        },
+        timer: {
+            key: 'timer',
+            group: '課堂輔助工具',
+            groupClass: 'bg-rose-50 text-rose-700 border-rose-200/60',
+            title: '考試計時',
+            icon: 'fa-solid fa-stopwatch',
+            iconWrapClass: 'bg-rose-50 text-rose-600 border-rose-200/50',
+            tag: '考程看板',
+            summary: '多考程排程・投影看板・倒數鈴聲',
+            desc: '專為課堂測驗與段考設計的全螢幕計時看板。支援多科目考程排程、預備鈴、正式鈴與溫和收卷鈴聲，避免干擾思考。',
+            highlights: [
+                '全螢幕超大字級倒數顯示，考場教室任何角落都能清楚掌握剩餘時間',
+                '支援多考程多科目連續排程，自動切換科目與準備時間',
+                '具備標準考試鈴聲提醒與全螢幕沉浸專注投影模式'
+            ],
+            scenario: '全校定期評量測驗計時、隨堂小考限時作答、課堂分組限時討論。',
+            targetNav: 'exam-timer'
+        },
+        attendance: {
+            key: 'attendance',
+            group: '課堂輔助工具',
+            groupClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
+            title: '出勤簽到',
+            icon: 'fa-solid fa-user-check',
+            iconWrapClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
+            tag: '事病公假',
+            summary: '應到實到・事病公假標記・自主打卡',
+            desc: '晨間一分鐘快速出缺席點名。支援病假、事假、公假與遲到快速標記，自動即時聯動至作業點收排除缺交。',
+            highlights: [
+                '一鍵點名，快速標記病假、事假、公假或遲到狀態',
+                '即時統計全班應到人數、實到人數與請假清單',
+                '自動連動作業點收與全班加分，請假學生自動標記排除不扣分'
+            ],
+            scenario: '每日晨光時間出缺席清點、下午第一節課點名、校外教學安全清點。',
+            targetNav: 'attendance'
+        },
+        studio: {
+            key: 'studio',
+            group: '課堂輔助工具',
+            groupClass: 'bg-purple-50 text-purple-700 border-purple-200/60',
+            title: '座位分組',
+            icon: 'fa-solid fa-chair',
+            iconWrapClass: 'bg-purple-50 text-purple-600 border-purple-200/50',
+            tag: '視角翻轉',
+            summary: '講台視角180°翻轉・重排全部・雙人併桌',
+            desc: '靈活的教室座位排定與分組工坊。支援講台視角 180 度翻轉、滑鼠拖曳換位、男女交錯排位與雙人併桌多種教室格局。',
+            highlights: [
+                '獨家「講台位置 180° 翻轉」，排位時無需在腦中反向對照學生左右',
+                '支援單人單桌、雙人併桌等多種桌椅排列格局，拖曳即可輕鬆換位',
+                '智慧隨機分組與同質/異質排位，快速產生課堂小組名單'
+            ],
+            scenario: '定期段考後更換座位、分組合作學習小組排定、視力與身高座位調整。',
+            targetNav: 'classroom-studio'
+        }
+    };
+
+    let activeFeatureTargetNav = 'overview';
+
+    function openFeatureTourModal(featureKey) {
+        const feat = FEATURE_MODULE_DETAILS[featureKey];
+        if (!feat) return;
+
+        const modal = document.getElementById('portal-feature-detail-modal');
+        if (!modal) return;
+
+        activeFeatureTargetNav = feat.targetNav;
+
+        const iconWrap = document.getElementById('feature-detail-icon-wrap');
+        const iconEl = document.getElementById('feature-detail-icon');
+        const groupBadge = document.getElementById('feature-detail-group-badge');
+        const tagBadge = document.getElementById('feature-detail-tag-badge');
+        const titleEl = document.getElementById('feature-detail-title');
+        const summaryEl = document.getElementById('feature-detail-summary');
+        const descEl = document.getElementById('feature-detail-desc');
+        const highlightsEl = document.getElementById('feature-detail-highlights');
+        const scenarioEl = document.getElementById('feature-detail-scenario');
+        const launchText = document.getElementById('feature-detail-launch-text');
+
+        if (iconWrap) iconWrap.className = `w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-xs border ${feat.iconWrapClass}`;
+        if (iconEl) iconEl.className = feat.icon;
+        if (groupBadge) {
+            groupBadge.textContent = feat.group;
+            groupBadge.className = `text-[10px] font-black px-2.5 py-0.5 rounded-full border ${feat.groupClass}`;
+        }
+        if (tagBadge) tagBadge.textContent = feat.tag;
+        if (titleEl) titleEl.textContent = feat.title;
+        if (summaryEl) summaryEl.textContent = feat.summary;
+        if (descEl) descEl.textContent = feat.desc;
+
+        if (highlightsEl) {
+            highlightsEl.innerHTML = feat.highlights.map(h => `
+                <li class="flex items-start gap-2 leading-relaxed">
+                    <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5"><i class="fa-solid fa-check"></i></span>
+                    <span class="text-stone-700">${h}</span>
+                </li>
+            `).join('');
+        }
+
+        if (scenarioEl) scenarioEl.textContent = feat.scenario;
+
+        if (launchText) {
+            launchText.textContent = state.currentUser ? `前往「${feat.title}」功能` : `立即前往體驗 (需先登入)`;
+        }
+
+        openModal(modal);
+    }
+
+    document.querySelectorAll('.feature-tour-card, [data-feature-key]').forEach(card => {
+        card.addEventListener('click', () => {
+            const key = card.dataset.featureKey;
+            if (key) openFeatureTourModal(key);
+        });
+    });
+
+    bindClick('feature-detail-close-btn', () => {
+        closeModal(document.getElementById('portal-feature-detail-modal'));
+    });
+    bindClick('feature-detail-cancel-btn', () => {
+        closeModal(document.getElementById('portal-feature-detail-modal'));
+    });
+
+    bindClick('feature-detail-launch-btn', () => {
+        closeModal(document.getElementById('portal-feature-detail-modal'));
+        if (state.currentUser) {
+            navigateToDefaultLaunchPage(activeFeatureTargetNav);
+        } else {
+            openPortalAuthModal('signin');
+            showToast("請先登入帳號以體驗該功能", "info");
         }
     });
 

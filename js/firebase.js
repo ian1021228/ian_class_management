@@ -346,17 +346,15 @@ export function renderAdminUsersList() {
     if (!usersList) return;
 
     const searchInput = document.getElementById('admin-user-search-input');
-    const hideGuestsCb = document.getElementById('admin-hide-guests-checkbox');
     const hideAdminCb = document.getElementById('admin-hide-admin-checkbox');
     const countBadge = document.getElementById('admin-user-count-badge');
 
     const keyword = (searchInput?.value || '').trim().toLowerCase();
-    const hideGuests = Boolean(hideGuestsCb?.checked);
     const hideAdmin = Boolean(hideAdminCb?.checked);
 
     const filtered = adminCachedUsers.filter(u => {
-        // 隱藏訪客帳號
-        if (hideGuests && u.isGuest) return false;
+        // 後台不會顯示訪客帳號 (永遠過濾訪客)
+        if (u.isGuest) return false;
         // 隱藏管理者帳號 (ianw.solar@gmail.com)
         if (hideAdmin && (u.isAdmin || (u.email && u.email.toLowerCase() === 'ianw.solar@gmail.com'))) return false;
         // 關鍵字搜尋 (支援姓名、Email、稱謂、UID)
@@ -369,8 +367,20 @@ export function renderAdminUsersList() {
         return true;
     });
 
+    // 以主檔空間作為排序依據，越高越上面 (降序排序)
+    filtered.sort((a, b) => {
+        const sizeA = parseFloat(a.dataSizeKB ?? a.data?.dataSizeKB) || 0;
+        const sizeB = parseFloat(b.dataSizeKB ?? b.data?.dataSizeKB) || 0;
+        if (sizeB !== sizeA) {
+            return sizeB - sizeA;
+        }
+        const timeA = a.lastActive ? new Date(a.lastActive).getTime() : 0;
+        const timeB = b.lastActive ? new Date(b.lastActive).getTime() : 0;
+        return timeB - timeA;
+    });
+
     if (countBadge) {
-        countBadge.textContent = `顯示 ${filtered.length} / 共 ${adminCachedUsers.length} 個帳號`;
+        countBadge.textContent = `顯示 ${filtered.length} / 共 ${adminCachedUsers.length} 位正式用戶 (已按空間排序)`;
     }
 
     usersList.innerHTML = '';
@@ -390,11 +400,12 @@ export function renderAdminUsersList() {
             : '<span class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded-lg text-xs font-black shadow-sm flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> 正常</span>';
             
         const lastActive = data.lastActive ? new Date(data.lastActive).toLocaleString('zh-TW', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'}) : '未知';
-        const size = data.dataSizeKB ? `${data.dataSizeKB} KB` : '未知';
+        const sizeVal = parseFloat(u.dataSizeKB ?? data.dataSizeKB) || 0;
+        const size = `${sizeVal.toFixed(1)} KB`;
 
         const roleBadge = isAdminUser
             ? '<span class="inline-block bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded-md ml-1.5 align-middle">最高管理員</span>'
-            : (u.isGuest ? '<span class="inline-block bg-slate-200 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1.5 align-middle">訪客</span>' : '');
+            : '';
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50/80 transition-colors";
@@ -404,10 +415,15 @@ export function renderAdminUsersList() {
                     <span>${u.displayName}</span>
                     ${roleBadge}
                 </div>
-                <div class="text-[11px] font-bold text-slate-400 mt-0.5">${u.email || (u.isGuest ? '未綁定 Email (訪客體驗)' : '無 Email')}</div>
+                <div class="text-[11px] font-bold text-slate-400 mt-0.5">${u.email || '未綁定 Email'}</div>
             </td>
             <td class="p-3 border-b border-slate-100 text-xs font-bold text-slate-500 hidden sm:table-cell">${lastActive}</td>
-            <td class="p-3 border-b border-slate-100 text-xs font-black text-indigo-600">${size}</td>
+            <td class="p-3 border-b border-slate-100">
+                <span class="inline-flex items-center gap-1 font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <i class="fa-solid fa-database text-[10px] text-indigo-500"></i>
+                    ${size}
+                </span>
+            </td>
             <td class="p-3 border-b border-slate-100">${statusHtml}</td>
             <td class="p-3 border-b border-slate-100 text-right space-x-1 whitespace-nowrap">
                 ${isAdminUser ? 
@@ -550,18 +566,22 @@ export async function loadAllUsersForAdmin(onViewDataCallback) {
             const data = docSnap.data() || {};
             const id = docSnap.id;
             const email = (data.email || '').trim();
-            const isGuest = Boolean(data.isGuest || !email || email.includes('guest') || data.displayName === '訪客');
+            const isGuest = Boolean(data.isGuest || !email || email.includes('guest') || data.displayName === '訪客' || (data.username && data.username.includes('guest')) || id.startsWith('guest_') || id.startsWith('visitor_'));
+            // 規範：管理者後台絕不顯示訪客帳號
+            if (isGuest) return;
+
             const isAdmin = Boolean(email && email.toLowerCase() === 'ianw.solar@gmail.com');
+            const dataSizeKB = parseFloat(data.dataSizeKB) || 0;
             userMap.set(id, {
                 id,
                 data,
                 email,
-                displayName: data.displayName || data.username || data.name || (isGuest ? '訪客' : '一般用戶'),
-                isGuest,
+                displayName: data.displayName || data.username || data.name || '一般用戶',
+                isGuest: false,
                 isAdmin,
                 isLocked: Boolean(data.isLocked),
                 lastActive: data.lastActive,
-                dataSizeKB: data.dataSizeKB
+                dataSizeKB
             });
         });
 
@@ -572,18 +592,21 @@ export async function loadAllUsersForAdmin(onViewDataCallback) {
                 const accId = acc.id || acc.uid;
                 if (accId && !userMap.has(accId)) {
                     const accEmail = (acc.email || acc.authEmail || '').trim();
-                    const isGuest = Boolean(!accEmail || accEmail.includes('guest'));
+                    const isGuest = Boolean(!accEmail || accEmail.includes('guest') || acc.isGuest || (acc.username && acc.username.includes('guest')) || accId.startsWith('guest_') || accId.startsWith('visitor_'));
+                    // 規範：管理者後台絕不顯示訪客帳號
+                    if (isGuest) return;
+
                     const isAdmin = Boolean(accEmail && accEmail.toLowerCase() === 'ianw.solar@gmail.com');
                     userMap.set(accId, {
                         id: accId,
                         data: acc,
                         email: accEmail,
                         displayName: acc.displayName || acc.username || acc.name || '註冊用戶',
-                        isGuest,
+                        isGuest: false,
                         isAdmin,
                         isLocked: false,
                         lastActive: acc.createdAt,
-                        dataSizeKB: 0
+                        dataSizeKB: parseFloat(acc.dataSizeKB) || 0
                     });
                 }
             });

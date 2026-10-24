@@ -84,7 +84,7 @@ export function adjustStudentPoints(seat, delta, reason = '課堂表現', client
     ensureClassPointsData(currentClass);
 
     const oldPoints = getStudentPoints(currentClass, seat);
-    const newPoints = Math.max(0, oldPoints + delta);
+    const newPoints = oldPoints + delta;
     currentClass.pointsBySeat[String(seat)] = newPoints;
 
     const record = {
@@ -144,7 +144,7 @@ export function awardWholeClassBonus(delta = 1, reason = '全班專注獎勵') {
             return;
         }
         const cur = getStudentPoints(currentClass, seat);
-        currentClass.pointsBySeat[String(seat)] = Math.max(0, cur + delta);
+        currentClass.pointsBySeat[String(seat)] = cur + delta;
         awardedCount++;
     });
 
@@ -295,7 +295,7 @@ export function renderPointsPage() {
             calloutText.innerHTML = `<span class="text-stone-600 font-medium flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-600"></i>尚未設定集分目標，請於上方輸入目標分數與達標福利。</span>`;
         }
     } else {
-        const pct = Math.min(100, Math.round((totalScore / targetVal) * 100));
+        const pct = Math.max(0, Math.min(100, Math.round((totalScore / targetVal) * 100)));
         if (progressText) progressText.textContent = `${totalScore.toLocaleString()} / ${targetVal.toLocaleString()}`;
         if (progressFill) progressFill.style.width = `${pct}%`;
 
