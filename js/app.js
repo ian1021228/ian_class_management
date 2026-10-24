@@ -79,6 +79,7 @@ import {
     openPortalAuthModal,
     closePortalAuthModal,
     proceedIntoSystem,
+    navigateToDefaultLaunchPage,
     promptSystemUsageAndNavigate,
     fullRender
 } from './navigation.js';
@@ -328,41 +329,22 @@ async function init() {
         startRealtimeCloudSync();
     }
 
-    // 6. 頁面導航初始化 (未登入時預設顯示首頁且隱藏漢堡按鈕，進入系統工作台後才會顯示)
-    const hash = window.location.hash;
-    const hasPassedPortal = sessionStorage.getItem('has_passed_portal_in_session') === 'true' || !!state.currentUser;
-    if (hash === '#overview') {
-        showOverviewPage(true);
-    } else if (hash === '#attendance') {
-        showAttendancePage(true);
-    } else if (hash === '#points') {
-        showPointsPage(true);
-    } else if (hash === '#lottery' || hash === '#draw') {
-        showLotteryPage(true);
-    } else if (hash === '#draw-points') {
-        showPointsPage(true);
-    } else if (hash === '#classroom-studio') {
-        showClassroomStudioPage(true);
-    } else if (hash === '#exam-timer') {
-        showExamTimerPage(true);
-    } else if (hash === '#contact-book') {
-        showContactBookPage(true);
-    } else if (hash === '#student-details') {
-        showStudentDetailsPage(true);
-    } else if (hash === '#homework-types') {
-        showHomeworkTypesPage(true);
-    } else if (hash === '#scores' || hash === '#exam-scores') {
-        showExamScoresPage(true);
-    } else if (hash === '#classes' || hash === '#manage-class') {
-        showManageClassPage(true);
-    } else if (hash === '#main') {
-        applyCheckMode(localStorage.getItem('checkMode') || 'manual');
-        pushPageState({ page: 'main' }, '#main'); 
-        showMainPage(true);
-    } else if (hasPassedPortal && hash !== '#portal') {
-        showOverviewPage(true);
-    } else {
+    // 6. 頁面導航初始化
+    // 依使用者指示：
+    // (1) 若狀態為未登入，必須返回首頁，以免造成狀態模糊
+    // (2) 只要是登入狀態，重新進入頁面一律維持在總覽，也可以在設定中選擇默認開啟頁面（每次打開網頁直接開啟此頁面）
+    const isLoggedIn = !!state.currentUser && !state.currentUser.isGuest && sessionStorage.getItem('app_is_guest_mode') !== 'true';
+
+    if (!isLoggedIn) {
+        // 未登入狀態：一律返回首頁，清除任何內頁 hash，杜絕狀態模糊
+        if (window.location.hash !== '' && window.location.hash !== '#portal') {
+            try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+        }
         showPortalPage(true);
+    } else {
+        // 登入狀態：一律維持在總覽，或依設定中指定的默認開啟頁面直達
+        const defaultLaunchPage = localStorage.getItem('default_launch_page') || 'overview';
+        navigateToDefaultLaunchPage(defaultLaunchPage, true);
     }
 }
 

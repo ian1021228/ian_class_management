@@ -430,9 +430,9 @@
 
     <!-- 全螢幕米色系首頁 / 門戶 Landing Page (沉浸式工作台預設隱藏) -->
     <div id="portal-page" class="min-h-screen bg-[#FBF8F3] text-stone-800 flex flex-col font-sans transition-all duration-300 relative z-30 overflow-x-hidden hidden">
-        <!-- 可愛萌物探頭背景固定層 & 柔和氛圍光 (Cute Creature Peeking Frosted Background) -->
+        <!-- 專屬教學可愛風格背景固定層 & 柔和氛圍光 (Cute Educational Background & Frosted Ambient) -->
         <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-            <img src="assets/bg/cute_creature_bg.jpg?v=5.5.1" alt="" class="w-full h-full object-cover opacity-[0.16] select-none pointer-events-none transition-opacity duration-700" style="object-position: 80% 100%;" />
+            <img src="assets/bg/palclass_bg.png?v=5.6.0" alt="" class="w-full h-full object-cover opacity-[0.20] select-none pointer-events-none transition-opacity duration-700" style="object-position: center bottom;" />
             <div class="absolute -top-[10%] -left-[10%] w-[55vw] h-[55vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 70%);"></div>
             <div class="absolute top-[30%] right-[-5%] w-[45vw] h-[45vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 70%);"></div>
             <div class="absolute -bottom-[10%] left-[20%] w-[55vw] h-[55vw] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0) 70%);"></div>
@@ -467,8 +467,7 @@
                     <!-- 說明與日誌下拉選單 (收納：家長端/學生端快捷、給老師的話、意見回饋、更新日誌、教學影片) -->
                     <div class="relative inline-block text-left" id="portal-nav-more-dropdown-container">
                         <button type="button" id="portal-nav-more-menu-btn" class="text-xs sm:text-sm font-bold text-stone-700 bg-white/75 hover:bg-white border border-stone-200/80 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap shrink-0" title="查看系統說明、教學影片與更新紀錄" aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis text-stone-600 sm:hidden"></i>
-                            <i class="fa-solid fa-circle-info text-amber-600 hidden sm:inline-block"></i>
+                            <i class="fa-solid fa-circle-info text-amber-600"></i>
                             <span class="hidden md:inline">說明與日誌</span>
                             <i id="portal-nav-more-chevron" class="fa-solid fa-chevron-down text-[10px] text-stone-400 transition-transform duration-200"></i>
                         </button>
@@ -615,501 +614,168 @@
                     </div>
                 </div>
 
-                <!-- 右側產品介面預覽卡片 (Liquid Frosted Glass Card) -->
-                <div class="lg:col-span-5 relative">
+                <!-- 右側：各端入口與快速登入樞紐 (Portals & Quick Access Hub) -->
+                <div class="lg:col-span-5 relative" id="portal-gateways-container">
                     <div class="absolute -inset-2 bg-gradient-to-r from-amber-400/20 via-indigo-500/15 to-purple-500/20 rounded-[2.5rem] blur-xl opacity-80 pointer-events-none"></div>
                     
-                    <div class="relative liquid-glass-card rounded-[2.25rem] p-6 sm:p-7 space-y-4">
-                        <!-- AI 繪本風旗艦視覺橫幅 -->
-                        <div class="relative overflow-hidden rounded-2xl shadow-inner border border-white/80 aspect-[16/9] max-h-48 group">
-                            <img src="assets/images/palclass_hero_synergy.png" alt="PalClass 暖心現代班級經營" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                            <div class="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent flex items-end p-3.5">
-                                <span class="text-white text-xs font-black drop-shadow-md flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> PalClass 暖心協作與智慧課堂</span>
-                            </div>
-                        </div>
-
-                        <!-- 視窗控制點與目前作業標題 -->
+                    <div class="relative liquid-glass-card rounded-[2.25rem] p-6 sm:p-7 space-y-4 shadow-xl border border-white/80">
+                        <!-- 樞紐頂部標頭 -->
                         <div class="flex items-center justify-between pb-3 border-b border-stone-200/60">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
-                                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
-                                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-sm shadow-md shadow-indigo-600/20">
+                                    <i class="fa-solid fa-compass"></i>
+                                </span>
+                                <div>
+                                    <h2 class="text-base sm:text-lg font-black text-stone-900 tracking-tight">各端入口直達</h2>
+                                    <span class="text-[11px] font-bold text-stone-500">親師生三端無縫聯動</span>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-extrabold text-stone-800">三年二班 • 國語生字簿</span>
-                                <span class="px-2 py-0.5 rounded-full bg-indigo-50/90 text-indigo-700 text-[10px] font-bold border border-indigo-200/60">點收中</span>
-                            </div>
-                        </div>
-
-                        <!-- 繳交進度條 -->
-                        <div class="bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/70 space-y-2">
-                            <div class="flex justify-between items-center text-xs font-bold">
-                                <span class="text-stone-600">已收 28 / 30 本</span>
-                                <span class="text-emerald-600 font-black">93.3% 達成率</span>
-                            </div>
-                            <div class="w-full bg-stone-200/80 rounded-full h-2.5 overflow-hidden">
-                                <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full w-[93.3%]"></div>
-                            </div>
-                            <div class="flex justify-between items-center text-[11px] text-stone-500 pt-0.5">
-                                <span>未繳交座號：<strong class="text-rose-500">7號、19號</strong></span>
-                                <span class="text-indigo-600 font-bold">即時統計</span>
-                            </div>
-                        </div>
-
-                        <!-- 模擬座號按鈕矩陣 -->
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs font-bold text-stone-500">全班座號點收狀態預覽</span>
-                                <span class="text-[10px] font-bold text-indigo-600">支援快速點選切換</span>
-                            </div>
-                            <div class="grid grid-cols-6 gap-1.5">
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">1</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">2</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">3</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">4</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">5</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">6</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-2xs animate-pulse">7</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">8</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">9</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">10</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">11</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">12</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">13</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">14</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">15</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">16</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">17</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">18</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-2xs animate-pulse">19</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">20</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">21</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">22</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">23</div>
-                                <div class="h-7 sm:h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-2xs">24</div>
-                            </div>
-                        </div>
-
-                        <!-- 條碼槍就緒狀態 -->
-                        <div class="pt-2 border-t border-stone-200/60 flex items-center justify-between text-xs">
-                            <span class="flex items-center gap-1.5 text-stone-600 font-bold">
-                                <i class="fa-solid fa-barcode text-indigo-600"></i> 實體條碼掃描槍就緒
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-100/90 text-emerald-800 text-[11px] font-black border border-emerald-300/60 flex items-center gap-1.5 shadow-2xs">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 全線就緒
                             </span>
-                            <span class="text-indigo-600 font-bold bg-indigo-50/80 px-2.5 py-1 rounded-lg border border-indigo-100">
-                                聯絡簿同步中
+                        </div>
+
+                        <!-- 1. 教師端工作台入口 (Teacher Portal) -->
+                        <div class="bg-white/70 backdrop-blur-md rounded-2xl p-4 sm:p-4.5 border border-white/80 space-y-3 transition-all hover:bg-white/85 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm font-bold border border-indigo-200/60">
+                                        <i class="fa-solid fa-chalkboard-user"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-black text-stone-900">教師端管理工作台</h3>
+                                        <p class="text-[11px] text-stone-500 font-medium">條碼秒速點收、學科排程與班級管理</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">核心管理</span>
+                            </div>
+
+                            <!-- 未登入狀態按鈕組 -->
+                            <div id="portal-hero-teacher-guest-actions" class="grid grid-cols-2 gap-2 pt-1">
+                                <button type="button" id="portal-hero-signin-btn" class="py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                                    <span>登入 / 註冊</span>
+                                </button>
+                                <button type="button" id="portal-hero-google-btn" class="py-2.5 px-3 bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-bold text-xs rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    <span>Google 登入</span>
+                                </button>
+                            </div>
+
+                            <!-- 已登入狀態按鈕組 (預設隱藏，登入後即時同步展示) -->
+                            <div id="portal-hero-teacher-user-actions" class="hidden flex items-center justify-between pt-1">
+                                <span class="text-xs font-bold text-stone-700 flex items-center gap-1.5 truncate max-w-[170px]">
+                                    <i class="fa-solid fa-circle-user text-indigo-600"></i>
+                                    <span id="portal-hero-user-display-name">教師已連線</span>
+                                </span>
+                                <button type="button" id="portal-hero-enter-system-btn" class="py-2 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <span>直接進入工作台</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. 家長端即時查核看板入口 (Parent Portal) -->
+                        <div class="bg-gradient-to-r from-indigo-50/80 via-white/80 to-purple-50/70 backdrop-blur-md rounded-2xl p-4 border border-indigo-100/90 hover:border-indigo-200 transition-all shadow-2xs group flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-house-chimney-user"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-sm font-black text-stone-900 group-hover:text-indigo-700 transition-colors">家長端即時查核看板</h3>
+                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded">免註冊</span>
+                                    </div>
+                                    <p class="text-[11px] text-stone-500 font-medium truncate">輸入班級代碼即可查閱孩子欠繳與聯絡簿</p>
+                                </div>
+                            </div>
+                            <a href="parent.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
+                                <span>開啟看板</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+
+                        <!-- 3. 學生端數位聯絡簿入口 (Student Portal) -->
+                        <div class="bg-gradient-to-r from-emerald-50/80 via-white/80 to-teal-50/70 backdrop-blur-md rounded-2xl p-4 border border-emerald-100/90 hover:border-emerald-200 transition-all shadow-2xs group flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-book-open-reader"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-sm font-black text-stone-900 group-hover:text-emerald-700 transition-colors">學生端數位聯絡簿</h3>
+                                        <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 px-1.5 py-0.2 rounded">課堂投影</span>
+                                    </div>
+                                    <p class="text-[11px] text-stone-500 font-medium truncate">每日黑板作業、課表與全勤榮譽榜</p>
+                                </div>
+                            </div>
+                            <a href="student.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
+                                <span>開啟聯絡簿</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+
+                        <!-- 底部快捷操作與條碼說明 -->
+                        <div class="pt-2 border-t border-stone-200/60 flex items-center justify-between text-xs font-semibold text-stone-500">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-barcode text-indigo-500"></i>
+                                <span>支援 USB / 藍牙條碼掃描槍</span>
                             </span>
+                            <button type="button" id="portal-hero-qr-login-btn" class="text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 cursor-pointer font-bold">
+                                <i class="fa-solid fa-bolt text-amber-500"></i>
+                                <span>掃碼授權</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
- 
-            <!-- 系統最新更新日誌 (Changelog) & 完整使用教學專區 (Liquid Glass) -->
-            <section class="max-w-7xl mx-auto px-6 sm:px-10 py-8 border-t border-white/60 space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- 最新更新紀錄卡片 (Liquid Glass) -->
-                    <div class="lg:col-span-6 liquid-glass-card rounded-3xl p-6 sm:p-7 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center text-lg border border-amber-300/40">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
-                                </span>
-                                <div>
-                                    <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
-                                    <span class="text-xs text-stone-500 font-bold">最新版本 v5.5.1 • 2026/10/24</span>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-black border border-emerald-300/60">最新版本</span>
-                        </div>
 
-                        <div class="p-4 bg-gradient-to-br from-indigo-50/70 via-emerald-50/40 to-amber-50/30 rounded-2xl border border-white/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
-                            <div class="font-bold text-indigo-950 flex items-center gap-1.5">
-                                <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                                <span>v5.5.1 首頁美感旗艦升級・液態玻璃質感與萌物探頭視覺：</span>
-                            </div>
-                            <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>首頁液態磨砂玻璃質感 (Liquid Glassmorphism)</b>：導覽列與卡片全數升級通透毛玻璃、細緻高光微漸層內邊框與柔和陰影。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>可愛萌物探頭背景固定層</b>：右下角可愛萌物以低透明度固定背景若隱若現，營造療癒吸睛視覺，文字清晰好讀。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>8 大核心亮點精緻網格收納</b>：以 4 欄式精巧卡片網格俐落收納核心功能，支援即時點擊放大高畫質燈箱。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>行動端 393px 自適應無溢位</b>：導覽列精算佈局與智慧收納，手機端瀏覽徹底杜絕橫向捲軸破版。</span></li>
-                                <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>課堂與點收全套核心加固</b>：全班共同集分預設零示範資料、24h 出勤滾輪、出缺席每月重置、考試計時器 24h 制防呆。</span></li>
-                            </ul>
-                        </div>
-
-                        <div class="flex items-center justify-between pt-1">
-                            <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+            <!-- 系統最新更新日誌 (Changelog Section) - 依規範展示最新版與完整歷史版本 -->
+            <section class="max-w-4xl mx-auto px-6 sm:px-10 py-8 sm:py-12 border-t border-white/60">
+                <div class="liquid-glass-card rounded-3xl p-6 sm:p-8 space-y-4 shadow-lg border border-white/80">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center text-lg border border-amber-300/40">
                                 <i class="fa-solid fa-clock-rotate-left"></i>
-                                <span>查看完整版本演進日誌 (v1.0 ~ v5.5.1)</span>
-                            </button>
+                            </span>
+                            <div>
+                                <h3 class="font-black text-stone-900 text-lg">系統更新紀錄 (Changelog)</h3>
+                                <span class="text-xs text-stone-500 font-bold">最新版本 v5.6.0 • 2026/10/24</span>
+                            </div>
                         </div>
+                        <span class="px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-black border border-emerald-300/60 shadow-2xs">最新版本</span>
                     </div>
 
-                    <!-- 完整使用教學影片卡片 (Frosted Dark Glass) -->
-                    <div class="lg:col-span-6 bg-gradient-to-br from-indigo-950/90 via-slate-900/90 to-indigo-900/90 backdrop-blur-xl text-white rounded-3xl p-6 sm:p-7 shadow-xl shadow-indigo-950/20 border border-white/10 space-y-4 relative overflow-hidden flex flex-col justify-between">
-                        <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none"></div>
-
-                        <div class="flex items-center justify-between relative z-10">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-10 h-10 rounded-2xl bg-white/10 text-indigo-300 flex items-center justify-center text-lg border border-white/10">
-                                    <i class="fa-solid fa-film"></i>
-                                </span>
-                                <div>
-                                    <h3 class="font-black text-white text-lg">完整使用教學影片</h3>
-                                    <span class="text-xs text-indigo-200 font-medium">全新範例示範 • 重新製作中</span>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">敬請期待......</span>
+                    <div class="p-4 sm:p-5 bg-gradient-to-br from-indigo-50/70 via-emerald-50/40 to-amber-50/30 rounded-2xl border border-white/80 space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                        <div class="font-bold text-indigo-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+                            <span>v5.6.0 首頁入口樞紐升級・無感極速登入與全快取自動清空：</span>
                         </div>
+                        <ul class="space-y-1.5 text-xs text-stone-600 pl-2">
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>首頁改以各端入口與快速登入為主</b>：教師端、家長端即時查核看板、學生端數位聯絡簿三端一站直達，大幅精簡長篇冗長說明，首頁清爽明快。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>無感流暢進入系統</b>：按下開始使用不再彈出重複詢問視窗，未登入直開登入視圖，已登入秒速進入系統。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>註冊頁支援 Google 帳號快速登入</b>：註冊與登入視圖全面配備 Google 一鍵登入授權，體驗更加無縫。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>全面完全移除快取與硬碟檔案模式</b>：Service Worker 自動清空舊版快取，登入視窗完全移除硬碟檔案綁定，純化為雲端備份與瀏覽器安心體驗。</span></li>
+                            <li class="flex items-start gap-1.5"><i class="fa-solid fa-check text-emerald-600 mt-0.5"></i> <span><b>專屬教學可愛風格背景圖</b>：全新可愛教學意象背景，搭配通透液態玻璃感（Liquid Glassmorphism），文字清晰療癒。</span></li>
+                        </ul>
+                    </div>
 
-                        <p class="text-xs sm:text-sm text-indigo-100/90 leading-relaxed relative z-10">
-                            我們正在重新製作更詳盡、更清晰的高畫質實機教學影片，將包含完整的真實範例示範、班級改名、權限碼分享及作業點收全流程！
-                        </p>
-
-                        <div class="pt-2 relative z-10">
-                            <button type="button" id="portal-card-tutorial-btn" class="w-full py-3 px-4 bg-white/95 hover:bg-white text-indigo-950 font-black text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
-                                <span>點選查看詳情（敬請期待......）</span>
-                            </button>
-                        </div>
+                    <div class="flex items-center justify-between pt-1">
+                        <button type="button" id="portal-card-changelog-btn" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>查看完整版本演進日誌 (v1.0 ~ v5.6.0)</span>
+                        </button>
                     </div>
                 </div>
-            </section>
 
-            <!-- 2. 特色介紹區塊 (8 大核心亮點精緻網格收納) -->
-            <section class="max-w-7xl mx-auto px-6 sm:px-10 py-14 sm:py-18 border-t border-white/60">
-                <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/75 backdrop-blur-md border border-amber-300/80 text-amber-900 text-xs font-bold mb-3 shadow-2xs">
-                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
-                        <span>實戰現場驗證 • 歷經多版本反覆迭代</span>
-                    </div>
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight mb-3">
-                        8 大核心功能全景導覽
-                    </h2>
-                    <p class="text-stone-600 text-sm sm:text-base leading-relaxed">
-                        由國中一年級學生獨立編程設計，從條碼秒速辨識、學科流轉到親師透明協作，兼具極致效率與溫暖體驗。點擊任一圖片即可放大檢視細節。
-                    </p>
-                </div>
-
-                <!-- 8 大核心功能精緻輕盈卡片網格 (2x4 / 4x2 Responsive Grid) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-
-                    <!-- 卡片 1：點收畫面 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-black border border-indigo-200/60">
-                                    01 • 核心點收
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">點收畫面</span>
-                            </div>
-
-                            <!-- 縮圖 (點擊燈箱放大) -->
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="點收畫面 — 座號矩陣與雙模式切換" data-src="點收畫面.svg" data-fallback="homework-checker-icon.png">
-                                <img src="點收畫面.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="點收畫面（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-indigo-600 transition-colors">
-                                座號矩陣與雙模式點收
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                直觀清晰 30 號座號矩陣，高對比色彩標示；手動點擊與條碼槍秒速切換，「全部套用」一鍵完成。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 雙模式切換</span>
-                            <span class="text-indigo-600 font-bold">即時統計</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 2：支援條碼器 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-black border border-blue-200/60">
-                                    02 • 智慧條碼
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">支援條碼器</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="支援條碼器 — 學生條碼設定與智慧等差數列推算" data-src="支援條碼器.svg" data-fallback="homework-checker-icon.png">
-                                <img src="支援條碼器.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="支援條碼器（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                                獨家智慧等差條碼推算
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                相容所有 USB/藍牙掃描槍。只要輸入前 3 號即分析公差一鍵填滿全班，每本作業 0.5 秒迅速登記。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 智慧公差推算</span>
-                            <span class="text-blue-600 font-bold">0.5秒秒掃</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 3：作業種類 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-black border border-purple-200/60">
-                                    03 • 學科種類
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">作業種類</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="作業種類 — 配置不同學科作業狀態與完成判定" data-src="作業種類.svg" data-fallback="homework-checker-icon.png">
-                                <img src="作業種類.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="作業種類（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-purple-600 transition-colors">
-                                多學科狀態與完成判定
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                突破勾「交/沒交」死板限制！自訂 2~4 段狀態（未繳、已繳、訂正中、已通過），自由勾選完成條件。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 四段流轉狀態</span>
-                            <span class="text-purple-600 font-bold">自訂標準</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 4：科任老師也能用 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-black border border-emerald-200/60">
-                                    04 • 多班科任
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">科任也能用</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="科任老師也能用 — 多班級切換與家長專屬權限碼" data-src="科任老師也能用.svg" data-fallback="homework-checker-icon.png">
-                                <img src="科任老師也能用.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="科任老師也能用（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-emerald-600 transition-colors">
-                                多班切換與獨立權限碼
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                導師或科任跨班授課秒速切換。每班設有獨立加密「家長權限碼」，一鍵複製專屬網址分享至班群。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 獨立加密代碼</span>
-                            <span class="text-emerald-600 font-bold">Line一鍵分享</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 5：家長端 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-black border border-amber-200/60">
-                                    05 • 親師透明
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">家長端</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="家長端 — 個人化作業進度概況與每日聯絡簿" data-src="家長端.svg" data-fallback="homework-checker-icon.png">
-                                <img src="家長端.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="家長端（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-amber-700 transition-colors">
-                                家長端即時查核看板
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                家長免註冊免帳號，輸入班級碼與孩子座號即可即時掌握欠交項目，並橫向翻閱一週黑板聯絡簿。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 免註冊零門檻</span>
-                            <span class="text-amber-700 font-bold">即時透明</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 6：新增作業 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 text-[11px] font-black border border-teal-200/60">
-                                    06 • 快速建檔
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">新增作業</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="新增作業 — 智慧座號生成與彈性缺號排除" data-src="新增作業.svg" data-fallback="homework-checker-icon.png">
-                                <img src="新增作業.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="新增作業（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-teal-700 transition-colors">
-                                智慧座號與缺號排除
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                數秒完成作業建檔！支援「5, 12, 23-25」範圍語法自動避開轉學與空號，省去逐一刪號繁雜步驟。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 智慧缺號過濾</span>
-                            <span class="text-teal-700 font-bold">一鍵鋪排</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 7：學生詳情 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[11px] font-black border border-rose-200/60">
-                                    07 • 個案追蹤
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">學生詳情</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="學生詳情 — 全班各座號未完成作業卡片矩陣" data-src="學生詳情.svg" data-fallback="homework-checker-icon.png">
-                                <img src="學生詳情.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="學生詳情（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-rose-600 transition-colors">
-                                學習進度與全勤榮譽徽章
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                全景卡片矩陣展示全班各座號進度。全勤學生獲專屬綠色榮譽徽章，具體欠繳清單一目了然便於個別輔導。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 全勤榮譽徽章</span>
-                            <span class="text-rose-600 font-bold">無跳號名冊</span>
-                        </div>
-                    </div>
-
-                    <!-- 卡片 8：聯絡簿 -->
-                    <div class="liquid-glass-card rounded-3xl p-5 sm:p-5.5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 group">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-800 text-[11px] font-black border border-stone-200/80">
-                                    08 • 擬真黑板
-                                </span>
-                                <span class="text-[10px] font-bold text-stone-400">聯絡簿</span>
-                            </div>
-
-                            <div class="feature-screenshot-wrapper group/img relative rounded-2xl overflow-hidden border border-stone-200/70 bg-stone-100/70 aspect-[16/10] cursor-pointer flex items-center justify-center" data-title="聯絡簿 — 擬真粉筆黑板與一鍵套用昨日" data-src="聯絡簿.svg" data-fallback="homework-checker-icon.png">
-                                <img src="聯絡簿.svg" onerror="this.onerror=null; this.src='homework-checker-icon.png';" loading="lazy" decoding="async" alt="聯絡簿（示意圖）" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300" />
-                                <div class="absolute inset-0 bg-stone-900/30 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1 backdrop-blur-xs">
-                                    <i class="fa-solid fa-magnifying-glass-plus"></i> 點擊放大
-                                </div>
-                            </div>
-
-                            <h3 class="text-base sm:text-lg font-black text-stone-900 tracking-tight group-hover:text-stone-700 transition-colors">
-                                教室擬真黑板與套用昨日
-                            </h3>
-                            <p class="text-stone-600 text-xs leading-relaxed font-medium">
-                                木框深綠黑板粉筆質感，支援 A-/A+ 字級縮放與投影清晰優化，廣受好評「套用昨日」一秒複製排程。
-                            </p>
-                        </div>
-
-                        <div class="pt-3 border-t border-stone-200/50 mt-3 flex items-center justify-between text-[11px] text-stone-500 font-semibold">
-                            <span class="flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> 一鍵套用昨日</span>
-                            <span class="text-stone-700 font-bold">字級動態縮放</span>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- 3. 系統公告與動態區塊 (Liquid Glass) -->
-            <section class="max-w-7xl mx-auto px-6 sm:px-10 py-12 sm:py-16 border-t border-white/60">
-                <div class="mb-8">
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">系統公告與動態</h2>
-                    <p class="text-stone-500 text-sm sm:text-base">
-                        隨時掌握 PalClass 最新功能與重要訊息。
-                    </p>
-                </div>
-
-                <div class="liquid-glass-card rounded-3xl p-6 sm:p-8 divide-y divide-stone-200/50">
-                    <!-- 公告條目 1 -->
-                    <div class="pb-5 space-y-2">
-                        <div class="flex items-center gap-3">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">最新版本</span>
-                            <span class="text-xs text-stone-400 font-medium">2026 年最新發布</span>
-                        </div>
-                        <h3 class="text-base sm:text-lg font-black text-stone-900">PalClass 旗艦版正式上線！全新首頁導覽與親師生三端全面升級</h3>
-                        <p class="text-stone-500 text-sm leading-relaxed">
-                            重構全站視覺與首頁入口，引進實體條碼槍秒速辨識、雲端帳號備份、親師聯絡簿整合等多項強大功能。
-                        </p>
-                    </div>
-
-                    <!-- 公告條目 2 -->
-                    <div class="py-5 space-y-2">
-                        <div class="flex items-center gap-3">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">功能更新</span>
-                            <span class="text-xs text-stone-400 font-medium">近期優化</span>
-                        </div>
-                        <h3 class="text-base sm:text-lg font-black text-stone-900">強化聯絡簿一鍵複製與智慧缺繳名單統計</h3>
-                        <p class="text-stone-500 text-sm leading-relaxed">
-                            支援自訂作業種類、多段座號快速產生與排除缺號學生，大幅節省課堂與班級點收時間。
-                        </p>
-                    </div>
-
-                    <!-- 公告條目 3 -->
-                    <div class="pt-5 space-y-2">
-                        <div class="flex items-center gap-3">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 text-xs font-bold border border-amber-100">安全性</span>
-                            <span class="text-xs text-stone-400 font-medium">安全公告</span>
-                        </div>
-                        <h3 class="text-base sm:text-lg font-black text-stone-900">支援 SMTP 電子郵件密碼重設與本機硬碟安全儲存協定</h3>
-                        <p class="text-stone-500 text-sm leading-relaxed">
-                            提供高規格帳號防護，免伺服器亦可將資料儲存在使用者專屬檔案中，保障班級隱私。
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. 深色醒目行動號召卡片 (Screenshot 1: 準備好提升點收效率了嗎？) -->
-            <section class="max-w-7xl mx-auto px-6 sm:px-10 py-10 sm:py-16">
-                <div class="bg-[#111827] text-white rounded-[2.5rem] p-10 sm:p-14 lg:p-16 text-center max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
-                    <!-- 氛圍裝飾光暈 -->
-                    <div class="absolute -top-24 -left-24 w-60 h-60 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-                    <div class="absolute -bottom-24 -right-24 w-60 h-60 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
-                    
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4 relative z-10">
-                        準備好提升班級經營效率了嗎？
-                    </h2>
-                    <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto mb-8 relative z-10 leading-relaxed font-medium">
-                        加入 PalClass，立即體驗無縫銜接的數位化作業管理與班級經營環境。只需一分鐘即可完成設定並開始使用。
-                    </p>
-                    <button id="portal-cta-start-btn" class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 font-black text-base shadow-lg hover:shadow-xl active:shadow-inner active:scale-[0.96] active:translate-y-1 transition-all duration-150 transform relative z-20 cursor-pointer select-none focus:outline-none focus:ring-4 focus:ring-white/40">
-                        <span class="pointer-events-none select-none inline-block">免費建立帳號 / 立即開始使用</span>
-                        <i class="fa-solid fa-chevron-right text-xs pointer-events-none select-none"></i>
-                    </button>
-                </div>
+                <!-- 隱藏相容按鈕 (確保 JS 事件綁定不報錯) -->
+                <button id="portal-card-tutorial-btn" class="hidden"></button>
+                <button id="portal-cta-start-btn" class="hidden"></button>
             </section>
         </main>
 
@@ -1294,35 +960,6 @@
         </div>
     </div>
 
-    <!-- 詢問是否使用過系統彈窗 (Usage Inquiry Modal) -->
-    <div id="usage-inquiry-modal" class="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm hidden modal transition-all duration-300">
-        <div id="usage-inquiry-card" class="modal-content w-full max-w-[420px] relative my-auto">
-            <div class="bg-white rounded-[2.25rem] border border-[#e8dfd3] shadow-2xl p-7 sm:p-8 relative transition-all text-center">
-                <!-- 關閉按鈕 -->
-                <button id="usage-inquiry-close-btn" class="absolute top-5 right-5 text-stone-400 hover:text-stone-700 text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors cursor-pointer" title="關閉視窗"><i class="fa-solid fa-xmark"></i></button>
-
-                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black shadow-xs">
-                    <i class="fa-solid fa-circle-question"></i>
-                </div>
-                <h3 id="usage-inquiry-title" class="text-2xl font-black text-stone-900 tracking-tight mb-2">是否使用過此系統？</h3>
-                <p id="usage-inquiry-desc" class="text-stone-500 text-sm font-medium leading-relaxed mb-6">
-                    請問您以前是否使用過 PalClass？<br>請選擇您目前的帳號狀態以利快速導向：
-                </p>
-
-                <div class="grid grid-cols-2 gap-3.5">
-                    <button id="usage-inquiry-yes-btn" type="button" class="py-3.5 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer">
-                        <span class="text-base font-black">是</span>
-                        <span class="text-xs opacity-90 font-medium whitespace-nowrap">已有帳號（前往登入）</span>
-                    </button>
-                    <button id="usage-inquiry-no-btn" type="button" class="py-3.5 px-3 rounded-2xl bg-stone-100 hover:bg-stone-200 active:scale-95 text-stone-800 font-bold text-sm transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border border-stone-200">
-                        <span class="text-base font-black">否</span>
-                        <span class="text-xs text-stone-500 font-medium whitespace-nowrap">新用戶（前往註冊）</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 登入 / 註冊 / 忘記密碼 / 本地硬碟互動彈窗 (Portal Auth Modal Overlay) -->
     <div id="portal-auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm hidden modal transition-all duration-300">
         <div class="modal-content w-full max-w-[490px] relative my-auto">
@@ -1398,28 +1035,77 @@
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
-                        <span>使用 Google 帳號</span>
+                        <span>使用 Google 帳號登入</span>
                     </button>
 
-                    <!-- 本地硬碟與暫存模式 (保留原選擇功能) -->
-                    <div class="pt-2 border-t border-stone-100 grid grid-cols-2 gap-2">
-                        <button type="button" id="portal-link-file-btn" class="py-2.5 px-2.5 bg-amber-50/70 hover:bg-amber-100/70 text-amber-900 border border-amber-200/80 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5" title="綁定電腦硬碟 .json 檔案 (免帳號)">
-                            <span class="flex items-center justify-center gap-1.5"><i class="fa-solid fa-folder-open"></i> 綁定硬碟檔案</span>
-                        </button>
-                        <button type="button" id="portal-browser-only-btn" class="py-2.5 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5" title="先存在瀏覽器暫存 (訪客體驗)">
-                            <span class="flex items-center justify-center gap-1.5"><i class="fa-solid fa-desktop"></i> 瀏覽器暫存進入</span>
+                    <!-- 免登入瀏覽器暫存模式 (已移除硬碟檔案綁定) -->
+                    <div class="pt-2 border-t border-stone-100">
+                        <button type="button" id="portal-browser-only-btn" class="w-full py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer" title="免登入先在瀏覽器體驗 (訪客模式)">
+                            <i class="fa-solid fa-desktop text-stone-500"></i>
+                            <span>免登入快速體驗 (瀏覽器模式)</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- 2. 註冊視圖 (Sign Up View) -->
+                <!-- 2. 註冊視圖 (Sign Up View - 同步支援 Google 快速註冊) -->
                 <div id="portal-view-signup" class="space-y-3.5 hidden">
                     <div class="text-center">
                         <h2 class="text-2xl font-black text-stone-900 tracking-tight">註冊 PalClass 帳號</h2>
                         <p class="text-xs sm:text-sm text-stone-500 font-medium mt-1">建立帳號，雲端自動備份您的所有作業與班級資料。</p>
                     </div>
 
+                    <!-- 註冊頁 Google 登入/註冊按鈕 -->
+                    <button type="button" id="portal-signup-google-btn" class="w-full py-2.5 px-4 bg-white border border-stone-200 hover:border-stone-300 hover:bg-stone-50/80 text-stone-700 font-bold text-sm rounded-xl shadow-sm transition-all flex items-center justify-center gap-3 cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>使用 Google 快速註冊 / 登入</span>
+                    </button>
+
+                    <div class="relative flex items-center justify-center my-1">
+                        <div class="border-t border-stone-200 w-full"></div>
+                        <span class="bg-white px-3 text-[11px] text-stone-400 font-bold absolute">或自訂帳號密碼註冊</span>
+                    </div>
+
                     <form id="portal-signup-form" class="space-y-3">
+                        <div>
+                            <label for="portal-signup-name" class="block text-xs font-bold text-stone-700 mb-1">使用者名稱 (必填，將作為登入帳號)</label>
+                            <input type="text" id="portal-signup-name" required class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400" placeholder="例如：三年一班導師、陳小華">
+                            <p class="text-[11px] text-stone-400 font-medium mt-1">※ 日後登入只需輸入此「使用者名稱」與密碼。</p>
+                        </div>
+                        <div>
+                            <label for="portal-signup-email" class="block text-xs font-bold text-stone-700 mb-1">電子信箱 (必填，所有信箱皆可重複註冊多組帳號)</label>
+                            <input type="email" id="portal-signup-email" required class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400" placeholder="example@email.com">
+                            <p class="text-[11px] text-stone-400 font-medium mt-1">※ 支援所有信箱申辦多組帳號，用於接收驗證與密碼信件。</p>
+                        </div>
+                        <div>
+                            <label for="portal-signup-password" class="block text-xs font-bold text-stone-700 mb-1">設定密碼 (至少 6 位數)</label>
+                            <div class="relative">
+                                <input type="password" id="portal-signup-password" required minlength="6" class="w-full px-3 py-2 pr-10 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400" placeholder="••••••••">
+                                <button type="button" id="toggle-signup-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="portal-signup-confirm" class="block text-xs font-bold text-stone-700 mb-1">確認密碼</label>
+                            <input type="password" id="portal-signup-confirm" required minlength="6" class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400" placeholder="••••••••">
+                        </div>
+
+                        <button type="submit" id="portal-signup-btn" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-600/25 transition-all active:scale-[0.99] mt-2">
+                            註冊並登入系統
+                        </button>
+                    </form>
+
+                    <div class="text-center pt-2">
+                        <button type="button" id="portal-signup-to-signin-btn" class="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+                            已有帳號？返回登入
+                        </button>
+                    </div>
+                </div>
                         <div>
                             <label for="portal-signup-name" class="block text-xs font-bold text-stone-700 mb-1">使用者名稱 (必填，將作為登入帳號)</label>
                             <input type="text" id="portal-signup-name" required class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400" placeholder="例如：三年一班導師、陳小華">
@@ -3602,6 +3288,31 @@
                    </span>
                </button>
 
+               <!-- 預設開啟頁面設定區塊 (Default Launch Page) -->
+               <div class="p-5 border border-amber-200 rounded-2xl bg-gradient-to-br from-amber-50/80 to-orange-50/50 shadow-xs relative overflow-hidden">
+                   <div class="flex items-center justify-between mb-1.5">
+                       <div class="flex items-center gap-2">
+                           <i class="fa-solid fa-compass text-base text-amber-600"></i>
+                           <h3 class="font-extrabold text-stone-800 text-sm sm:text-base">預設開啟頁面</h3>
+                       </div>
+                       <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">登入後首頁</span>
+                   </div>
+                   <p class="text-xs text-stone-600 mb-3 leading-relaxed font-medium">
+                       選擇每次打開網頁或重新進入系統時直接開啟的頁面（預設為「班級總覽」）：
+                   </p>
+                   <select id="setting-default-launch-page" class="w-full px-3.5 py-2.5 rounded-xl border border-amber-200 bg-white text-stone-800 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                       <option value="overview">班級總覽 (預設)</option>
+                       <option value="main">作業點收畫面</option>
+                       <option value="attendance">出缺席點名</option>
+                       <option value="points">全班集分與摸彩</option>
+                       <option value="classroom-studio">座位表與分組</option>
+                       <option value="exam-timer">考試計時器</option>
+                       <option value="contact-book">數位黑板聯絡簿</option>
+                       <option value="scores">成績統計分析</option>
+                   </select>
+                   <p class="text-[11px] text-amber-700 mt-2 font-semibold">※ 只要是登入狀態，重新進入頁面一律維持在總覽（或您指定之默認開啟頁面）。</p>
+               </div>
+
                <!-- 點收模式設定區塊 (手動點收 / 條碼掃描) -->
                <div class="p-5 border border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-purple-50/50 shadow-sm relative overflow-hidden">
                    <h3 class="font-extrabold text-indigo-950 mb-1.5 flex items-center justify-between relative z-10 text-sm sm:text-base">
@@ -4710,14 +4421,51 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
-                    <!-- v5.5.1 首頁美感旗艦升級版 -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-indigo-50/80 to-emerald-50/60 border-2 border-amber-500 shadow-xl relative">
+                    <!-- v5.6.0 首頁各端入口樞紐與快取完全清空升級版 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/80 to-emerald-50/60 border-2 border-indigo-600 shadow-xl relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.5.1 首頁美感旗艦升級</span>
-                                <span class="text-xs font-bold text-amber-950">首頁液態玻璃感 (Liquid Glassmorphism)・可愛萌物探頭背景・8大核心亮點網格收納・三端體驗躍升</span>
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.6.0 各端入口樞紐升級版</span>
+                                <span class="text-xs font-bold text-indigo-950">首頁各端入口直達・無感極速登入・全面移除快取與硬碟檔案・默認開啟頁面設定</span>
                             </div>
-                            <span class="text-xs font-mono font-bold text-amber-800">2026-10-24</span>
+                            <span class="text-xs font-mono font-bold text-indigo-800">2026-10-24</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>首頁改以各端入口與快速登入為主</b>：教師端管理工作台、家長端即時查核看板、學生端數位聯絡簿三端一站直達，徹底精簡長篇冗贅說明，保留溫暖核心標語。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>狀態嚴格分明・未登入返回首頁</b>：未登入狀態嚴格返回首頁，杜絕狀態模糊；只要是登入狀態，重新進入頁面一律維持在總覽（或依設定中的默認開啟頁面直達）。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>設定支援自訂默認開啟頁面</b>：在系統設定中自由指定每次開啟網頁時直接顯示的畫面（如班級總覽、作業點收、出缺席等）。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>無感流暢進入系統</b>：按下開始使用不再彈出重複詢問視窗，未登入直開登入視圖，已登入秒速進入系統。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>註冊頁支援 Google 一鍵登入</b>：註冊與登入視圖全面配備 Google 快速登入授權按鈕，流暢整合。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-indigo-600 shrink-0 mt-0.5"></i>
+                                <span><b>全面完全移除快取與硬碟檔案綁定</b>：PWA Service Worker 自動清理歷史 CacheStorage，登入視窗徹底移除硬碟檔案綁定，純化為雲端備份與瀏覽器體驗。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- v5.5.1 首頁美感旗艦升級版 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/95 via-indigo-50/80 to-emerald-50/60 border border-stone-200/80 shadow-md relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-stone-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">v5.5.1 首頁美感旗艦升級</span>
+                                <span class="text-xs font-bold text-stone-800">首頁液態玻璃感 (Liquid Glassmorphism)・可愛萌物探頭背景・8大核心亮點網格收納・三端體驗躍升</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-stone-600">2026-10-24</span>
                         </div>
                         <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
                             <li class="flex items-start gap-2">
@@ -6135,7 +5883,7 @@
 
 <script src="js/lib/qrcode.min.js"></script>
 <script src="js/lib/html5-qrcode.min.js"></script>
-<script type="module" src="js/app.js?v=5.5.0"></script>
+<script type="module" src="js/app.js?v=5.6.0"></script>
 
     <!-- ============================================================== -->
     <!-- 全螢幕班級成績與測驗管理系統 (Fullscreen Exam Scores System)   -->

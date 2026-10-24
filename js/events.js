@@ -263,27 +263,28 @@ export function setupButtonEvents() {
         promptSystemUsageAndNavigate();
     });
 
-    // 詢問是否使用過系統之互動按鈕
-    bindClick('usage-inquiry-yes-btn', () => {
-        const modal = document.getElementById('usage-inquiry-modal');
-        if (modal) closeModal(modal);
+    // 首頁各端入口樞紐快捷按鈕
+    bindClick('portal-hero-signin-btn', () => {
         openPortalAuthModal('signin');
     });
-    bindClick('usage-inquiry-no-btn', () => {
-        const modal = document.getElementById('usage-inquiry-modal');
-        if (modal) closeModal(modal);
-        openPortalAuthModal('signup');
+    bindClick('portal-hero-enter-system-btn', () => {
+        proceedIntoSystem();
     });
-    bindClick('usage-inquiry-close-btn', () => {
-        const modal = document.getElementById('usage-inquiry-modal');
-        if (modal) closeModal(modal);
+    bindClick('portal-hero-qr-login-btn', () => {
+        openPortalAuthModal('signin');
+        const qrTrigger = document.getElementById('portal-modal-qr-login-btn');
+        if (qrTrigger) qrTrigger.click();
     });
-    const inquiryModal = document.getElementById('usage-inquiry-modal');
-    if (inquiryModal) {
-        inquiryModal.addEventListener('click', (e) => {
-            if (e.target === inquiryModal) {
-                closeModal(inquiryModal);
-            }
+
+    // 系統設定：預設開啟頁面切換
+    const defaultLaunchSelect = document.getElementById('setting-default-launch-page');
+    if (defaultLaunchSelect) {
+        defaultLaunchSelect.value = localStorage.getItem('default_launch_page') || 'overview';
+        defaultLaunchSelect.addEventListener('change', (e) => {
+            const target = e.target.value;
+            localStorage.setItem('default_launch_page', target);
+            const selectedText = e.target.options[e.target.selectedIndex]?.text || target;
+            showToast(`已儲存預設開啟頁面為「${selectedText}」`, 'success');
         });
     }
 
@@ -1795,6 +1796,8 @@ export function setupButtonEvents() {
     };
 
     bindClick('portal-google-btn', handleGoogleLogin);
+    bindClick('portal-signup-google-btn', handleGoogleLogin);
+    bindClick('portal-hero-google-btn', handleGoogleLogin);
     bindClick('google-login-btn', handleGoogleLogin);
     bindClick('welcome-google-btn', handleGoogleLogin);
 

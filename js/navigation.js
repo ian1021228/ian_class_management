@@ -499,6 +499,7 @@ if (typeof window !== 'undefined') {
     window.showStudentDetailsPage = showStudentDetailsPage;
     window.applyCheckMode = applyCheckMode;
     window.proceedIntoSystem = proceedIntoSystem;
+    window.navigateToDefaultLaunchPage = navigateToDefaultLaunchPage;
     window.openPortalAuthModal = openPortalAuthModal;
     window.openGlobalNavDrawer = openGlobalNavDrawer;
     window.closeGlobalNavDrawer = closeGlobalNavDrawer;
@@ -795,12 +796,8 @@ export function promptSystemUsageAndNavigate() {
         proceedIntoSystem();
         return;
     }
-    const modal = document.getElementById('usage-inquiry-modal');
-    if (modal) {
-        openModal(modal);
-    } else {
-        openPortalAuthModal('signup');
-    }
+    // 依使用者指示：按下開始使用不要詢問是否使用過，直接開啟登入視圖
+    openPortalAuthModal('signin');
 }
 
 export function openPortalAuthModal(defaultView = 'signin') {
@@ -830,6 +827,42 @@ export function closePortalAuthModal() {
     if (modal) closeModal(modal);
 }
 
+/**
+ * 依默認設定導航至啟動頁面 (預設為班級總覽)
+ */
+export function navigateToDefaultLaunchPage(pageId, fromHistory = false) {
+    const target = pageId || localStorage.getItem('default_launch_page') || 'overview';
+    switch (target) {
+        case 'main':
+            applyCheckMode(localStorage.getItem('checkMode') || 'manual');
+            pushPageState({ page: 'main' }, '#main');
+            showMainPage(fromHistory);
+            break;
+        case 'attendance':
+            showAttendancePage(fromHistory);
+            break;
+        case 'points':
+            showPointsPage(fromHistory);
+            break;
+        case 'classroom-studio':
+            showClassroomStudioPage(fromHistory);
+            break;
+        case 'exam-timer':
+            showExamTimerPage(fromHistory);
+            break;
+        case 'contact-book':
+            showContactBookPage(fromHistory);
+            break;
+        case 'scores':
+            showExamScoresPage(fromHistory);
+            break;
+        case 'overview':
+        default:
+            showOverviewPage(fromHistory);
+            break;
+    }
+}
+
 export function proceedIntoSystem() {
     sessionStorage.setItem('has_passed_portal_in_session', 'true');
     closePortalAuthModal();
@@ -841,7 +874,10 @@ export function proceedIntoSystem() {
     }
     applyCheckMode(state.currentCheckMode || localStorage.getItem('checkMode') || 'manual');
 
-    showOverviewPage();
+    // 依使用者指示：登入後一律導航至總覽或設定中指定之默認開啟頁面
+    const defaultPage = localStorage.getItem('default_launch_page') || 'overview';
+    navigateToDefaultLaunchPage(defaultPage);
+
     const portalEl = document.getElementById('portal-page');
     if (portalEl) portalEl.classList.add('hidden');
     

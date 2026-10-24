@@ -830,6 +830,10 @@ export function updatePortalUI() {
     const heroStartBtn = document.getElementById('portal-hero-start-btn');
     const ctaStartBtn = document.getElementById('portal-cta-start-btn');
 
+    const heroTeacherGuestActions = document.getElementById('portal-hero-teacher-guest-actions');
+    const heroTeacherUserActions = document.getElementById('portal-hero-teacher-user-actions');
+    const heroUserDisplayName = document.getElementById('portal-hero-user-display-name');
+
     if (state.currentUser) {
         if (signinView) signinView.classList.add('hidden');
         if (signupView) signupView.classList.add('hidden');
@@ -846,6 +850,11 @@ export function updatePortalUI() {
         if (mobileUserNameSpan) mobileUserNameSpan.textContent = displayName;
         if (heroStartBtn) heroStartBtn.innerHTML = `<span>進入班級經營系統</span><i class="fa-solid fa-arrow-right text-sm"></i>`;
         if (ctaStartBtn) ctaStartBtn.innerHTML = `<span class="pointer-events-none select-none inline-block">立即進入系統</span><i class="fa-solid fa-chevron-right text-xs pointer-events-none select-none"></i>`;
+
+        // 同步 Hero 右側入口卡片為已登入狀態
+        if (heroTeacherGuestActions) heroTeacherGuestActions.classList.add('hidden');
+        if (heroTeacherUserActions) heroTeacherUserActions.classList.remove('hidden');
+        if (heroUserDisplayName) heroUserDisplayName.textContent = displayName;
     } else {
         if (loggedinView) loggedinView.classList.add('hidden');
         if (signupView && !signupView.classList.contains('hidden')) {
@@ -859,6 +868,10 @@ export function updatePortalUI() {
         if (userBadge) userBadge.classList.add('hidden');
         if (heroStartBtn) heroStartBtn.innerHTML = `<span>立即開始使用</span><i class="fa-solid fa-arrow-right text-sm"></i>`;
         if (ctaStartBtn) ctaStartBtn.innerHTML = `<span class="pointer-events-none select-none inline-block">免費建立帳號 / 立即開始使用</span><i class="fa-solid fa-chevron-right text-xs pointer-events-none select-none"></i>`;
+
+        // 同步 Hero 右側入口卡片為未登入狀態
+        if (heroTeacherGuestActions) heroTeacherGuestActions.classList.remove('hidden');
+        if (heroTeacherUserActions) heroTeacherUserActions.classList.add('hidden');
     }
 }
 
