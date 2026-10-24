@@ -2540,9 +2540,9 @@ export function setupButtonEvents() {
                 disabledSeats: []
             },
             classGoal: {
-                enabled: true,
-                target: 1000,
-                reward: '全班同樂會'
+                enabled: false,
+                target: null,
+                reward: ''
             },
             studentScores: {}
         };
@@ -3200,6 +3200,7 @@ export function setupButtonEvents() {
         if (window.renderZeroScrollDashboard) window.renderZeroScrollDashboard();
         if (window.renderPointsPage) window.renderPointsPage();
         if (window.renderLotteryPage) window.renderLotteryPage();
+        if (typeof window.showOverviewPage === 'function') window.showOverviewPage();
     };
 
     bindChange('class-selector', handleClassSelectorChange);

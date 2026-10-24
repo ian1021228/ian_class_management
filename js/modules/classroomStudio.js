@@ -395,6 +395,14 @@ function placeStudentAtCell(seatNum, targetR, targetC) {
     pushHistory(currentClass);
     saveData();
     renderClassroomStudio();
+
+    const studentName = getStudentNameOnly(currentClass, seatNum);
+    const targetLabel = `${targetR + 1}排 ${targetC + 1}列`;
+    if (targetOldStudent && originR !== null) {
+        showToast(`已將 ${seatNum} 號與 ${targetOldStudent} 號座位互換`, 'info');
+    } else {
+        showToast(`已將 ${seatNum} 號${studentName ? ' ' + studentName : ''} 安排至【${targetLabel}】`, 'success');
+    }
 }
 
 /**
@@ -579,11 +587,28 @@ function renderSeatingView(currentClass) {
                     });
                 } else {
                     // 空位
-                    cell.innerHTML = `
-                        <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
-                        <strong class="my-auto font-black text-2xl text-stone-300 group-hover:text-stone-500 leading-none">+</strong>
-                        <span class="text-[11px] font-bold text-stone-400">空位</span>
-                    `;
+                    const isUnassignedSelected = selectedSource && selectedSource.type === 'unassigned';
+                    if (isUnassignedSelected) {
+                        cell.className = `relative rounded-2xl border-2 border-dashed border-emerald-500 bg-emerald-50/80 hover:bg-emerald-100 hover:border-emerald-600 shadow-xs cursor-pointer transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] group`;
+                        cell.innerHTML = `
+                            <span class="text-[10px] font-black text-emerald-700">${posLabel}</span>
+                            <div class="my-auto flex flex-col items-center justify-center text-emerald-800">
+                                <i class="fa-solid fa-arrow-down text-sm mb-0.5 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-black">點擊安排</span>
+                            </div>
+                            <span class="text-[10px] text-emerald-600 font-bold">${selectedSource.seat} 號入座</span>
+                        `;
+                    } else {
+                        cell.className = `relative rounded-2xl border transition-all select-none p-2 sm:p-2.5 flex flex-col items-center justify-between min-h-[92px] bg-white border-stone-200/90 hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer group`;
+                        cell.innerHTML = `
+                            <span class="text-[10px] font-bold text-stone-400">${posLabel}</span>
+                            <div class="my-auto text-center">
+                                <strong class="font-black text-2xl text-stone-300 group-hover:text-emerald-600 leading-none block transition-colors">+</strong>
+                                <span class="text-[10px] text-stone-400 group-hover:text-emerald-700 font-bold block mt-0.5 transition-colors">點擊選座號</span>
+                            </div>
+                            <span class="text-[11px] font-bold text-stone-400">空位</span>
+                        `;
+                    }
                 }
 
                 // 點擊事件
@@ -617,7 +642,7 @@ function renderSeatingView(currentClass) {
                                 selectedSource = null;
                                 renderClassroomStudio();
                             } else {
-                                // 互換座位
+                                // 互換座位或移到空位
                                 placeStudentAtCell(selectedSource.seat, r, c);
                             }
                         }
@@ -626,6 +651,9 @@ function renderSeatingView(currentClass) {
                         if (studentSeat) {
                             selectedSource = { type: 'seat', seat: studentSeat, r, c };
                             renderClassroomStudio();
+                        } else if (!isDisabled) {
+                            // 直接按下空位 -> 跳出待安排座號選擇彈窗！
+                            openSeatPickerModal(r, c);
                         }
                     }
                 });
@@ -699,15 +727,18 @@ function renderSeatingView(currentClass) {
                     }`;
 
                     chip.innerHTML = `
-                        <strong class="font-mono text-sm ${isSelected ? 'text-amber-900' : 'text-stone-900'}">${seat}</strong>
+                        <strong class="font-mono text-sm ${isSelected ? 'text-amber-900 font-black' : 'text-stone-900'}">${seat}</strong>
                         <span class="truncate max-w-[80px]">${escapeHtml(name)}</span>
+                        ${isSelected ? '<span class="text-[9px] bg-amber-600 text-white font-black px-1.5 py-0.5 rounded-full ml-0.5 shadow-2xs">已選</span>' : ''}
                     `;
 
-                    chip.addEventListener('click', () => {
+                    chip.addEventListener('click', (e) => {
+                        e.stopPropagation();
                         if (selectedSource && selectedSource.type === 'unassigned' && selectedSource.seat === seat) {
                             selectedSource = null;
                         } else {
                             selectedSource = { type: 'unassigned', seat };
+                            showToast(`已選取 ${seat} 號，請點選座位表中任意「空位」入座`, 'info');
                         }
                         renderClassroomStudio();
                     });
@@ -774,11 +805,31 @@ function renderGroupsView(currentClass) {
     const groups = groupsCfg.groups || [];
     const scores = groupsCfg.groupScores || {};
 
+    // 0. 同步分組競賽工具列組數與 Stepper 按鈕狀態
+    const toolbarGroupCountDisplay = document.getElementById('studio-toolbar-group-count-display');
+    if (toolbarGroupCountDisplay) {
+        toolbarGroupCountDisplay.textContent = `${groups.length || 6} 組`;
+    }
+    const decBtn = document.getElementById('studio-toolbar-group-dec-btn');
+    if (decBtn) {
+        const isMin = groups.length <= 2;
+        decBtn.disabled = isMin;
+        decBtn.classList.toggle('opacity-40', isMin);
+        decBtn.classList.toggle('cursor-not-allowed', isMin);
+    }
+    const incBtn = document.getElementById('studio-toolbar-group-inc-btn');
+    if (incBtn) {
+        const isMax = groups.length >= 16;
+        incBtn.disabled = isMax;
+        incBtn.classList.toggle('opacity-40', isMax);
+        incBtn.classList.toggle('cursor-not-allowed', isMax);
+    }
+
     if (groups.length === 0) {
         container.innerHTML = `
             <div class="col-span-full py-12 text-center text-stone-400 font-bold space-y-3">
                 <i class="fa-solid fa-people-group text-4xl text-stone-300"></i>
-                <p>尚未建立小組分組，請點擊上方「手動設定組員」或「重新劃分小組」按鈕開始分組</p>
+                <p>尚未建立小組分組，請點擊上方「隨機分組」或「手動設定組員」按鈕開始分組</p>
             </div>
         `;
         return;
@@ -874,6 +925,311 @@ function renderGroupsView(currentClass) {
 
         container.appendChild(card);
     });
+}
+
+let activePickerTarget = null; // { r, c }
+
+/**
+ * 開啟空位座號快速指派彈窗
+ */
+export function openSeatPickerModal(r, c) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    activePickerTarget = { r, c };
+    const badge = document.getElementById('studio-seat-picker-pos-badge');
+    if (badge) badge.textContent = `${r + 1}排 ${c + 1}列`;
+
+    const searchInp = document.getElementById('studio-seat-picker-search');
+    if (searchInp) searchInp.value = '';
+
+    const modal = document.getElementById('studio-seat-picker-modal');
+    if (modal) {
+        openModal(modal);
+        renderSeatPickerModalContent();
+    }
+}
+
+/**
+ * 渲染空位座號指派彈窗內容
+ */
+function renderSeatPickerModalContent() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass || !activePickerTarget) return;
+
+    const unassignedList = getUnassignedStudents(currentClass);
+    const statsEl = document.getElementById('studio-seat-picker-unassigned-stats');
+    if (statsEl) statsEl.textContent = `共 ${unassignedList.length} 人`;
+
+    const searchVal = (document.getElementById('studio-seat-picker-search')?.value || '').trim().toLowerCase();
+    const grid = document.getElementById('studio-seat-picker-students-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    if (unassignedList.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full py-8 text-center text-xs text-stone-400 font-bold space-y-2">
+                <i class="fa-solid fa-circle-check text-2xl text-emerald-500"></i>
+                <p>目前待安排名單無學生（全班皆已就座）</p>
+                <p class="text-[11px] text-stone-400 font-normal">若需微調，可直接在座位表點選已就座學生進行對調</p>
+            </div>
+        `;
+        return;
+    }
+
+    const filtered = unassignedList.filter(seat => {
+        if (!searchVal) return true;
+        const name = getStudentNameOnly(currentClass, seat) || '';
+        return String(seat).includes(searchVal) || name.toLowerCase().includes(searchVal);
+    });
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-stone-400 font-bold">查無相符的待安排學生</div>`;
+        return;
+    }
+
+    filtered.forEach(seat => {
+        const name = getStudentNameOnly(currentClass, seat) || '';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `p-2.5 rounded-2xl border border-stone-200 hover:border-emerald-500 hover:bg-emerald-50/70 hover:shadow-xs text-left transition-all cursor-pointer flex items-center gap-2.5 group active:scale-95 bg-white select-none`;
+        btn.innerHTML = `
+            <span class="w-8 h-8 rounded-xl bg-stone-100 group-hover:bg-emerald-100 text-stone-800 group-hover:text-emerald-800 font-mono font-black text-sm flex items-center justify-center shrink-0">
+                ${seat}
+            </span>
+            <div class="min-w-0 flex-1">
+                <span class="block text-xs font-black text-stone-800 group-hover:text-emerald-950 truncate">${escapeHtml(name || seat + '號')}</span>
+                <span class="text-[10px] text-stone-400 group-hover:text-emerald-600 font-bold">點擊安排</span>
+            </div>
+        `;
+        btn.addEventListener('click', () => {
+            const target = activePickerTarget;
+            closeModal(document.getElementById('studio-seat-picker-modal'));
+            if (target) {
+                placeStudentAtCell(seat, target.r, target.c);
+            }
+            activePickerTarget = null;
+        });
+        grid.appendChild(btn);
+    });
+}
+
+/**
+ * 匯出座位表為高解析度 PNG 圖檔 (Retina 2x)
+ */
+export function exportSeatingChartToPNG() {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return;
+    ensureClassStudioData(currentClass);
+
+    showToast('正在產生高畫質座位表圖檔...', 'info');
+
+    const cfg = currentClass.seatingConfig;
+    const lockedSet = new Set(cfg.lockedSeats || []);
+    const disabledSet = new Set(cfg.disabledSeats || []);
+
+    const cols = cfg.cols;
+    const rows = cfg.rows;
+
+    const cellWidth = 130;
+    const cellHeight = 85;
+    const cellGap = 12;
+    const padding = 36;
+    const headerHeight = 90;
+    const podiumHeight = 44;
+    const podiumMargin = 16;
+    const footerHeight = 40;
+
+    const gridWidth = cols * cellWidth + (cols - 1) * cellGap;
+    const totalWidth = Math.max(680, gridWidth + padding * 2);
+    const gridOffsetX = padding + (totalWidth - padding * 2 - gridWidth) / 2;
+
+    const totalHeight = padding * 2 + headerHeight + podiumHeight + podiumMargin * 2 + rows * cellHeight + (rows - 1) * cellGap + footerHeight;
+
+    const scale = 2; // Retina 2x for sharp print quality
+    const canvas = document.createElement('canvas');
+    canvas.width = totalWidth * scale;
+    canvas.height = totalHeight * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // 1. 背景底色
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+    // 2. 頁首 (Header)
+    ctx.fillStyle = '#1c1917';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`【${currentClass.name}】課堂座位表`, padding, padding);
+
+    ctx.fillStyle = '#78716c';
+    ctx.font = '12px system-ui, -apple-system, sans-serif';
+    const todayStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    ctx.fillText(`規格：${rows} 排 × ${cols} 列 · 講台方向：${podiumPosition === 'top' ? '講台在上方' : '講台在下方'} · 匯出時間：${todayStr}`, padding, padding + 32);
+
+    ctx.strokeStyle = '#e7e5e4';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + 60);
+    ctx.lineTo(totalWidth - padding, padding + 60);
+    ctx.stroke();
+
+    let curY = padding + headerHeight;
+
+    function drawBox(x, y, w, h, r, fillColor, strokeColor, isDashed = false) {
+        ctx.save();
+        if (isDashed) ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(x, y, w, h, r);
+        } else {
+            ctx.rect(x, y, w, h);
+        }
+        if (fillColor) {
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+        }
+        if (strokeColor) {
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function drawPodium(y) {
+        const pWidth = 180;
+        const pHeight = 36;
+        const pX = (totalWidth - pWidth) / 2;
+        drawBox(pX, y, pWidth, pHeight, 10, '#24483B', '#163026');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('講  台', totalWidth / 2, y + pHeight / 2);
+    }
+
+    if (podiumPosition === 'top') {
+        drawPodium(curY);
+        curY += podiumHeight + podiumMargin;
+    }
+
+    const rowIndices = [];
+    const colIndices = [];
+    if (podiumPosition === 'top') {
+        for (let r = 0; r < rows; r++) rowIndices.push(r);
+        for (let c = 0; c < cols; c++) colIndices.push(c);
+    } else {
+        for (let r = rows - 1; r >= 0; r--) rowIndices.push(r);
+        for (let c = cols - 1; c >= 0; c--) colIndices.push(c);
+    }
+
+    rowIndices.forEach((r, rIdx) => {
+        colIndices.forEach((c, cIdx) => {
+            const cellKey = `${r}_${c}`;
+            const isDisabled = disabledSet.has(cellKey);
+            const studentSeat = cfg.layout[r]?.[c];
+            const isLocked = studentSeat && lockedSet.has(studentSeat);
+
+            const x = gridOffsetX + cIdx * (cellWidth + cellGap);
+            const y = curY + rIdx * (cellHeight + cellGap);
+
+            if (isDisabled) {
+                drawBox(x, y, cellWidth, cellHeight, 12, '#f5f5f4', '#d6d3d1', true);
+                ctx.fillStyle = '#a8a29e';
+                ctx.font = '10px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillText(`${r + 1}排 ${c + 1}列`, x + 8, y + 8);
+
+                ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('走 道', x + cellWidth / 2, y + cellHeight / 2);
+            } else if (studentSeat) {
+                const studentName = getStudentNameOnly(currentClass, studentSeat);
+                drawBox(x, y, cellWidth, cellHeight, 12, isLocked ? '#fffbeb' : '#ffffff', isLocked ? '#f59e0b' : '#cbd5e1');
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillText(`${r + 1}排 ${c + 1}列`, x + 8, y + 8);
+
+                if (isLocked) {
+                    ctx.fillStyle = '#d97706';
+                    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('固定', x + cellWidth - 8, y + 8);
+                }
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 24px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const seatY = studentName ? y + cellHeight / 2 - 8 : y + cellHeight / 2;
+                ctx.fillText(String(studentSeat), x + cellWidth / 2, seatY);
+
+                if (studentName) {
+                    ctx.fillStyle = '#334155';
+                    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(studentName, x + cellWidth / 2, y + cellHeight / 2 + 15);
+                }
+            } else {
+                drawBox(x, y, cellWidth, cellHeight, 12, '#fafaf9', '#e2e8f0', true);
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '10px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillText(`${r + 1}排 ${c + 1}列`, x + 8, y + 8);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '13px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('+ 空位', x + cellWidth / 2, y + cellHeight / 2);
+            }
+        });
+    });
+
+    curY += rows * cellHeight + (rows - 1) * cellGap;
+
+    if (podiumPosition === 'bottom') {
+        curY += podiumMargin;
+        drawPodium(curY);
+        curY += podiumHeight;
+    }
+
+    ctx.strokeStyle = '#e7e5e4';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, totalHeight - footerHeight);
+    ctx.lineTo(totalWidth - padding, totalHeight - footerHeight);
+    ctx.stroke();
+
+    ctx.fillStyle = '#a8a29e';
+    ctx.font = '11px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PalClass 班級經營系統 · 全方位智慧班級管理工作台', totalWidth / 2, totalHeight - footerHeight / 2);
+
+    const dateFileStr = new Date().toISOString().slice(0, 10);
+    const fileName = `${currentClass.name}_課堂座位表_${dateFileStr}.png`;
+    const dataUrl = canvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = dataUrl;
+    downloadLink.download = fileName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    showToast(`已成功匯出高畫質圖檔【${fileName}】！`, 'success');
 }
 
 let currentEditingGroupId = null;
@@ -1185,7 +1541,7 @@ function renderManualGroupModalContent() {
                                     ? 'bg-amber-100 text-amber-800' 
                                     : 'bg-stone-100 text-stone-500'
                         }">
-                            ${isInCurrent ? '✓ 本組' : assignedGroup ? assignedGroup.name : '未分組'}
+                            ${isInCurrent ? '本組' : assignedGroup ? assignedGroup.name : '未分組'}
                         </span>
                     </div>
                     <span class="text-xs font-bold text-stone-600 truncate max-w-full block mt-1">${escapeHtml(name)}</span>
@@ -1367,22 +1723,51 @@ export function initClassroomStudio() {
         renderClassroomStudio();
     });
 
-    // 自動分組觸發按鈕
-    document.getElementById('studio-auto-group-btn')?.addEventListener('click', () => {
-        const count = parseInt(prompt('請輸入預計劃分的小組組數（2 ~ 8 組）：', '6'), 10);
-        if (count >= 2 && count <= 8) {
-            autoGenerateGroups(count, 'random');
-        } else if (!isNaN(count)) {
-            showToast('組數請填寫 2 至 8 之間', 'error');
+    // 隨機分組觸發按鈕（依當前組數直接隨機劃分）
+    document.getElementById('studio-random-group-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const curCount = currentClass?.groupsConfig?.groups?.length || 6;
+        autoGenerateGroups(curCount, 'random');
+    });
+
+    // 分組競賽工具列組數 Stepper [-] / [+]
+    document.getElementById('studio-toolbar-group-dec-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const curCount = currentClass?.groupsConfig?.groups?.length || 6;
+        if (curCount > 2) {
+            setManualGroupCount(curCount - 1);
+        }
+    });
+    document.getElementById('studio-toolbar-group-inc-btn')?.addEventListener('click', () => {
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        const curCount = currentClass?.groupsConfig?.groups?.length || 6;
+        if (curCount < 16) {
+            setManualGroupCount(curCount + 1);
         }
     });
 
     // 重置小組積分
     document.getElementById('studio-reset-group-scores-btn')?.addEventListener('click', resetAllGroupScores);
 
+    // 匯出高畫質座位表 PNG
+    document.getElementById('studio-export-png-btn')?.addEventListener('click', () => {
+        exportSeatingChartToPNG();
+    });
+
     // 列印座位表
     document.getElementById('studio-print-seats-btn')?.addEventListener('click', () => {
         window.print();
+    });
+
+    // 空位指派彈窗事件綁定
+    document.getElementById('close-studio-seat-picker-modal-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('studio-seat-picker-modal'));
+    });
+    document.getElementById('studio-seat-picker-cancel-btn')?.addEventListener('click', () => {
+        closeModal(document.getElementById('studio-seat-picker-modal'));
+    });
+    document.getElementById('studio-seat-picker-search')?.addEventListener('input', () => {
+        renderSeatPickerModalContent();
     });
 
     // 手動分組名單彈窗設定
@@ -1444,7 +1829,9 @@ export function initClassroomStudio() {
 
     // 點擊空白處取消選取
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('#studio-seats-grid') && !e.target.closest('#studio-unassigned-list')) {
+        if (!e.target.closest('#studio-seats-grid') && 
+            !e.target.closest('#studio-unassigned-list') &&
+            !e.target.closest('#studio-seat-picker-modal')) {
             if (selectedSource) {
                 selectedSource = null;
                 renderClassroomStudio();
@@ -1460,3 +1847,5 @@ window.setManualGroupCount = setManualGroupCount;
 window.addOneManualGroup = addOneManualGroup;
 window.deleteCurrentManualGroup = deleteCurrentManualGroup;
 window.renameCurrentManualGroup = renameCurrentManualGroup;
+window.openSeatPickerModal = openSeatPickerModal;
+window.exportSeatingChartToPNG = exportSeatingChartToPNG;

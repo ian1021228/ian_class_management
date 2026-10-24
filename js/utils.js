@@ -328,49 +328,124 @@ export function showAlertModal(title, message, onOk) {
 }
 
 export function showConfirmModal(title, message, onConfirm, onCancel, options = {}) {
-    const confirmModal = document.getElementById('confirm-modal');
-    const confirmTitle = document.getElementById('confirm-title');
-    const confirmMessage = document.getElementById('confirm-message');
-    const confirmCancel = document.getElementById('confirm-cancel');
-    const confirmOk = document.getElementById('confirm-ok');
-    if (!confirmModal || !confirmOk || !confirmCancel) return;
+    return new Promise((resolve) => {
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmTitle = document.getElementById('confirm-title');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmCancel = document.getElementById('confirm-cancel');
+        const confirmOk = document.getElementById('confirm-ok');
+        if (!confirmModal || !confirmOk || !confirmCancel) {
+            resolve(false);
+            return;
+        }
 
-    confirmTitle.textContent = title; 
-    confirmMessage.textContent = message; 
+        confirmTitle.textContent = title; 
+        confirmMessage.textContent = message; 
 
-    const defaultOkClass = "bg-rose-500 text-white font-bold py-2.5 px-6 text-sm rounded-xl shadow-md hover:bg-rose-600 transition-colors";
-    const defaultCancelClass = "bg-slate-100 text-slate-600 font-bold py-2.5 px-5 text-sm rounded-xl hover:bg-slate-200 transition-colors";
+        const defaultOkClass = "bg-rose-500 text-white font-bold py-2.5 px-6 text-sm rounded-xl shadow-md hover:bg-rose-600 transition-colors";
+        const defaultCancelClass = "bg-slate-100 text-slate-600 font-bold py-2.5 px-5 text-sm rounded-xl hover:bg-slate-200 transition-colors";
 
-    confirmOk.textContent = options.okText || '確定執行';
-    confirmOk.className = options.okClass || defaultOkClass;
+        confirmOk.textContent = options.okText || '確定執行';
+        confirmOk.className = options.okClass || defaultOkClass;
 
-    confirmCancel.textContent = options.cancelText || '取消';
-    confirmCancel.className = options.cancelClass || defaultCancelClass;
-    confirmCancel.classList.remove('hidden');
+        confirmCancel.textContent = options.cancelText || '取消';
+        confirmCancel.className = options.cancelClass || defaultCancelClass;
+        confirmCancel.classList.remove('hidden');
 
-    openModal(confirmModal);
+        openModal(confirmModal);
 
-    const confirmHandler = () => { 
-        closeModal(confirmModal); 
-        cleanup(); 
-        if (onConfirm) onConfirm(); 
-    };
-    const cancelHandler = () => { 
-        closeModal(confirmModal); 
-        cleanup(); 
-        if (onCancel) onCancel(); 
-    };
-    const cleanup = () => { 
-        confirmOk.removeEventListener('click', confirmHandler); 
-        confirmCancel.removeEventListener('click', cancelHandler); 
-        confirmOk.textContent = '確定執行';
-        confirmOk.className = defaultOkClass;
-        confirmCancel.textContent = '取消';
-        confirmCancel.className = defaultCancelClass;
-    };
-    confirmOk.addEventListener('click', confirmHandler);
-    confirmCancel.addEventListener('click', cancelHandler);
+        const confirmHandler = () => { 
+            closeModal(confirmModal); 
+            cleanup(); 
+            if (typeof onConfirm === 'function') onConfirm(); 
+            resolve(true);
+        };
+        const cancelHandler = () => { 
+            closeModal(confirmModal); 
+            cleanup(); 
+            if (typeof onCancel === 'function') onCancel(); 
+            resolve(false);
+        };
+        const cleanup = () => { 
+            confirmOk.removeEventListener('click', confirmHandler); 
+            confirmCancel.removeEventListener('click', cancelHandler); 
+            confirmOk.textContent = '確定執行';
+            confirmOk.className = defaultOkClass;
+            confirmCancel.textContent = '取消';
+            confirmCancel.className = defaultCancelClass;
+        };
+        confirmOk.addEventListener('click', confirmHandler);
+        confirmCancel.addEventListener('click', cancelHandler);
+    });
 }
+
+/**
+ * 全域客製化輸入彈窗 (替代瀏覽器原生 prompt)
+ */
+export function showCustomPromptModal(title, message, defaultValue = '', onConfirm = null) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('prompt-modal');
+        if (!modal) {
+            if (typeof onConfirm === 'function' && defaultValue) onConfirm(defaultValue);
+            resolve(defaultValue || null);
+            return;
+        }
+        const titleEl = document.getElementById('prompt-modal-title');
+        const msgEl = document.getElementById('prompt-modal-message');
+        const inputEl = document.getElementById('prompt-modal-input');
+        const okBtn = document.getElementById('prompt-modal-ok');
+        const cancelBtn = document.getElementById('prompt-modal-cancel');
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message || '';
+        if (inputEl) {
+            inputEl.value = defaultValue || '';
+            setTimeout(() => {
+                inputEl.focus();
+                inputEl.select();
+            }, 150);
+        }
+
+        openModal(modal);
+
+        const handleOk = () => {
+            const val = inputEl ? inputEl.value.trim() : '';
+            closeModal(modal);
+            cleanup();
+            if (typeof onConfirm === 'function' && val) onConfirm(val);
+            resolve(val || null);
+        };
+
+        const handleCancel = () => {
+            closeModal(modal);
+            cleanup();
+            resolve(null);
+        };
+
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleOk();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancel();
+            }
+        };
+
+        const cleanup = () => {
+            okBtn?.removeEventListener('click', handleOk);
+            cancelBtn?.removeEventListener('click', handleCancel);
+            inputEl?.removeEventListener('keydown', handleKeydown);
+        };
+
+        okBtn?.addEventListener('click', handleOk);
+        cancelBtn?.addEventListener('click', handleCancel);
+        inputEl?.addEventListener('keydown', handleKeydown);
+    });
+}
+
+window.showConfirmModal = showConfirmModal;
+window.showCustomPromptModal = showCustomPromptModal;
 
 export function showNamePromptModal(callback) {
     const modal = document.getElementById('name-prompt-modal');

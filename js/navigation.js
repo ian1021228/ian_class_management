@@ -681,6 +681,7 @@ export function initGlobalNavDrawer() {
                 localStorage.setItem('currentClassId', newClassId);
                 saveData();
                 fullRender();
+                showOverviewPage();
                 closeGlobalNavDrawer();
                 showToast(`已切換為「${state.appData.classes.find(c => c.id === newClassId)?.name || ''}」`, 'success');
             }

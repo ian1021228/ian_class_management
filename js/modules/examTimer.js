@@ -17,7 +17,7 @@
  */
 
 import { state } from '../state.js';
-import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen } from '../utils.js';
+import { formatDate, generateId, showToast, escapeHtml, toggleAppFullscreen, showConfirmModal } from '../utils.js';
 import { saveData } from '../storage.js';
 import { isSoundEnabled } from './audioFx.js';
 import { getAttendanceSummaryForClass } from './attendanceHub.js';
@@ -34,18 +34,19 @@ let editingScheduleId = null;
 function ensureClassExamData(classObj) {
     if (!classObj) return null;
     if (!Array.isArray(classObj.examSchedules)) {
-        classObj.examSchedules = [
-            {
-                id: generateId(),
-                content: '數學第一單元',
-                startTime: '08:40',
-                endTime: '09:25',
-                durationMins: 45
-            }
-        ];
+        classObj.examSchedules = [];
+    } else {
+        // 清除舊版本預設之示範測試考程 (避免造成使用者誤會)
+        if (classObj.examSchedules.length === 1 &&
+            classObj.examSchedules[0].content === '數學第一單元' &&
+            classObj.examSchedules[0].startTime === '08:40' &&
+            classObj.examSchedules[0].endTime === '09:25' &&
+            !classObj.examSchedules[0].isCustomCreated) {
+            classObj.examSchedules = [];
+        }
     }
     if (typeof classObj.examNotes !== 'string') {
-        classObj.examNotes = '請將桌面清空，非應試用品置於教室前後。專心作答，鐘響停筆。';
+        classObj.examNotes = '';
     }
     if (!classObj.examSettings || typeof classObj.examSettings !== 'object') {
         classObj.examSettings = {
@@ -56,6 +57,66 @@ function ensureClassExamData(classObj) {
         };
     }
     return classObj;
+}
+
+/**
+ * 驗證 24 小時制時間字串 (HH:mm)
+ */
+export function isValid24HourTime(str) {
+    if (!str || typeof str !== 'string') return false;
+    const parts = str.trim().split(':');
+    if (parts.length !== 2) return false;
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return false;
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+}
+
+/**
+ * 格式化為標準 24 小時制 HH:mm
+ */
+export function formatTime24(str) {
+    if (!str || typeof str !== 'string') return '08:40';
+    const clean = str.trim().replace('：', ':');
+    const parts = clean.split(':');
+    if (parts.length !== 2) return '08:40';
+    const h = Math.min(23, Math.max(0, parseInt(parts[0], 10) || 0));
+    const m = Math.min(59, Math.max(0, parseInt(parts[1], 10) || 0));
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * 將 HH:mm 轉換為當日第幾分鐘 (0 ~ 1439)
+ */
+export function timeToMinutes(str) {
+    if (!str || !str.includes(':')) return 0;
+    const [h, m] = str.split(':').map(x => parseInt(x, 10) || 0);
+    return h * 60 + m;
+}
+
+/**
+ * 將分鐘數轉換為 24 小時制 HH:mm
+ */
+export function minutesToTime(totalMins) {
+    const wrapped = ((totalMins % 1440) + 1440) % 1440;
+    const h = Math.floor(wrapped / 60);
+    const m = wrapped % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * 依現有考程智慧推算下一場建議開始時間 (上一場結束 + 10 分鐘下課休息)
+ */
+export function getNextSuggestedStartTime(schedules) {
+    if (!schedules || schedules.length === 0) {
+        const now = new Date();
+        const curMins = now.getHours() * 60 + now.getMinutes();
+        const rounded = Math.ceil(curMins / 5) * 5;
+        return minutesToTime(rounded);
+    }
+    const endMinutesList = schedules.map(s => timeToMinutes(s.endTime));
+    const maxEnd = Math.max(...endMinutesList);
+    return minutesToTime(maxEnd + 10);
 }
 
 /**
@@ -142,16 +203,30 @@ export function renderExamTimerSetup() {
 
     // 1. 已排定考程清單
     const schedulesList = document.getElementById('exam-schedules-list');
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
     if (schedulesList) {
         schedulesList.innerHTML = '';
         if (currentClass.examSchedules.length === 0) {
             schedulesList.innerHTML = `
                 <div class="py-6 text-center text-stone-400 font-bold text-xs bg-stone-50 rounded-2xl border border-dashed border-stone-200">
-                    尚無排定考程，請於上方輸入內容並新增
+                    尚無排定考程，請於上方輸入內容並新增考程
                 </div>
             `;
         } else {
             currentClass.examSchedules.forEach((sch, idx) => {
+                const sMin = timeToMinutes(sch.startTime);
+                const eMin = timeToMinutes(sch.endTime);
+                let statusBadge = '';
+                if (nowMinutes < sMin) {
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">未開始</span>`;
+                } else if (nowMinutes >= sMin && nowMinutes <= eMin) {
+                    statusBadge = `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">進行中</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-500">已結束</span>`;
+                }
+
                 const item = document.createElement('div');
                 item.className = `p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 bg-white hover:border-amber-400 shadow-2xs ${
                     idx === activeScheduleIndex ? 'border-amber-400 ring-2 ring-amber-300/40 bg-amber-50/20' : 'border-stone-200'
@@ -161,7 +236,10 @@ export function renderExamTimerSetup() {
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="w-6 h-6 rounded-lg bg-stone-100 text-stone-700 flex items-center justify-center font-mono font-bold text-xs shrink-0">${idx + 1}</span>
                         <div class="min-w-0">
-                            <h4 class="font-black text-stone-900 text-sm truncate">${escapeHtml(sch.content)}</h4>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h4 class="font-black text-stone-900 text-sm truncate">${escapeHtml(sch.content)}</h4>
+                                ${statusBadge}
+                            </div>
                             <p class="text-xs text-stone-500 font-mono">${sch.startTime} ~ ${sch.endTime} (${sch.durationMins} 分鐘)</p>
                         </div>
                     </div>
@@ -215,18 +293,16 @@ export function renderExamTimerSetup() {
     }
 
     // 2. 右側投影預覽
-    const activeSch = currentClass.examSchedules[activeScheduleIndex] || {
-        content: '尚未設定考試',
-        durationMins: 45
-    };
+    const hasSchedules = currentClass.examSchedules.length > 0;
+    const activeSch = hasSchedules ? (currentClass.examSchedules[activeScheduleIndex] || currentClass.examSchedules[0]) : null;
 
     const prevTitle = document.getElementById('exam-preview-subject-title');
     const prevDigits = document.getElementById('exam-preview-digits');
     const prevAtt = document.getElementById('exam-preview-attendance-text');
     const prevNotes = document.getElementById('exam-preview-notes-box');
 
-    if (prevTitle) prevTitle.textContent = activeSch.content;
-    if (prevDigits) prevDigits.textContent = `${activeSch.durationMins}:00`;
+    if (prevTitle) prevTitle.textContent = activeSch ? activeSch.content : '尚未排定考程';
+    if (prevDigits) prevDigits.textContent = activeSch ? `${activeSch.durationMins}:00` : '--:--';
 
     // 自動連動出勤中樞計算人數
     const attSummary = getAttendanceSummaryForClass(currentClass, formatDate(new Date(), 'YYYY-MM-DD'));
@@ -255,6 +331,71 @@ export function renderExamTimerSetup() {
 }
 
 /**
+ * 切換目前投影進行中的考試場次
+ */
+function switchRunningSchedule(idx) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass || !currentClass.examSchedules[idx]) return;
+    activeScheduleIndex = idx;
+    const sch = currentClass.examSchedules[idx];
+
+    const runningTitle = document.getElementById('exam-running-title');
+    if (runningTitle) runningTitle.textContent = sch.content;
+
+    totalDurationSeconds = (sch.durationMins || 45) * 60;
+    remainingSeconds = totalDurationSeconds;
+
+    updateCountdownUI();
+    renderRunningSchedulesList(currentClass);
+    showToast(`已切換投影場次為第 ${idx + 1} 場「${sch.content}」`, 'info');
+}
+
+/**
+ * 渲染執行中左側考程清單
+ */
+function renderRunningSchedulesList(currentClass) {
+    const runningList = document.getElementById('exam-running-schedules-list');
+    if (!runningList) return;
+    runningList.innerHTML = '';
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    currentClass.examSchedules.forEach((sch, idx) => {
+        const isCur = idx === activeScheduleIndex;
+        const sMin = timeToMinutes(sch.startTime);
+        const eMin = timeToMinutes(sch.endTime);
+
+        let statusBadge = '';
+        if (nowMinutes < sMin) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">未開始</span>`;
+        } else if (nowMinutes >= sMin && nowMinutes <= eMin) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black animate-pulse">進行中</span>`;
+        } else {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 text-[10px] font-black">已結束</span>`;
+        }
+
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = `w-full p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+            isCur ? 'bg-amber-50 border-amber-400 shadow-xs ring-2 ring-amber-300/40' : 'bg-white border-stone-200 hover:border-amber-300'
+        }`;
+        el.innerHTML = `
+            <div class="flex items-center justify-between gap-1">
+                <span class="text-xs font-black truncate ${isCur ? 'text-amber-900' : 'text-stone-800'}">${idx + 1}. ${escapeHtml(sch.content)}</span>
+                ${statusBadge}
+            </div>
+            <p class="text-[11px] text-stone-500 font-mono mt-0.5">${sch.startTime} ~ ${sch.endTime} (${sch.durationMins}分)</p>
+        `;
+        el.addEventListener('click', () => {
+            if (activeScheduleIndex !== idx) {
+                switchRunningSchedule(idx);
+            }
+        });
+        runningList.appendChild(el);
+    });
+}
+
+/**
  * 進入大看板考試計時執行畫面
  */
 export function startExamSession() {
@@ -263,7 +404,7 @@ export function startExamSession() {
     ensureClassExamData(currentClass);
 
     if (currentClass.examSchedules.length === 0) {
-        showToast('請先新增至少一場考試排程！', 'warning');
+        showToast('尚無排定任何考試考程，請先新增考程！', 'warning');
         return;
     }
 
@@ -282,26 +423,8 @@ export function startExamSession() {
     totalDurationSeconds = (activeSch.durationMins || 45) * 60;
     remainingSeconds = totalDurationSeconds;
 
-    // 左側今日考程清單
-    const runningList = document.getElementById('exam-running-schedules-list');
-    if (runningList) {
-        runningList.innerHTML = '';
-        currentClass.examSchedules.forEach((sch, idx) => {
-            const isCur = idx === activeScheduleIndex;
-            const el = document.createElement('div');
-            el.className = `p-3 rounded-2xl border text-left transition-all ${
-                isCur ? 'bg-amber-50 border-amber-400 shadow-xs' : 'bg-white border-stone-200'
-            }`;
-            el.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-black ${isCur ? 'text-amber-900' : 'text-stone-800'}">${idx + 1}. ${escapeHtml(sch.content)}</span>
-                    ${isCur ? `<span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black">進行中</span>` : ''}
-                </div>
-                <p class="text-[11px] text-stone-500 font-mono mt-0.5">${sch.startTime} ~ ${sch.endTime} (${sch.durationMins}分)</p>
-            `;
-            runningList.appendChild(el);
-        });
-    }
+    // 左側今日考程清單 (支援即時點選切換)
+    renderRunningSchedulesList(currentClass);
 
     // 人數設定與開關
     const showAtt = document.getElementById('exam-toggle-show-attendance')?.checked !== false;

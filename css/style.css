@@ -240,10 +240,18 @@ html.dark .modal-content, html.dark .confirm-modal-content { background-color: #
 }
 
 /* ============================================================== */
-/* 專業列印樣式 (Classroom Print Engine)                         */
+/* 專業列印樣式 (Classroom Print Engine) - 單頁完美呈現，不跨頁      */
 /* ============================================================== */
 @media print {
+    @page {
+        size: auto;
+        margin: 6mm 8mm;
+    }
+
     /* 隱藏所有互動元件、浮動按鈕、導覽抽屜、背後插圖與背景光效 */
+    header,
+    footer,
+    nav,
     #global-nav-burger-btn,
     #global-nav-drawer,
     #mobile-bottom-bar,
@@ -251,46 +259,143 @@ html.dark .modal-content, html.dark .confirm-modal-content { background-color: #
     #admin-view-banner,
     .storybook-banner-card,
     .modal,
-    button:not(.print-keep),
+    button,
     .btn-adjust-point,
     .nav-buttons,
     #sync-banner,
-    .sound-toggle-btn {
+    .sound-toggle-btn,
+    #portal-nav-bar,
+    #main-page-top-bar,
+    .toast,
+    /* 課堂工坊中無需列印的控制列與側邊欄 */
+    #studio-tab-btn-seating,
+    #studio-tab-btn-groups,
+    #studio-export-png-btn,
+    #studio-print-seats-btn,
+    #studio-podium-toggle-btn,
+    #studio-view-seating > div:first-child, /* 頂部排位動作按鈕列（依座號安排、隨機安排等） */
+    #classroom-studio-page .lg\:col-span-4, /* 右側待安排/教室配置欄 */
+    #classroom-studio-page .xl\:col-span-3,
+    #studio-unassigned-section,
+    #studio-unassigned-list,
+    #studio-view-groups > div:first-child, /* 分組團隊競賽頂部說明卡片（避免佔用空間導致跨頁） */
+    .studio-edit-group-btn,
+    .studio-add-member-btn,
+    .studio-remove-group-member-btn,
+    .group-score-btn {
         display: none !important;
     }
 
-    body {
+    html, body {
         background: #fff !important;
         color: #000 !important;
-        font-size: 12pt !important;
+        font-size: 11pt !important;
         margin: 0 !important;
         padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
     }
 
-    /* 列印座位表優化：清晰高對比黑白邊框 */
-    #classroom-studio-page {
+    /* 確保所有頁面層級容器自適應展開 */
+    #app, main, #main-content, #classroom-studio-page {
         display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
         padding: 0 !important;
+        margin: 0 !important;
         min-height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
     }
+
+    /* 座位表左側畫布鋪滿全寬 */
+    #classroom-studio-page .lg\:col-span-8,
+    #classroom-studio-page .xl\:col-span-9 {
+        width: 100% !important;
+        max-width: 100% !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* 座位網格容器：單頁防跨頁 */
+    #studio-seats-grid-wrapper {
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
     #studio-seats-grid {
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 6px !important;
         border: 2px solid #000 !important;
         background: #fff !important;
         box-shadow: none !important;
-        padding: 8px !important;
+        padding: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
+
     #studio-seats-grid > div {
         border: 1.5px solid #222 !important;
         color: #000 !important;
         background: #fff !important;
         box-shadow: none !important;
-        break-inside: avoid;
+        min-height: 56px !important;
+        max-height: 80px !important;
+        padding: 4px 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
-    #studio-lectern-top, #studio-lectern-bottom {
+
+    /* 講台指示黑白高對比列印 */
+    #studio-podium-top, #studio-podium-bottom {
+        display: flex !important;
+        justify-content: center !important;
+        margin: 4px auto !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #studio-podium-top > div, #studio-podium-bottom > div {
         border: 2px solid #000 !important;
-        background: #f0f0f0 !important;
-        color: #000 !important;
+        background: #24483B !important;
+        color: #fff !important;
         font-weight: 900 !important;
+        padding: 4px 28px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 分組團隊競賽單頁列印優化 (解決使用者回報之跨頁問題) */
+    #studio-view-groups {
+        display: block !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #studio-groups-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #studio-groups-container > div {
+        border: 1.5px solid #000 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        padding: 6px 10px !important;
+        border-radius: 12px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 
     /* 列印聯絡簿黑板內容 */
@@ -305,8 +410,43 @@ html.dark .modal-content, html.dark .confirm-modal-content { background-color: #
         background: #fff !important;
         color: #000 !important;
         box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 }
+
+/* ============================================================== */
+/* 液態磨砂玻璃質感 (Liquid Glassmorphism) & 首頁可愛萌感優化    */
+/* ============================================================== */
+.liquid-glass-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    box-shadow: 0 8px 30px 0 rgba(148, 115, 83, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.liquid-glass-card:hover {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 16px 40px -4px rgba(148, 115, 83, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+}
+
+.liquid-glass-nav {
+    background: rgba(253, 251, 247, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 20px -2px rgba(120, 90, 60, 0.03);
+}
+
+.liquid-glass-pill {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
 
 
 

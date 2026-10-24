@@ -6,7 +6,7 @@
  */
 
 import { state } from '../state.js';
-import { showToast, openModal, closeModal, escapeHtml } from '../utils.js';
+import { showToast, openModal, closeModal, escapeHtml, showConfirmModal } from '../utils.js';
 import { saveData } from '../storage.js';
 import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js';
 import { isStudentAbsentOrLeaveToday } from './attendanceHub.js';
@@ -41,10 +41,21 @@ function ensureClassPointsData(classObj) {
     }
     if (!classObj.classGoal || typeof classObj.classGoal !== 'object') {
         classObj.classGoal = {
-            enabled: true,
-            target: 1000,
-            reward: '全班同樂會自由活動'
+            enabled: false,
+            target: null,
+            reward: ''
         };
+    } else {
+        // 清除舊版本預設之示範測試資料 (避免造成誤會)
+        if (classObj.classGoal.target === 1000 &&
+            (classObj.classGoal.reward === '全班同樂會' ||
+             classObj.classGoal.reward === '全班同樂會自由活動' ||
+             classObj.classGoal.reward === '自由活動') &&
+            !classObj.classGoal.isCustomConfigured) {
+            classObj.classGoal.target = null;
+            classObj.classGoal.reward = '';
+            classObj.classGoal.enabled = false;
+        }
     }
     return classObj;
 }
@@ -254,7 +265,7 @@ export function renderPointsPage() {
     if (classBadge) classBadge.textContent = currentClass.name;
 
     // 1. CLASS GOAL 全班共同集分計算
-    const goal = currentClass.classGoal || { enabled: true, target: 1000, reward: '自由活動' };
+    const goal = currentClass.classGoal || { enabled: false, target: null, reward: '' };
     const totalScore = activeSeats.reduce((sum, s) => sum + getStudentPoints(currentClass, s), 0);
 
     const totalScoreDisplay = document.getElementById('class-total-score-display');
@@ -267,28 +278,42 @@ export function renderPointsPage() {
 
     if (totalScoreDisplay) totalScoreDisplay.textContent = totalScore.toLocaleString();
     if (totalStudentsDisplay) totalStudentsDisplay.textContent = `共 ${activeSeats.length} 位學生`;
-    if (targetInput && document.activeElement !== targetInput) targetInput.value = goal.target;
-    if (rewardInput && document.activeElement !== rewardInput) rewardInput.value = goal.reward || '';
+    if (targetInput && document.activeElement !== targetInput) {
+        targetInput.value = (goal.target && goal.target > 0) ? goal.target : '';
+    }
+    if (rewardInput && document.activeElement !== rewardInput) {
+        rewardInput.value = goal.reward || '';
+    }
 
-    const targetVal = Math.max(1, parseInt(goal.target, 10) || 1000);
-    const pct = Math.min(100, Math.round((totalScore / targetVal) * 100));
+    const targetVal = parseInt(goal.target, 10);
+    const hasTarget = !isNaN(targetVal) && targetVal > 0;
 
-    if (progressText) progressText.textContent = `${totalScore.toLocaleString()} / ${targetVal.toLocaleString()}`;
-    if (progressFill) progressFill.style.width = `${pct}%`;
+    if (!hasTarget) {
+        if (progressText) progressText.textContent = `${totalScore.toLocaleString()} / 尚未設定`;
+        if (progressFill) progressFill.style.width = `0%`;
+        if (calloutText) {
+            calloutText.innerHTML = `<span class="text-stone-600 font-medium flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-600"></i>尚未設定集分目標，請於上方輸入目標分數與達標福利。</span>`;
+        }
+    } else {
+        const pct = Math.min(100, Math.round((totalScore / targetVal) * 100));
+        if (progressText) progressText.textContent = `${totalScore.toLocaleString()} / ${targetVal.toLocaleString()}`;
+        if (progressFill) progressFill.style.width = `${pct}%`;
 
-    if (calloutText) {
-        if (totalScore >= targetVal) {
-            calloutText.innerHTML = `<span class="text-emerald-700 font-black"><i class="fa-solid fa-trophy text-amber-500 mr-1.5"></i>全班已達標！解鎖福利：${escapeHtml(goal.reward || '全班慶祝')}</span>`;
-            if (!currentClass.hasCelebratedGoal) {
-                currentClass.hasCelebratedGoal = true;
-                playGoalAchieved();
-                triggerConfetti({ count: 160 });
-                showToast(`全班總分達成 ${targetVal} 分！恭喜解鎖：${goal.reward || '全班慶祝'}！`, 'success');
+        if (calloutText) {
+            if (totalScore >= targetVal) {
+                calloutText.innerHTML = `<span class="text-emerald-700 font-black"><i class="fa-solid fa-trophy text-amber-500 mr-1.5"></i>全班已達標！解鎖福利：${escapeHtml(goal.reward || '全班慶祝')}</span>`;
+                if (!currentClass.hasCelebratedGoal) {
+                    currentClass.hasCelebratedGoal = true;
+                    playGoalAchieved();
+                    triggerConfetti({ count: 160 });
+                    showToast(`全班總分達成 ${targetVal} 分！恭喜解鎖：${goal.reward || '全班慶祝'}！`, 'success');
+                }
+            } else {
+                currentClass.hasCelebratedGoal = false;
+                const diff = targetVal - totalScore;
+                const rewardDesc = goal.reward ? `（福利：${escapeHtml(goal.reward)}）` : '';
+                calloutText.innerHTML = `再累積 <span class="font-black text-amber-700">${diff.toLocaleString()}</span> 分就達標（目前進度 ${pct}%）${rewardDesc}`;
             }
-        } else {
-            currentClass.hasCelebratedGoal = false;
-            const diff = targetVal - totalScore;
-            calloutText.textContent = `再累積 ${diff.toLocaleString()} 分就達標（目前進度 ${pct}%）`;
         }
     }
 
@@ -487,7 +512,10 @@ export function initArenaDrawAndPoints() {
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
         ensureClassPointsData(currentClass);
-        currentClass.classGoal.target = parseInt(e.target.value, 10) || 1000;
+        const val = parseInt(e.target.value, 10);
+        currentClass.classGoal.target = (!isNaN(val) && val > 0) ? val : null;
+        currentClass.classGoal.enabled = (currentClass.classGoal.target !== null);
+        currentClass.classGoal.isCustomConfigured = true;
         saveData();
         renderPointsPage();
     });
@@ -497,6 +525,7 @@ export function initArenaDrawAndPoints() {
         if (!currentClass) return;
         ensureClassPointsData(currentClass);
         currentClass.classGoal.reward = e.target.value.trim();
+        currentClass.classGoal.isCustomConfigured = true;
         saveData();
         renderPointsPage();
     });
@@ -534,8 +563,15 @@ export function initArenaDrawAndPoints() {
     });
 
     // 6. 重置全班分數按鈕
-    document.getElementById('arena-reset-all-points-btn')?.addEventListener('click', () => {
-        if (confirm('確定要將目前班級所有學生的個人加扣分歸零嗎？此操作無法復原。')) {
+    document.getElementById('arena-reset-all-points-btn')?.addEventListener('click', async () => {
+        const ok = await showConfirmModal(
+            '重置全班分數',
+            '確定要將目前班級所有學生的個人加扣分歸零嗎？此操作無法復原。',
+            null,
+            null,
+            { okText: '確定歸零', cancelText: '取消', okClass: 'bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 px-6 text-sm rounded-xl' }
+        );
+        if (ok) {
             const currentClass = getCurrentClass();
             if (!currentClass) return;
             ensureClassPointsData(currentClass);
