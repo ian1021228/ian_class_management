@@ -668,12 +668,15 @@
                             </div>
 
                             <!-- 已登入狀態按鈕組 (預設隱藏，登入後即時同步展示) -->
-                            <div id="portal-hero-teacher-user-actions" class="hidden flex items-center justify-between pt-1">
-                                <span class="text-xs font-bold text-stone-700 flex items-center gap-1.5 truncate max-w-[170px]">
-                                    <i class="fa-solid fa-circle-user text-indigo-600"></i>
-                                    <span id="portal-hero-user-display-name">教師已連線</span>
-                                </span>
-                                <button type="button" id="portal-hero-enter-system-btn" class="py-2 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                            <div id="portal-hero-teacher-user-actions" class="hidden flex items-center justify-between pt-1 gap-2">
+                                <div class="min-w-0">
+                                    <span class="text-xs font-bold text-stone-700 flex items-center gap-1.5 truncate max-w-[170px]">
+                                        <i class="fa-solid fa-circle-user text-indigo-600"></i>
+                                        <span id="portal-hero-user-display-name">教師已連線</span>
+                                    </span>
+                                    <span id="portal-hero-current-class-badge" class="text-[10px] text-indigo-600 font-semibold block truncate">當前班級：載入中...</span>
+                                </div>
+                                <button type="button" id="portal-hero-enter-system-btn" class="py-2 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
                                     <span>直接進入工作台</span>
                                     <i class="fa-solid fa-arrow-right text-xs"></i>
                                 </button>
@@ -694,10 +697,15 @@
                                     <p class="text-[11px] text-stone-500 font-medium truncate">輸入班級代碼即可查閱孩子欠繳與聯絡簿</p>
                                 </div>
                             </div>
-                            <a href="parent.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-                                <span>開啟看板</span>
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" id="portal-copy-parent-link-btn" class="w-8 h-8 rounded-xl bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200/80 flex items-center justify-center text-xs transition-colors shadow-2xs cursor-pointer" title="複製家長端直達網址分享至班群">
+                                    <i class="fa-solid fa-link"></i>
+                                </button>
+                                <a href="parent.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                                    <span>開啟看板</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                </a>
+                            </div>
                         </div>
 
                         <!-- 3. 學生端數位聯絡簿入口 (Student Portal) -->
@@ -714,10 +722,16 @@
                                     <p class="text-[11px] text-stone-500 font-medium truncate">每日黑板作業、課表與全勤榮譽榜</p>
                                 </div>
                             </div>
-                            <a href="student.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer">
-                                <span>開啟聯絡簿</span>
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" id="portal-copy-student-link-btn" class="w-8 h-8 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center justify-center text-xs transition-colors shadow-2xs cursor-pointer" title="複製學生端聯絡簿網址">
+                                    <i class="fa-solid fa-link"></i>
+                                </button>
+                                <a href="student.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                                    <span>開啟聯絡簿</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                </a>
+                            </div>
+                        </div>
                         </div>
 
                         <!-- 底部快捷操作與條碼說明 -->

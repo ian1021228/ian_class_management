@@ -276,6 +276,39 @@ export function setupButtonEvents() {
         if (qrTrigger) qrTrigger.click();
     });
 
+    // 一鍵複製家長端與學生端專屬連結
+    bindClick('portal-copy-parent-link-btn', () => {
+        const curClass = state.appData?.classes?.find(c => c.id === state.currentClassId);
+        const code = curClass?.parentAccessCode || curClass?.id;
+        const baseUrl = window.location.href.split('#')[0].replace(/index\.html$/, '');
+        const url = code ? `${baseUrl}parent.html?class=${encodeURIComponent(code)}` : `${baseUrl}parent.html`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast(curClass ? `已複製「${curClass.name}」家長端專屬直達連結！` : "已複製家長端連結！", "success");
+            }).catch(() => {
+                showToast("複製失敗，請手動複製網址", "error");
+            });
+        } else {
+            showToast("瀏覽器不支援剪貼簿寫入，請手動複製", "warning");
+        }
+    });
+
+    bindClick('portal-copy-student-link-btn', () => {
+        const curClass = state.appData?.classes?.find(c => c.id === state.currentClassId);
+        const code = curClass?.id;
+        const baseUrl = window.location.href.split('#')[0].replace(/index\.html$/, '');
+        const url = code ? `${baseUrl}student.html?class=${encodeURIComponent(code)}` : `${baseUrl}student.html`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast(curClass ? `已複製「${curClass.name}」學生端專屬連結！` : "已複製學生端連結！", "success");
+            }).catch(() => {
+                showToast("複製失敗，請手動複製網址", "error");
+            });
+        } else {
+            showToast("瀏覽器不支援剪貼簿寫入，請手動複製", "warning");
+        }
+    });
+
     // 系統設定：預設開啟頁面切換
     const defaultLaunchSelect = document.getElementById('setting-default-launch-page');
     if (defaultLaunchSelect) {

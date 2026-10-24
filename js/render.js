@@ -855,6 +855,11 @@ export function updatePortalUI() {
         if (heroTeacherGuestActions) heroTeacherGuestActions.classList.add('hidden');
         if (heroTeacherUserActions) heroTeacherUserActions.classList.remove('hidden');
         if (heroUserDisplayName) heroUserDisplayName.textContent = displayName;
+        const curClassBadge = document.getElementById('portal-hero-current-class-badge');
+        if (curClassBadge) {
+            const curClass = state.appData?.classes?.find(c => c.id === state.currentClassId);
+            curClassBadge.textContent = curClass ? `當前班級：${curClass.name}` : (state.appData?.classes?.length ? `當前班級：${state.appData.classes[0].name}` : '尚未建立班級');
+        }
     } else {
         if (loggedinView) loggedinView.classList.add('hidden');
         if (signupView && !signupView.classList.contains('hidden')) {
