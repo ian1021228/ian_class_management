@@ -13,7 +13,7 @@
  */
 
 import { state } from '../state.js';
-import { showToast, escapeHtml, openModal, closeModal } from '../utils.js';
+import { showToast, escapeHtml, openModal, closeModal, showConfirmModal, showNamePromptModal } from '../utils.js';
 import { saveData } from '../storage.js';
 import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly } from './classWizard.js';
 
@@ -1301,11 +1301,21 @@ export function setManualGroupCount(targetCount) {
         const removingGroups = groups.slice(count);
         const totalMembers = removingGroups.reduce((acc, g) => acc + (g.seats ? g.seats.length : 0), 0);
         if (totalMembers > 0) {
-            const confirmed = confirm(`縮減為 ${count} 組將會移除後續 ${groups.length - count} 個小組，組內共 ${totalMembers} 名成員將移回「未分組」，是否確定？`);
-            if (!confirmed) {
+            showConfirmModal('縮減組數確認', `縮減為 ${count} 組將會移除後續 ${groups.length - count} 個小組，組內共 ${totalMembers} 名成員將移回「未分組」，是否確定？`, () => {
+                groups = groups.slice(0, count);
+                currentClass.groupsConfig.groups = groups;
+                currentClass.groupsConfig.groupCount = groups.length;
+
+                if (!groups.some(g => g.id === currentEditingGroupId)) {
+                    currentEditingGroupId = groups[0] ? groups[0].id : null;
+                }
+
                 renderManualGroupModalContent();
-                return;
-            }
+                showToast(`已將小組組數縮減為 ${groups.length} 組`, 'info');
+            }, () => {
+                renderManualGroupModalContent();
+            });
+            return;
         }
         groups = groups.slice(0, count);
         currentClass.groupsConfig.groups = groups;
@@ -1370,20 +1380,25 @@ export function deleteCurrentManualGroup() {
     if (curIdx === -1) return;
     const curGroup = groups[curIdx];
 
+    const doDelete = () => {
+        groups.splice(curIdx, 1);
+        currentClass.groupsConfig.groups = groups;
+        currentClass.groupsConfig.groupCount = groups.length;
+
+        const nextGroup = groups[Math.min(curIdx, groups.length - 1)];
+        currentEditingGroupId = nextGroup ? nextGroup.id : null;
+
+        renderManualGroupModalContent();
+        showToast(`已刪除【${curGroup.name}】`, 'info');
+    };
+
     if (curGroup.seats && curGroup.seats.length > 0) {
-        const confirmed = confirm(`確定要刪除【${curGroup.name}】嗎？組內 ${curGroup.seats.length} 名成員將移回「未分組」。`);
-        if (!confirmed) return;
+        showConfirmModal('刪除小組確認', `確定要刪除【${curGroup.name}】嗎？組內 ${curGroup.seats.length} 名成員將移回「未分組」。`, () => {
+            doDelete();
+        });
+        return;
     }
-
-    groups.splice(curIdx, 1);
-    currentClass.groupsConfig.groups = groups;
-    currentClass.groupsConfig.groupCount = groups.length;
-
-    const nextGroup = groups[Math.min(curIdx, groups.length - 1)];
-    currentEditingGroupId = nextGroup ? nextGroup.id : null;
-
-    renderManualGroupModalContent();
-    showToast(`已刪除【${curGroup.name}】`, 'info');
+    doDelete();
 }
 
 /**
@@ -1397,11 +1412,14 @@ export function renameCurrentManualGroup() {
     const curGroup = groups.find(g => g.id === currentEditingGroupId);
     if (!curGroup) return;
 
-    const newName = prompt('請輸入小組新名稱：', curGroup.name);
-    if (newName && newName.trim() && newName.trim() !== curGroup.name) {
-        curGroup.name = newName.trim();
-        renderManualGroupModalContent();
-        showToast(`已將小組名稱更名為【${curGroup.name}】`, 'success');
+    if (typeof showNamePromptModal === 'function') {
+        showNamePromptModal('修改小組名稱', '請輸入此小組的新名稱：', curGroup.name, (newName) => {
+            if (newName && newName.trim()) {
+                curGroup.name = newName.trim();
+                renderManualGroupModalContent();
+                showToast(`已將小組名稱更名為【${curGroup.name}】`, 'success');
+            }
+        });
     }
 }
 
@@ -1608,13 +1626,13 @@ export function autoGenerateGroups(groupCount = 6, method = 'random') {
 export function resetAllGroupScores() {
     const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
     if (!currentClass) return;
-    if (!confirm('確定要將所有小組的競賽積分歸零重置嗎？')) return;
-
-    if (!currentClass.groupsConfig) currentClass.groupsConfig = {};
-    currentClass.groupsConfig.groupScores = {};
-    saveData();
-    renderClassroomStudio();
-    showToast('已成功重置所有小組競賽積分為 0', 'success');
+    showConfirmModal('重置小組積分確認', '確定要將所有小組的競賽積分歸零重置嗎？', () => {
+        if (!currentClass.groupsConfig) currentClass.groupsConfig = {};
+        currentClass.groupsConfig.groupScores = {};
+        saveData();
+        renderClassroomStudio();
+        showToast('已成功重置所有小組競賽積分為 0', 'success');
+    });
 }
 
 export function openClassroomStudioModal(tab = 'seating') {
@@ -1638,9 +1656,9 @@ export function initClassroomStudio() {
 
     // 重排全部 (所有人座號全數移至待安排區塊)
     document.getElementById('studio-clear-all-btn')?.addEventListener('click', () => {
-        if (confirm('確定要將全班座號全數清空，移回待安排區塊重新編排嗎？')) {
+        showConfirmModal('清空座位重排確認', '確定要將全班座號全數清空，移回待安排區塊重新編排嗎？', () => {
             clearAllSeatsToUnassigned();
-        }
+        });
     });
 
     // 講台位置切換 (講台在上方 ⇄ 講台在下方)

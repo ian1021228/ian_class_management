@@ -692,6 +692,9 @@ const ENABLE_SCORES_FEATURE = true;
       }
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = (urlParams.get('token') || urlParams.get('t') || '').trim();
+
     function getTeacherConfiguredPin(seat) {
       const s = String(seat || state.studentSeat || "");
       if (!s) return null;
@@ -710,37 +713,47 @@ const ENABLE_SCORES_FEATURE = true;
     function checkStudentScoresAuth() {
       if (!state.accessCode || !state.studentSeat) return false;
       const seat = String(state.studentSeat);
-      const teacherPin = getTeacherConfiguredPin(seat);
+      const configuredToken = state.classData?.studentTokens?.[seat];
+      const tokenKey = "student_token_" + state.accessCode + "_" + seat;
+      const authKey = "student_auth_verified_" + state.accessCode + "_" + seat;
 
-      if (!teacherPin) {
-        if (elements.studentScoresUnconfiguredView) elements.studentScoresUnconfiguredView.classList.remove('hidden');
-        if (elements.studentScoresLockedView) elements.studentScoresLockedView.classList.add('hidden');
-        if (elements.studentScoresUnlockedView) elements.studentScoresUnlockedView.classList.add('hidden');
-        if (elements.unconfiguredSeatNumber) elements.unconfiguredSeatNumber.textContent = seat;
-        return false;
+      // Case 1: 網址帶有專屬防偽安全令牌 (URL Token)
+      if (configuredToken) {
+        if (urlToken && urlToken === configuredToken) {
+          localStorage.setItem(tokenKey, urlToken);
+          localStorage.setItem(authKey, "true");
+          if (elements.studentScoresUnconfiguredView) elements.studentScoresUnconfiguredView.classList.add('hidden');
+          if (elements.studentScoresLockedView) elements.studentScoresLockedView.classList.add('hidden');
+          if (elements.studentScoresUnlockedView) elements.studentScoresUnlockedView.classList.remove('hidden');
+          return true;
+        }
+
+        // Case 2: 本機已儲存之專屬防偽安全令牌 (LocalStorage Token)
+        const storedToken = localStorage.getItem(tokenKey);
+        if (storedToken && storedToken === configuredToken) {
+          if (elements.studentScoresUnconfiguredView) elements.studentScoresUnconfiguredView.classList.add('hidden');
+          if (elements.studentScoresLockedView) elements.studentScoresLockedView.classList.add('hidden');
+          if (elements.studentScoresUnlockedView) elements.studentScoresUnlockedView.classList.remove('hidden');
+          return true;
+        }
       }
 
-      // 檢查本機驗證憑證 (LocalStorage)
-      const authKey = "student_auth_verified_" + state.accessCode + "_" + seat;
-      const pinKey = "student_auth_pin_" + state.accessCode + "_" + seat;
+      // 相容舊模式 (若尚未換發 Token，且先前已驗證過)
+      const teacherPin = getTeacherConfiguredPin(seat);
       const isVerified = localStorage.getItem(authKey) === "true";
-      const storedPin = localStorage.getItem(pinKey);
-
-      // Case 1: 本機已驗證過且密碼相符 -> 本機免密直開！
-      if (isVerified && storedPin && storedPin.trim().toUpperCase() === teacherPin) {
+      const storedPin = localStorage.getItem("student_auth_pin_" + state.accessCode + "_" + seat);
+      if (!configuredToken && isVerified && storedPin && storedPin.trim().toUpperCase() === teacherPin) {
         if (elements.studentScoresUnconfiguredView) elements.studentScoresUnconfiguredView.classList.add('hidden');
         if (elements.studentScoresLockedView) elements.studentScoresLockedView.classList.add('hidden');
         if (elements.studentScoresUnlockedView) elements.studentScoresUnlockedView.classList.remove('hidden');
         return true;
       }
 
-      // Case 2: 尚未驗證（首次存取或切換座號跨座號防窺）
+      // 未通過令牌驗證 -> 呈現防偽安全鎖定卡片
       if (elements.studentScoresUnconfiguredView) elements.studentScoresUnconfiguredView.classList.add('hidden');
       if (elements.studentScoresLockedView) elements.studentScoresLockedView.classList.remove('hidden');
       if (elements.studentScoresUnlockedView) elements.studentScoresUnlockedView.classList.add('hidden');
       if (elements.lockedSeatNumber) elements.lockedSeatNumber.textContent = seat;
-      if (elements.studentPinErrorBox) elements.studentPinErrorBox.classList.add('hidden');
-      if (elements.inputStudentAuthPin) elements.inputStudentAuthPin.value = '';
 
       return false;
     }

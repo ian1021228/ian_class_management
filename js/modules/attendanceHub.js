@@ -10,7 +10,7 @@
  */
 
 import { state } from '../state.js';
-import { formatDate, showToast, escapeHtml } from '../utils.js';
+import { formatDate, showToast, escapeHtml, showConfirmModal } from '../utils.js';
 import { saveData } from '../storage.js';
 import { getActiveSeatsForClass, getStudentDisplayName, getStudentNameOnly, spawnScorePop } from './classWizard.js';
 
@@ -178,6 +178,117 @@ export function markStudentAttendance(seat, clientEvent = null) {
     );
 }
 
+// ==========================================
+// 24小時制出勤時間滾輪 (24hr Time Wheel Picker)
+// ==========================================
+let wheelHour = 7;
+let wheelMinute = 50;
+let wheelSecond = 0;
+let isWheelInitialized = false;
+
+export function initAttendanceTimeWheel() {
+    const hourList = document.getElementById('att-wheel-hour-list');
+    const minList = document.getElementById('att-wheel-minute-list');
+    const secList = document.getElementById('att-wheel-second-list');
+    if (!hourList || !minList || !secList) return;
+    if (isWheelInitialized && hourList.children.length > 0) return;
+
+    hourList.innerHTML = '';
+    for (let h = 0; h < 24; h++) {
+        const item = document.createElement('div');
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.dataset.val = h;
+        item.textContent = String(h).padStart(2, '0');
+        item.addEventListener('click', () => setWheelTime(h, wheelMinute, wheelSecond, true));
+        hourList.appendChild(item);
+    }
+
+    minList.innerHTML = '';
+    for (let m = 0; m < 60; m++) {
+        const item = document.createElement('div');
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.dataset.val = m;
+        item.textContent = String(m).padStart(2, '0');
+        item.addEventListener('click', () => setWheelTime(wheelHour, m, wheelSecond, true));
+        minList.appendChild(item);
+    }
+
+    secList.innerHTML = '';
+    for (let s = 0; s < 60; s++) {
+        const item = document.createElement('div');
+        item.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-500 hover:text-amber-800 cursor-pointer snap-center transition-all select-none';
+        item.dataset.val = s;
+        item.textContent = String(s).padStart(2, '0');
+        item.addEventListener('click', () => setWheelTime(wheelHour, wheelMinute, s, true));
+        secList.appendChild(item);
+    }
+
+    const bindScroll = (container, onSnap) => {
+        let scrollTimeout = null;
+        container.addEventListener('scroll', () => {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const itemHeight = 36;
+                const idx = Math.max(0, Math.min(container.children.length - 1, Math.round(container.scrollTop / itemHeight)));
+                onSnap(idx);
+            }, 80);
+        }, { passive: true });
+    };
+
+    bindScroll(hourList, (h) => setWheelTime(h, wheelMinute, wheelSecond, false));
+    bindScroll(minList, (m) => setWheelTime(wheelHour, m, wheelSecond, false));
+    bindScroll(secList, (s) => setWheelTime(wheelHour, wheelMinute, s, false));
+
+    isWheelInitialized = true;
+}
+
+export function setWheelTime(h, m, s, scrollUI = true) {
+    const displayEl = document.getElementById('att-wheel-display');
+    const inputEl = document.getElementById('att-modal-time-input');
+    const hourList = document.getElementById('att-wheel-hour-list');
+    const minList = document.getElementById('att-wheel-minute-list');
+    const secList = document.getElementById('att-wheel-second-list');
+
+    if (h === null || h === undefined || isNaN(h)) {
+        if (displayEl) displayEl.textContent = '-- : -- : --';
+        if (inputEl) inputEl.value = '';
+        if (hourList) Array.from(hourList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
+        if (minList) Array.from(minList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
+        if (secList) Array.from(secList.children).forEach(c => c.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 snap-center transition-all');
+        return;
+    }
+
+    wheelHour = Math.max(0, Math.min(23, Number(h)));
+    wheelMinute = Math.max(0, Math.min(59, Number(m)));
+    wheelSecond = Math.max(0, Math.min(59, Number(s || 0)));
+
+    const hStr = String(wheelHour).padStart(2, '0');
+    const mStr = String(wheelMinute).padStart(2, '0');
+    const sStr = String(wheelSecond).padStart(2, '0');
+
+    if (displayEl) displayEl.textContent = `${hStr} : ${mStr} : ${sStr}`;
+    if (inputEl) inputEl.value = `${hStr}:${mStr}:${sStr}`;
+
+    const updateActiveItem = (list, activeVal) => {
+        if (!list || list.children.length === 0) return;
+        Array.from(list.children).forEach(child => {
+            const val = Number(child.dataset.val);
+            if (val === activeVal) {
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-black text-base text-amber-900 scale-110 bg-amber-500/15 rounded-lg snap-center transition-all';
+            } else {
+                child.className = 'att-wheel-item h-9 flex items-center justify-center font-mono font-bold text-sm text-stone-400 hover:text-stone-700 snap-center transition-all';
+            }
+        });
+        if (scrollUI) {
+            list.scrollTo({ top: activeVal * 36, behavior: 'smooth' });
+        }
+    };
+
+    updateActiveItem(hourList, wheelHour);
+    updateActiveItem(minList, wheelMinute);
+    updateActiveItem(secList, wheelSecond);
+}
+
 /**
  * 開啟出勤狀態切換選單彈窗
  */
@@ -202,12 +313,23 @@ export function openAttendanceStatusModal(seat) {
     const meta = ATTENDANCE_STATUS_META[existing?.status] || ATTENDANCE_STATUS_META.unmarked;
     if (statusEl) statusEl.textContent = `目前狀態：${meta.label} (${existing?.time || '尚未打卡'}${existing?.isModified ? ' · 已修改' : ''})`;
     if (noteInp) noteInp.value = existing?.note || '';
-    const timeInp = document.getElementById('att-modal-time-input');
-    if (timeInp) {
-        timeInp.value = existing?.time ? existing.time.substring(0, 8) : '';
-    }
 
     modal.classList.remove('hidden');
+
+    // 初始化並同步 24hr 時間滾輪（彈窗顯示後執行，以保證正確計算元素高度與滾動偏移）
+    initAttendanceTimeWheel();
+    if (existing?.time) {
+        const parts = existing.time.split(':');
+        const h = parseInt(parts[0], 10) || 0;
+        const m = parseInt(parts[1], 10) || 0;
+        const s = parseInt(parts[2], 10) || 0;
+        setWheelTime(h, m, s, false);
+        setTimeout(() => setWheelTime(h, m, s, true), 40);
+    } else {
+        const now = new Date();
+        setWheelTime(now.getHours(), now.getMinutes(), now.getSeconds(), false);
+        setTimeout(() => setWheelTime(now.getHours(), now.getMinutes(), now.getSeconds(), true), 40);
+    }
 }
 
 /**
@@ -232,6 +354,14 @@ export function renderAttendanceHub() {
 
     const classBadge = document.getElementById('attendance-class-badge');
     if (classBadge) classBadge.textContent = currentClass.name;
+
+    const dateDisplay = document.getElementById('attendance-date-display');
+    if (dateDisplay) dateDisplay.textContent = selectedAttendanceDate;
+
+    const lateTimeDisplay = document.getElementById('attendance-late-time-display');
+    if (lateTimeDisplay) {
+        lateTimeDisplay.textContent = currentClass.attendanceSettings.lateTime || '07:50';
+    }
 
     const dateInput = document.getElementById('attendance-date-input');
     if (dateInput && dateInput.value !== selectedAttendanceDate) {
@@ -498,22 +628,103 @@ export function initAttendanceHub() {
         }
     });
 
-    // 日期切換
-    document.getElementById('attendance-date-input')?.addEventListener('change', (e) => {
-        if (e.target.value) {
-            selectedAttendanceDate = e.target.value;
-            renderAttendanceHub();
+    // 初始化 24hr 時間滾輪（預先建立 DOM 項目）
+    initAttendanceTimeWheel();
+
+    // 日期選擇按鈕（使用自訂日曆彈窗，零原生日曆）
+    document.getElementById('att-date-select-btn')?.addEventListener('click', () => {
+        if (typeof window.openCustomDatePickerModal === 'function') {
+            window.openCustomDatePickerModal((dateStr) => {
+                selectedAttendanceDate = dateStr;
+                renderAttendanceHub();
+            }, selectedAttendanceDate);
+        } else {
+            // 相容現有 date-picker-modal
+            const dateModal = document.getElementById('date-picker-modal');
+            if (dateModal) {
+                window.customDatePickerCallback = (dateStr) => {
+                    selectedAttendanceDate = dateStr;
+                    renderAttendanceHub();
+                };
+                state.calendarDate = new Date(selectedAttendanceDate);
+                if (typeof window.renderCalendar === 'function') window.renderCalendar();
+                dateModal.classList.remove('hidden');
+            }
         }
     });
 
-    // 遲到基準時間設定
+    // 遲到基準時間設定（自訂彈窗，零原生時間輸入）
+    document.getElementById('att-late-threshold-btn')?.addEventListener('click', openLateThresholdModal);
+    document.getElementById('close-att-threshold-modal-btn')?.addEventListener('click', closeLateThresholdModal);
+    document.getElementById('cancel-att-threshold-btn')?.addEventListener('click', closeLateThresholdModal);
+
+    // 遲到基準快速預設標籤按鈕
+    document.querySelectorAll('.att-preset-thresh-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const timeVal = btn.dataset.time;
+            if (!timeVal) return;
+            const parts = timeVal.split(':');
+            const h = document.getElementById('att-thresh-hour-input');
+            const m = document.getElementById('att-thresh-min-input');
+            if (h) h.textContent = parts[0];
+            if (m) m.textContent = parts[1];
+        });
+    });
+
+    // 遲到基準微調按鈕
+    document.getElementById('att-thresh-h-up')?.addEventListener('click', () => {
+        const el = document.getElementById('att-thresh-hour-input');
+        if (!el) return;
+        let v = (parseInt(el.textContent, 10) + 1) % 24;
+        el.textContent = String(v).padStart(2, '0');
+    });
+    document.getElementById('att-thresh-h-down')?.addEventListener('click', () => {
+        const el = document.getElementById('att-thresh-hour-input');
+        if (!el) return;
+        let v = (parseInt(el.textContent, 10) + 23) % 24;
+        el.textContent = String(v).padStart(2, '0');
+    });
+    document.getElementById('att-thresh-m-up')?.addEventListener('click', () => {
+        const el = document.getElementById('att-thresh-min-input');
+        if (!el) return;
+        let v = (parseInt(el.textContent, 10) + 5) % 60;
+        el.textContent = String(v).padStart(2, '0');
+    });
+    document.getElementById('att-thresh-m-down')?.addEventListener('click', () => {
+        const el = document.getElementById('att-thresh-min-input');
+        if (!el) return;
+        let v = (parseInt(el.textContent, 10) + 55) % 60;
+        el.textContent = String(v).padStart(2, '0');
+    });
+
+    // 確認套用新遲到基準並自動重新歸類
+    document.getElementById('save-att-threshold-btn')?.addEventListener('click', () => {
+        const h = document.getElementById('att-thresh-hour-input')?.textContent.trim() || '07';
+        const m = document.getElementById('att-thresh-min-input')?.textContent.trim() || '50';
+        const newLateTime = `${h}:${m}`;
+
+        const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+        if (!currentClass) return;
+        ensureClassAttendanceData(currentClass);
+        currentClass.attendanceSettings.lateTime = newLateTime;
+
+        // 【使用者規範執行】：若改變遲到基準，則重新檢查當日所有學生簽到時間一次，再重新歸類狀態，請假或曠課則不受影響
+        reclassifyDayAttendanceByLateThreshold(newLateTime);
+        saveData();
+        closeLateThresholdModal();
+        showToast(`已更新遲到門檻為 ${newLateTime}，並完成當日簽到學生狀態重新歸類！`, 'success');
+    });
+
+    // 遲到基準時間設定 (相容舊 input 事件)
     document.getElementById('attendance-late-time-input')?.addEventListener('change', (e) => {
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
         ensureClassAttendanceData(currentClass);
-        currentClass.attendanceSettings.lateTime = e.target.value || '07:50';
+        const newTime = e.target.value || '07:50';
+        currentClass.attendanceSettings.lateTime = newTime;
+        reclassifyDayAttendanceByLateThreshold(newTime);
         saveData();
-        showToast(`已更新遲到基準時間為 ${currentClass.attendanceSettings.lateTime}`, 'success');
+        showToast(`已更新遲到基準時間為 ${currentClass.attendanceSettings.lateTime}，並重新檢查當日簽到`, 'success');
     });
 
     // 一鍵全班未到者全數準時出席
@@ -536,9 +747,13 @@ export function initAttendanceHub() {
         showToast(`已將剩餘 ${count} 位未簽到學生標記為「準時出席」`, 'success');
     });
 
-    // 清空重置本日簽到紀錄
-    document.getElementById('att-batch-reset-day-btn')?.addEventListener('click', () => {
-        if (!confirm('確定要清空本日的所有出勤簽到紀錄嗎？此動作將清除今日打卡時間與備註。')) return;
+    // 清空重置本日簽到紀錄 (零原生 confirm，使用系統毛玻璃彈窗)
+    document.getElementById('att-batch-reset-day-btn')?.addEventListener('click', async () => {
+        const ok = await showConfirmModal(
+            '清空本日出勤簽到紀錄',
+            '確定要清空本日的所有出勤簽到紀錄嗎？此動作將清除今日打卡時間與備註，請假與曠課紀錄亦將一併重置。'
+        );
+        if (!ok) return;
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
         ensureClassAttendanceData(currentClass);
@@ -554,12 +769,37 @@ export function initAttendanceHub() {
         if (e.target.id === 'attendance-status-modal') closeAttendanceStatusModal();
     });
 
+    // 24hr 時間滾輪微調與預設按鈕
+    document.getElementById('att-wheel-hour-up')?.addEventListener('click', () => {
+        setWheelTime((wheelHour + 1) % 24, wheelMinute, wheelSecond, true);
+    });
+    document.getElementById('att-wheel-hour-down')?.addEventListener('click', () => {
+        setWheelTime((wheelHour + 23) % 24, wheelMinute, wheelSecond, true);
+    });
+    document.getElementById('att-wheel-minute-up')?.addEventListener('click', () => {
+        setWheelTime(wheelHour, (wheelMinute + 1) % 60, wheelSecond, true);
+    });
+    document.getElementById('att-wheel-minute-down')?.addEventListener('click', () => {
+        setWheelTime(wheelHour, (wheelMinute + 59) % 60, wheelSecond, true);
+    });
+    document.getElementById('att-wheel-second-up')?.addEventListener('click', () => {
+        setWheelTime(wheelHour, wheelMinute, (wheelSecond + 1) % 60, true);
+    });
+    document.getElementById('att-wheel-second-down')?.addEventListener('click', () => {
+        setWheelTime(wheelHour, wheelMinute, (wheelSecond + 59) % 60, true);
+    });
+
     document.getElementById('att-modal-now-time-btn')?.addEventListener('click', () => {
         const now = new Date();
-        const timeInp = document.getElementById('att-modal-time-input');
-        if (timeInp) {
-            timeInp.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-        }
+        setWheelTime(now.getHours(), now.getMinutes(), now.getSeconds(), true);
+    });
+
+    document.getElementById('att-modal-preset-late-btn')?.addEventListener('click', () => {
+        setWheelTime(7, 50, 0, true);
+    });
+
+    document.getElementById('att-modal-clear-time-btn')?.addEventListener('click', () => {
+        setWheelTime(null, null, null, false);
     });
 
     document.querySelectorAll('.att-status-pick-btn').forEach(btn => {
@@ -609,8 +849,85 @@ export function initAttendanceHub() {
     document.getElementById('att-export-excel-btn')?.addEventListener('click', exportAttendanceExcel);
 }
 
-// 註冊全域供跨模組與導覽使用
+/**
+ * 重新檢查當日所有學生簽到時間並依新遲到基準歸類狀態
+ * 【使用者全域規範】：若改變遲到基準，則重新檢查當日所有學生簽到時間一次，再重新歸類狀態，請假或曠課則不受影響
+ */
+export function reclassifyDayAttendanceByLateThreshold(newLateTime = null) {
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    if (!currentClass) return 0;
+    ensureClassAttendanceData(currentClass);
+
+    const cutoff = newLateTime || currentClass.attendanceSettings?.lateTime || '07:50';
+    const dayRecords = currentClass.attendanceRecords[selectedAttendanceDate];
+    if (!dayRecords) return 0;
+
+    let reclassifiedCount = 0;
+    const seats = getActiveSeatsForClass(currentClass);
+
+    // 格式化門檻為 HH:MM:SS 用於字串精準比對 (如 07:50:00)
+    const cutoffStandard = cutoff.length === 5 ? `${cutoff}:00` : cutoff;
+
+    seats.forEach(seat => {
+        const rec = dayRecords[String(seat)];
+        if (!rec || !rec.time) return;
+
+        // 【嚴格遵循規範】：請假 (leave) 或 缺席/曠課 (absent) 絕對不受影響！
+        if (rec.status === 'leave' || rec.status === 'absent' || rec.status === 'unmarked') {
+            return;
+        }
+
+        // 僅針對 present (出席) 與 late (遲到) 重新審視
+        const recTimeStandard = rec.time.length === 5 ? `${rec.time}:00` : rec.time;
+        const newStatus = recTimeStandard <= cutoffStandard ? 'present' : 'late';
+
+        if (rec.status !== newStatus) {
+            rec.status = newStatus;
+            reclassifiedCount++;
+        }
+    });
+
+    saveData();
+    renderAttendanceHub();
+
+    if (reclassifiedCount > 0) {
+        showToast(`已依新門檻 (${cutoff}) 重新歸類 ${reclassifiedCount} 位學生狀態（請假/曠課保留不受影響）`, 'info');
+    }
+    return reclassifiedCount;
+}
+
+/**
+ * 開啟自訂遲到基準時間設定彈窗 (Zero Native Time Picker)
+ */
+export function openLateThresholdModal() {
+    const modal = document.getElementById('att-late-threshold-modal');
+    if (!modal) return;
+    const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
+    const curLate = currentClass?.attendanceSettings?.lateTime || '07:50';
+    const parts = curLate.split(':');
+    const h = parseInt(parts[0], 10) || 7;
+    const m = parseInt(parts[1], 10) || 50;
+
+    const hourInp = document.getElementById('att-thresh-hour-input');
+    const minInp = document.getElementById('att-thresh-min-input');
+    if (hourInp) hourInp.textContent = String(h).padStart(2, '0');
+    if (minInp) minInp.textContent = String(m).padStart(2, '0');
+
+    modal.classList.remove('hidden');
+}
+
+export function closeLateThresholdModal() {
+    const modal = document.getElementById('att-late-threshold-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// 註冊全域
 window.renderAttendanceHub = renderAttendanceHub;
+window.initAttendanceTimeWheel = initAttendanceTimeWheel;
+window.setWheelTime = setWheelTime;
+window.reclassifyDayAttendanceByLateThreshold = reclassifyDayAttendanceByLateThreshold;
+window.openLateThresholdModal = openLateThresholdModal;
+window.closeLateThresholdModal = closeLateThresholdModal;
 window.openAttendanceStatusModal = openAttendanceStatusModal;
 window.closeAttendanceStatusModal = closeAttendanceStatusModal;
 window.markStudentAttendance = markStudentAttendance;

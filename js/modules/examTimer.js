@@ -671,10 +671,11 @@ export function initExamTimer() {
     });
 
     // 6. 清除全部考程
-    document.getElementById('exam-clear-all-schedules-btn')?.addEventListener('click', () => {
+    document.getElementById('exam-clear-all-schedules-btn')?.addEventListener('click', async () => {
         const currentClass = state.appData.classes.find(c => c.id === state.currentClassId);
         if (!currentClass) return;
-        if (confirm('確定要清除所有已排定的考程場次嗎？')) {
+        const ok = await showConfirmModal('清除所有考程', '確定要清除所有已排定的考程場次嗎？');
+        if (ok) {
             currentClass.examSchedules = [];
             activeScheduleIndex = 0;
             editingScheduleId = null;

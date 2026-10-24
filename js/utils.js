@@ -450,7 +450,7 @@ window.showCustomPromptModal = showCustomPromptModal;
 export function showNamePromptModal(callback) {
     const modal = document.getElementById('name-prompt-modal');
     if (!modal) {
-        const name = prompt("請輸入您的尊姓大名或暱稱：", localStorage.getItem('visitor_name') || '親愛的老師');
+        const name = localStorage.getItem('visitor_name') || '親愛的老師';
         if (callback) callback(name);
         return;
     }

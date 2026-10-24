@@ -94,7 +94,12 @@
     }
   </style>
 </head>
-<body class="h-full flex flex-col text-slate-800 bg-slate-50 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body class="h-full flex flex-col text-slate-800 bg-[#FAF7F2] antialiased selection:bg-indigo-100 selection:text-indigo-900 relative">
+  <!-- 全域柔和 AI 氛圍背景層 (低對比、溫潤木質晨光、不花俏、保證文字極致清晰) -->
+  <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden" aria-hidden="true">
+    <img src="assets/images/bg_parent_portal.png" alt="" class="w-full h-full object-cover object-center opacity-35 mix-blend-multiply transition-opacity duration-700" onerror="this.style.display='none'">
+    <div class="absolute inset-0 bg-gradient-to-b from-[#FFFDF9]/85 via-[#FDFBF7]/90 to-[#FAF6EE]/95 backdrop-blur-[2px]"></div>
+  </div>
 
   <!-- =============================== -->
   <!-- 1. LOGIN / ACCESS CODE VIEW -->
@@ -535,64 +540,32 @@
             </div>
           </div>
 
-          <!-- State C: Seat Selected but Locked (Parent PIN Protection) -->
-          <div id="student-locked-view" class="hidden text-center py-8 px-4">
-            <div class="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4 border border-indigo-100 shadow-sm">
-              <i class="fa-solid fa-lock text-2xl text-indigo-600"></i>
-            </div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold mb-2">
+          <!-- State C: Seat Selected but Locked (親師專屬防偽安全令牌保護 - 徹底取代 PIN 碼) -->
+          <div id="student-locked-view" class="hidden text-center py-9 px-5 glass-card rounded-3xl border border-indigo-100 shadow-sm space-y-4">
+            <div class="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto border border-indigo-200/80 shadow-xs text-2xl">
               <i class="fa-solid fa-shield-halved"></i>
-              <span>座號 <span id="locked-seat-display">--</span> 號 學生隱私安全防護</span>
             </div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">請輸入學生端專屬驗證碼 (PIN)</h2>
-            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mt-2 mb-6 leading-relaxed">
-              為保護學生個人各項隱私，查看前需輸入專屬 PIN 碼（預設為 <strong>班級代碼 + 座號</strong>，家長與學生共用相同密碼）。
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-black">
+              <i class="fa-solid fa-lock"></i>
+              <span>座號 <span id="locked-seat-display">--</span> 號 親師防偽安全保護</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">此學生資料受親師專屬安全防偽令牌保護</h2>
+            <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              本系統已全面啟用親師防偽安全令牌，<strong>三端徹底取代傳統 PIN 碼</strong>。<br>
+              請點擊導師發送給您的<strong>【專屬家長端連結】</strong>即可自動免密直達孩子的個人空間！
             </p>
-
-            <form id="parent-pin-form" class="max-w-xs mx-auto space-y-4">
-              <div class="relative">
-                <input
-                  type="password"
-                  id="input-parent-pin"
-                  name="parentPin"
-                  placeholder="請輸入專屬 PIN 碼"
-                  maxlength="20"
-                  autocomplete="off"
-                  class="w-full text-center font-mono tracking-[0.2em] text-2xl sm:text-3xl font-extrabold py-3.5 px-4 bg-slate-50 border border-slate-300 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:tracking-normal placeholder:text-base placeholder:font-normal uppercase"
-                  required
-                />
-                <button
-                  type="button"
-                  id="btn-toggle-pin-visibility"
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="顯示/隱藏密碼"
-                >
-                  <i class="fa-regular fa-eye text-sm" id="icon-pin-eye"></i>
-                </button>
+            <div class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 text-xs text-amber-900 font-medium max-w-md mx-auto text-left space-y-1.5">
+              <div class="font-black flex items-center gap-1.5 text-amber-950">
+                <i class="fa-solid fa-circle-question text-amber-600"></i>
+                <span>如何取得專屬安全連結？</span>
               </div>
-
-              <!-- PIN Error Alert -->
-              <div id="pin-error-box" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-start gap-2 text-left">
-                <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500 flex-shrink-0"></i>
-                <span id="pin-error-msg" class="leading-snug">密碼不正確，請確認孩子學生端顯示之 6 位數 PIN 碼！</span>
-              </div>
-
-              <button
-                type="submit"
-                id="btn-submit-pin"
-                class="touch-target w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-lg shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <i id="pin-submit-icon" class="fa-solid fa-unlock-keyhole"></i>
-                <span id="pin-submit-text">驗證並解鎖</span>
-              </button>
-            </form>
-
-            <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-slate-400">
-              <button id="btn-cancel-unlock-seat" type="button" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer">
-                <i class="fa-solid fa-arrow-left"></i>
+              <div>請聯繫班級導師在教師端點選「親師專屬安全防偽連結與令牌管理」，即可一鍵複製該生專屬免密連結發送給您。</div>
+            </div>
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button id="btn-cancel-unlock-seat" type="button" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
                 <span>切換選擇其他座號</span>
               </button>
-              <span class="text-slate-400 flex items-center gap-1"><i class="fa-solid fa-lightbulb text-amber-500"></i> 提示：此密碼為 6 位數專屬 PIN 碼。若忘記密碼請聯繫導師重設。</span>
             </div>
           </div>
 
@@ -658,58 +631,27 @@
           </div>
         </div>
 
-        <!-- State B: Seat Selected but Locked (PIN Required) -->
-        <div id="parent-scores-locked-view" class="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-200/80 text-center hidden">
-          <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm">
-            <i class="fa-solid fa-shield-halved text-2xl"></i>
+        <!-- State B: Seat Selected but Locked (親師專屬防偽安全令牌保護 - 徹底取代 PIN 碼) -->
+        <div id="parent-scores-locked-view" class="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-200/80 text-center hidden space-y-4">
+          <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100 shadow-sm text-2xl">
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold mb-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
             <i class="fa-solid fa-lock"></i>
             <span>座號 <span class="parent-locked-seat-num">--</span> 號 學生個人成績防護</span>
           </div>
-          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">輸入專屬 PIN 碼解鎖成績</h2>
-          <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mt-2 mb-6 leading-relaxed">
-            為維護學生在校成績與個人隱私，請輸入專屬密碼（預設為 <strong>班級代碼 + 座號</strong>，家長與學生共用相同 PIN 碼）。
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">個人成績受親師專屬安全防偽令牌保護</h2>
+          <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+            為維護學生在校成績與個人隱私，系統已全面啟用親師防偽安全令牌，<strong>三端徹底取代 PIN 碼</strong>。<br>
+            請直接透過導師提供的<strong>【專屬家長端連結】</strong>開啟，即可自動免密直達成績總覽與各科分析。
           </p>
 
-          <form id="parent-scores-pin-form" class="max-w-xs mx-auto space-y-4">
-            <div class="relative">
-              <input
-                type="password"
-                id="input-scores-pin"
-                class="w-full text-center font-mono tracking-[0.2em] text-2xl sm:text-3xl font-extrabold py-3.5 px-4 bg-slate-50 border border-slate-300 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:tracking-normal placeholder:text-base placeholder:font-normal uppercase"
-                placeholder="請輸入專屬 PIN 碼"
-                maxlength="20"
-                required
-              />
-              <button
-                type="button"
-                id="btn-toggle-scores-pin"
-                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                title="顯示/隱藏密碼"
-              >
-                <i class="fa-regular fa-eye text-sm" id="icon-scores-pin-eye"></i>
-              </button>
+          <div class="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs text-emerald-900 font-medium max-w-md mx-auto text-left space-y-1.5">
+            <div class="font-black flex items-center gap-1.5 text-emerald-950">
+              <i class="fa-solid fa-circle-question text-emerald-600"></i>
+              <span>如何解鎖查看？</span>
             </div>
-
-            <!-- Error alert -->
-            <div id="scores-pin-error-box" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-start gap-2 text-left">
-              <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-500 flex-shrink-0"></i>
-              <span id="scores-pin-error-msg" class="leading-snug">密碼不正確！請向孩子確認學生端顯示之專屬查閱密碼。</span>
-            </div>
-
-            <button
-              type="submit"
-              id="btn-submit-scores-pin"
-              class="touch-target w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/25 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <i id="scores-pin-submit-icon" class="fa-solid fa-unlock-keyhole"></i>
-              <span id="scores-pin-submit-text">解鎖並查閱成績分析</span>
-            </button>
-          </form>
-
-          <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-slate-400">
-            <span class="text-slate-400 flex items-center gap-1"><i class="fa-solid fa-lightbulb text-amber-500"></i> 提示：此密碼為 6 位數專屬 PIN 碼。若忘記密碼請聯繫導師重設。</span>
+            <div>請聯繫導師在教師端後台一鍵複製專屬免密連結發送給您；首次開啟連結後，本機裝置將自動記憶驗證憑證！</div>
           </div>
         </div>
 
@@ -839,11 +781,11 @@
                   <option value="custom">自訂日期範圍</option>
                 </select>
 
-                <!-- 自訂日期輸入 (預設隱藏) -->
+                <!-- 自訂日期輸入 (預設隱藏，零原生日期選擇) -->
                 <div id="parent-filter-custom-date-container" class="hidden flex items-center gap-1">
-                  <input type="date" id="parent-filter-date-start" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs">
+                  <input type="text" id="parent-filter-date-start" readonly placeholder="起始日" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs w-20 text-center cursor-pointer" title="點選選擇起始日">
                   <span class="text-slate-400">至</span>
-                  <input type="date" id="parent-filter-date-end" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs">
+                  <input type="text" id="parent-filter-date-end" readonly placeholder="結束日" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs w-20 text-center cursor-pointer" title="點選選擇結束日">
                 </div>
 
                 <!-- Multi-Subject Filter Button (科目複選) -->
@@ -1218,9 +1160,11 @@
               <i class="fa-regular fa-calendar text-emerald-600 mr-1"></i> 測驗日期
             </label>
             <input
-              type="date"
+              type="text"
               id="parent-input-score-date"
-              class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center"
+              readonly
+              placeholder="點選選擇測驗日期"
+              class="w-full py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center cursor-pointer"
             />
           </div>
         </div>
@@ -1448,6 +1392,27 @@
         </button>
         <button id="btn-apply-parent-multi-subject" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs shadow-md shadow-teal-500/20 transition-all cursor-pointer">
           套用篩選
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自訂確認對話框 (零原生 confirm) -->
+  <div id="inapp-confirm-modal" class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md hidden transition-all duration-300">
+    <div class="relative w-full max-w-sm bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-200 text-center space-y-4">
+      <div class="w-14 h-14 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto border border-amber-100 shadow-xs" id="confirm-modal-icon-container">
+        <i class="fa-solid fa-triangle-exclamation" id="confirm-modal-icon"></i>
+      </div>
+      <div>
+        <h3 id="confirm-modal-title" class="text-base sm:text-lg font-black text-slate-900">確認提示</h3>
+        <p id="confirm-modal-message" class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">請確認是否繼續執行。</p>
+      </div>
+      <div class="flex gap-2.5 pt-2">
+        <button id="confirm-modal-cancel-btn" type="button" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs sm:text-sm hover:bg-slate-100 transition-colors cursor-pointer">
+          取消
+        </button>
+        <button id="confirm-modal-ok-btn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-500/20 transition-all cursor-pointer">
+          確定執行
         </button>
       </div>
     </div>

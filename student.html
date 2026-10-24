@@ -94,7 +94,12 @@
     }
   </style>
 </head>
-<body class="h-full flex flex-col text-slate-800 bg-slate-50 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+<body class="h-full flex flex-col text-slate-800 bg-[#F4F9F6] antialiased selection:bg-emerald-100 selection:text-emerald-900 relative">
+  <!-- 全域柔和 AI 氛圍背景層 (低對比、清新粉彩晴空、不花俏、保證文字極致清晰) -->
+  <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden" aria-hidden="true">
+    <img src="assets/images/bg_student_portal.png" alt="" class="w-full h-full object-cover object-center opacity-30 mix-blend-multiply transition-opacity duration-700" onerror="this.style.display='none'">
+    <div class="absolute inset-0 bg-gradient-to-b from-[#F8FAF9]/85 via-[#F4F9F6]/90 to-[#EDF6F1]/95 backdrop-blur-[2px]"></div>
+  </div>
 
   <!-- =============================== -->
   <!-- 1. LOGIN / ACCESS CODE VIEW     -->
@@ -380,56 +385,30 @@
             </div>
           </div>
 
-          <!-- State B: 導師已開通，但本機尚未驗證（首次綁定或跨座號防窺防護） -->
-          <div id="student-scores-locked-view" class="hidden text-center py-10 px-5 bg-white rounded-3xl border border-slate-200/80 shadow-sm space-y-5">
+          <!-- State B: 專屬防偽安全令牌保護卡片（徹底取代 PIN 碼） -->
+          <div id="student-scores-locked-view" class="hidden text-center py-10 px-5 bg-white/95 backdrop-blur-md rounded-3xl border border-emerald-100 shadow-sm space-y-4">
             <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mx-auto border border-emerald-200/80 shadow-xs">
               <i class="fa-solid fa-shield-halved"></i>
             </div>
             <div class="max-w-md mx-auto space-y-2">
-              <h3 class="text-lg font-black text-slate-900">學生個人專屬 PIN 碼驗證</h3>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
+                <i class="fa-solid fa-lock"></i>
+                <span>座號 <strong id="locked-seat-number" class="text-emerald-950 font-mono text-sm">--</strong> 號 個人空間防偽安全保護</span>
+              </div>
+              <h3 class="text-lg font-black text-slate-900 tracking-tight">個人成績與心情日記受防偽安全令牌保護</h3>
               <p class="text-xs text-slate-500 leading-relaxed" id="student-pin-verify-desc">
-                首次存取座號 <strong id="locked-seat-number" class="text-emerald-800">--</strong> 號或切換至其他同學座號時，必須輸入該座號之個人專屬 PIN 碼（預設為 <strong>班級代碼 + 座號</strong>）。<br>
-                驗證成功後本機將自動記憶憑證，日後免密直開！
+                本系統已全面啟用親師防偽安全令牌，<strong>三端徹底取代傳統 PIN 碼</strong>。<br>
+                請直接點擊導師發送給您的<strong>「學生端專屬安全連結」</strong>，即可免密直達個人專屬空間！
               </p>
             </div>
 
-            <!-- PIN Form -->
-            <form id="student-pin-auth-form" class="max-w-xs mx-auto space-y-3.5">
-              <div class="relative">
-                <input
-                  type="password"
-                  id="input-student-auth-pin"
-                  class="w-full text-center font-mono tracking-widest text-2xl font-black py-3 px-4 bg-slate-50 border border-slate-300 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder:text-slate-300 placeholder:text-sm placeholder:tracking-normal placeholder:font-normal uppercase"
-                  placeholder="請輸入專屬 PIN 碼"
-                  maxlength="20"
-                  autocomplete="off"
-                  required
-                />
-                <button
-                  type="button"
-                  id="btn-toggle-student-auth-pin"
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="顯示/隱藏密碼"
-                >
-                  <i class="fa-regular fa-eye text-sm" id="icon-student-pin-eye"></i>
-                </button>
+            <div class="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs text-emerald-900 font-medium max-w-sm mx-auto text-left space-y-1.5">
+              <div class="font-black flex items-center gap-1.5 text-emerald-950">
+                <i class="fa-solid fa-circle-question text-emerald-600"></i>
+                <span>如何取得專屬安全連結？</span>
               </div>
-
-              <!-- Error Alert -->
-              <div id="student-pin-error-box" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 text-left">
-                <i class="fa-solid fa-circle-exclamation mt-0.5 flex-shrink-0"></i>
-                <span id="student-pin-error-msg" class="leading-snug">密碼不正確！若忘記密碼，請聯繫導師在教師端一鍵重設。</span>
-              </div>
-
-              <button
-                type="submit"
-                id="btn-submit-student-pin"
-                class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <i class="fa-solid fa-key"></i>
-                <span>驗證並綁定此裝置（本機免密直開）</span>
-              </button>
-            </form>
+              <div>請向班級導師索取專屬防偽安全連結。首次由該連結開啟後，本機將自動記憶憑證，日後免密直開！</div>
+            </div>
           </div>
 
           <!-- State C: 已驗證通過（本機免密直開） -->
@@ -567,11 +546,11 @@
                   <option value="custom">自訂日期範圍</option>
                 </select>
 
-                <!-- 自訂日期輸入 (預設隱藏) -->
+                <!-- 自訂日期輸入 (預設隱藏，零原生日期選擇) -->
                 <div id="filter-custom-date-container" class="hidden flex items-center gap-1">
-                  <input type="date" id="filter-date-start" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs">
+                  <input type="text" id="filter-date-start" readonly placeholder="起始日" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs w-20 text-center cursor-pointer" title="點選選擇起始日">
                   <span class="text-slate-400">至</span>
-                  <input type="date" id="filter-date-end" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs">
+                  <input type="text" id="filter-date-end" readonly placeholder="結束日" class="py-1 px-2 rounded-lg border border-slate-200 bg-slate-50 font-bold text-slate-700 text-xs w-20 text-center cursor-pointer" title="點選選擇結束日">
                 </div>
 
                 <!-- Multi-Select Subjects Filter Button (科目複選) -->

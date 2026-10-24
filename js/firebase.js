@@ -35,7 +35,7 @@ import {
 
 import { firebaseConfig, globalAppId, DEFAULT_TYPES } from './constants.js';
 import { state } from './state.js';
-import { safeStringify, safeClone, sanitizeAppData, fixDates, showToast, showAlertModal, showConfirmModal, closeModal } from './utils.js';
+import { safeStringify, safeClone, sanitizeAppData, fixDates, showToast, showAlertModal, showConfirmModal, showNamePromptModal, closeModal } from './utils.js';
 import { getUserStorageKey, loadLocalDataForUser } from './storage.js';
 
 export let fbApp, fbAuth, fbDb;
@@ -481,15 +481,16 @@ export function renderAdminUsersList() {
             const targetBtn = e.target.closest('.send-banner-btn');
             if (!targetBtn) return;
             const id = targetBtn.dataset.id;
-            const msg = prompt("請輸入要廣播給該用戶的系統橫幅：");
-            if (msg) {
-                try {
-                    await updateDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', id), {
-                        bannerMessage: msg, bannerActive: true, bannerId: Date.now().toString()
-                    });
-                    showToast("廣播推播成功！", "success");
-                } catch(err) { showToast("推播失敗", "error"); }
-            }
+            showNamePromptModal('推播系統橫幅', '請輸入要廣播給該用戶的系統橫幅：', '', async (msg) => {
+                if (msg) {
+                    try {
+                        await updateDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', id), {
+                            bannerMessage: msg, bannerActive: true, bannerId: Date.now().toString()
+                        });
+                        showToast("廣播推播成功！", "success");
+                    } catch(err) { showToast("推播失敗", "error"); }
+                }
+            });
         });
     });
 
@@ -498,15 +499,16 @@ export function renderAdminUsersList() {
             const targetBtn = e.target.closest('.force-reset-btn');
             if (!targetBtn) return;
             const id = targetBtn.dataset.id;
-            const pass = prompt("【危險操作】請輸入 2FA 本地萬用密鑰以確認清空該用戶資料：");
-            if (pass === "ianw0000") {
-                try {
-                    await updateDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', id), { forceReset: true });
-                    showToast("重置核彈已發射！", "success");
-                } catch(err) { showToast("重置失敗", "error"); }
-            } else {
-                showToast("2FA 密鑰驗證失敗！", "error");
-            }
+            showNamePromptModal('【危險操作】資料清空確認', '請輸入 2FA 本地萬用密鑰以確認清空該用戶資料：', '', async (pass) => {
+                if (pass === "ianw0000") {
+                    try {
+                        await updateDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', id), { forceReset: true });
+                        showToast("重置核彈已發射！", "success");
+                    } catch(err) { showToast("重置失敗", "error"); }
+                } else if (pass) {
+                    showToast("2FA 密鑰驗證失敗！", "error");
+                }
+            });
         });
     });
 
@@ -516,9 +518,8 @@ export function renderAdminUsersList() {
             if (!targetBtn) return;
             const id = targetBtn.dataset.id;
             const name = targetBtn.dataset.name || id;
-            if (!confirm(`【確定刪除帳號？】\n\n確定要刪除用戶「${name}」？此操作將永久清除該用戶的資料庫設定與雲端作業資料，且不可復原！`)) {
-                return;
-            }
+            const ok = await showConfirmModal('確定刪除帳號？', `確定要刪除用戶「${name}」？此操作將永久清除該用戶的資料庫設定與雲端作業資料，且不可復原！`);
+            if (!ok) return;
             try {
                 await deleteDoc(doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', id));
                 await deleteDoc(doc(fbDb, 'artifacts', globalAppId, 'users', id, 'appData', 'mainDoc'));
@@ -1011,7 +1012,13 @@ export async function deleteMyAccount() {
     const uid = fbAuth?.currentUser?.uid || state.currentUser?.uid;
     const email = user.email || user.displayName || "目前登入的帳號";
 
-    const confirmed = confirm(`【確定註銷並刪除帳號？】\n\n您即將刪除帳號【${email}】。\n\n此操作將會：\n1. 永久刪除您在雲端保存的所有班級、學生與作業紀錄\n2. 刪除所有雲端備份與設定檔\n3. 清空本機暫存並登出系統\n\n此操作無法復原！是否確定要繼續刪除？`);
+    const confirmed = await showConfirmModal(
+        '確定註銷並刪除帳號？',
+        `您即將刪除帳號【${email}】。\n\n此操作將會：\n1. 永久刪除您在雲端保存的所有班級、學生與作業紀錄\n2. 刪除所有雲端備份與設定檔\n3. 清空本機暫存並登出系統\n\n此操作無法復原！是否確定要繼續刪除？`,
+        null,
+        null,
+        { okText: '確認永久刪除帳號', okClass: 'bg-rose-600 hover:bg-rose-700 text-white font-black py-2.5 px-6 text-sm rounded-xl shadow-md transition-colors' }
+    );
     if (!confirmed) return;
 
     try {
@@ -1084,23 +1091,25 @@ export async function syncClassStudentPinsToCloud(classObj) {
         const parentDocRef = doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'parentClasses', code);
         await setDoc(parentDocRef, {
             studentPins: classObj.studentPins || {},
+            studentTokens: classObj.studentTokens || {},
             updatedAt: new Date().toISOString()
         }, { merge: true });
 
-        // Update userProfiles for each configured seat
-        if (classObj.studentPins) {
-            for (const [seat, pin] of Object.entries(classObj.studentPins)) {
-                if (pin) {
-                    const studentDocId = `studentScores_${code}_seat${seat}`;
-                    const profileDocRef = doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', studentDocId);
-                    await setDoc(profileDocRef, {
-                        classCode: code,
-                        seat: String(seat),
-                        parentPin: String(pin),
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true }).catch(() => {});
-                }
-            }
+        // Update userProfiles for each configured seat with security token
+        const seats = new Set([
+            ...Object.keys(classObj.studentPins || {}),
+            ...Object.keys(classObj.studentTokens || {})
+        ]);
+        for (const seat of seats) {
+            const studentDocId = `studentScores_${code}_seat${seat}`;
+            const profileDocRef = doc(fbDb, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', studentDocId);
+            await setDoc(profileDocRef, {
+                classCode: code,
+                seat: String(seat),
+                studentToken: classObj.studentTokens?.[seat] || '',
+                parentPin: classObj.studentPins?.[seat] || '',
+                updatedAt: new Date().toISOString()
+            }, { merge: true }).catch(() => {});
         }
     } catch (e) {
         console.warn("syncClassStudentPinsToCloud error:", e);

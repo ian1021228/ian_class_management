@@ -71,6 +71,10 @@
     </script>
 </head>
 <body class="text-slate-800 antialiased overflow-x-hidden relative">
+    <!-- 網站右上角常駐音效/靜音按鈕 (Top-Right Persistent Sound/Mute Toggle) -->
+    <button id="global-sound-toggle-btn" type="button" aria-label="切換音效" class="sound-toggle-btn fixed top-3.5 right-3.5 sm:top-4 sm:right-4 z-[150] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#FFFDF9]/95 hover:bg-white backdrop-blur-xl border border-[#EBDCCB] shadow-md hover:shadow-lg text-stone-700 hover:text-amber-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none pointer-events-auto" title="點擊切換音效開啟/靜音">
+        <i class="fa-solid fa-volume-high text-emerald-600 text-lg sm:text-xl"></i>
+    </button>
     <!-- Admin View Mode Banner -->
     <div id="admin-view-banner" class="hidden fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg z-[200] flex justify-between items-center px-4 py-2 sm:px-6 sm:py-3">
         <div class="flex items-center gap-2">
@@ -1783,9 +1787,9 @@
                         <option value="all">所有作業種類</option>
                     </select>
                     <div class="flex items-center gap-1.5">
-                        <input type="date" id="filter-date-start" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="filter-date-start" readonly placeholder="起始日" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500 w-24 text-center" title="點擊選擇起始日期">
                         <span class="text-stone-400">-</span>
-                        <input type="date" id="filter-date-end" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="filter-date-end" readonly placeholder="結束日" class="text-xs rounded-xl border border-stone-200 bg-white font-bold text-stone-700 py-1.5 px-2.5 cursor-pointer focus:outline-none focus:border-indigo-500 w-24 text-center" title="點擊選擇結束日期">
                     </div>
                 </div>
                 <div class="flex justify-end items-center gap-2 shrink-0 self-end md:self-auto">
@@ -1989,12 +1993,11 @@
                                 <i class="fa-solid fa-caret-left text-xs"></i>
                             </button>
 
-                            <!-- 當前日期與選擇器 [ 2026/10/23  ] -->
-                            <div class="relative flex items-center gap-2 px-3 py-1.5 rounded-full border border-stone-300 bg-white cursor-pointer hover:border-amber-500 transition-colors">
+                            <!-- 當前日期與選擇器 [ 2026/10/23 ] (點選開啟自訂月曆，零原生控件) -->
+                            <button type="button" id="bb-open-calendar-btn" class="relative flex items-center gap-2 px-3 py-1.5 rounded-full border border-stone-300 bg-white cursor-pointer hover:border-amber-500 transition-colors" title="點選開啟自訂月曆挑選日期">
                                 <span id="bb-current-date-text" class="text-xs sm:text-sm font-black text-stone-800 font-mono tracking-tight">2026/10/23</span>
                                 <i class="fa-regular fa-calendar text-stone-600 text-xs"></i>
-                                <input type="date" id="bb-hidden-date-picker" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-                            </div>
+                            </button>
 
                             <!-- 後一天 ▶ -->
                             <button type="button" id="bb-next-day-btn" class="w-8 h-8 rounded-full border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-stone-100 hover:border-stone-400 cursor-pointer active:scale-90 transition-all" title="切換至後一天">
@@ -2241,15 +2244,22 @@
 
                     <!-- 日期、遲到時間基準、一鍵全勤與重置 -->
                     <div class="flex flex-wrap items-center gap-2.5">
-                        <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700">
-                            <i class="fa-regular fa-calendar text-slate-400"></i>
-                            <input type="date" id="attendance-date-input" class="bg-transparent font-black text-slate-800 text-xs focus:outline-none cursor-pointer">
-                        </div>
-                        <div class="flex items-center gap-1.5 bg-amber-50/70 px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-bold text-amber-900" title="超過此時間打卡自動判定為遲到">
+                        <!-- 自訂日曆選擇（零原生日期輸入） -->
+                        <button type="button" id="att-date-select-btn" class="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 cursor-pointer active:scale-95 transition-all" title="點擊開啟自訂日曆選擇日期">
+                            <i class="fa-regular fa-calendar text-indigo-500"></i>
+                            <span id="attendance-date-display" class="font-black text-slate-800">2026-10-24</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <input type="hidden" id="attendance-date-input">
+
+                        <!-- 自訂遲到基準時間選擇（零原生時間輸入） -->
+                        <button type="button" id="att-late-threshold-btn" class="flex items-center gap-1.5 bg-amber-50/70 hover:bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-bold text-amber-900 cursor-pointer active:scale-95 transition-all" title="點擊設定遲到基準時間（自訂彈窗）">
                             <i class="fa-solid fa-clock text-amber-500"></i>
                             <span>遲到基準:</span>
-                            <input type="time" id="attendance-late-time-input" value="07:50" class="bg-transparent font-black text-amber-900 text-xs focus:outline-none cursor-pointer">
-                        </div>
+                            <span id="attendance-late-time-display" class="font-mono font-black text-amber-950">07:50</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-amber-600"></i>
+                        </button>
+                        <input type="hidden" id="attendance-late-time-input" value="07:50">
                         <button type="button" id="att-batch-all-present-btn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95" title="將目前所有尚未簽到的座號設為準時出席">
                             <i class="fa-solid fa-check-double"></i>
                             <span>全員到齊</span>
@@ -2386,7 +2396,7 @@
                             <button type="button" id="att-wheel-hour-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加小時">
                                 <i class="fa-solid fa-chevron-up text-[10px]"></i>
                             </button>
-                            <div id="att-wheel-hour-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-7">
+                            <div id="att-wheel-hour-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
                                 <!-- 00 ~ 23 由 JS 動態生成 -->
                             </div>
                             <button type="button" id="att-wheel-hour-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少小時">
@@ -2400,7 +2410,7 @@
                             <button type="button" id="att-wheel-minute-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加分鐘">
                                 <i class="fa-solid fa-chevron-up text-[10px]"></i>
                             </button>
-                            <div id="att-wheel-minute-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-7">
+                            <div id="att-wheel-minute-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
                                 <!-- 00 ~ 59 由 JS 動態生成 -->
                             </div>
                             <button type="button" id="att-wheel-minute-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少分鐘">
@@ -2414,7 +2424,7 @@
                             <button type="button" id="att-wheel-second-up" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="增加秒數">
                                 <i class="fa-solid fa-chevron-up text-[10px]"></i>
                             </button>
-                            <div id="att-wheel-second-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-7">
+                            <div id="att-wheel-second-list" class="w-full h-24 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory text-center py-[30px]">
                                 <!-- 00 ~ 59 由 JS 動態生成 -->
                             </div>
                             <button type="button" id="att-wheel-second-down" class="w-full py-1 text-stone-400 hover:text-stone-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95" title="減少秒數">
@@ -2446,6 +2456,76 @@
             <div>
                 <label for="att-modal-note-input" class="text-xs font-bold text-slate-500 mb-1 block">備註說明 (選填，例: 看牙醫、病假、公車延誤):</label>
                 <input type="text" id="att-modal-note-input" placeholder="請輸入備註說明..." class="w-full text-xs font-bold py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- 自訂遲到基準時間設定 Modal (零原生時間輸入) -->
+    <div id="att-late-threshold-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-4 hidden modal z-[160]">
+        <div class="modal-content glass-card rounded-3xl shadow-2xl p-6 sm:p-7 w-full max-w-sm transform scale-95 border border-amber-200/80 bg-white">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm border border-amber-200">
+                        <i class="fa-solid fa-clock"></i>
+                    </span>
+                    <h3 class="text-base font-black text-slate-900">設定遲到判定基準</h3>
+                </div>
+                <button type="button" id="close-att-threshold-modal-btn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- 時間顯示與微調控制 -->
+            <div class="py-5 text-center">
+                <p class="text-xs text-slate-500 font-bold mb-3">請選擇或調整學生簽到遲到門檻時間</p>
+                <div class="inline-flex items-center gap-3 p-3 bg-amber-50/70 rounded-2xl border border-amber-200">
+                    <!-- 時 -->
+                    <div class="flex flex-col items-center">
+                        <button type="button" id="att-thresh-h-up" class="w-8 h-7 text-stone-500 hover:text-amber-800 transition-colors flex items-center justify-center active:scale-95 cursor-pointer" title="增加小時">
+                            <i class="fa-solid fa-chevron-up text-xs"></i>
+                        </button>
+                        <span id="att-thresh-hour-input" class="w-12 h-10 flex items-center justify-center font-mono font-black text-2xl text-amber-950 bg-white rounded-xl border border-amber-200 shadow-2xs">07</span>
+                        <button type="button" id="att-thresh-h-down" class="w-8 h-7 text-stone-500 hover:text-amber-800 transition-colors flex items-center justify-center active:scale-95 cursor-pointer" title="減少小時">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+
+                    <span class="font-mono font-black text-2xl text-amber-600">:</span>
+
+                    <!-- 分 -->
+                    <div class="flex flex-col items-center">
+                        <button type="button" id="att-thresh-m-up" class="w-8 h-7 text-stone-500 hover:text-amber-800 transition-colors flex items-center justify-center active:scale-95 cursor-pointer" title="增加分鐘">
+                            <i class="fa-solid fa-chevron-up text-xs"></i>
+                        </button>
+                        <span id="att-thresh-min-input" class="w-12 h-10 flex items-center justify-center font-mono font-black text-2xl text-amber-950 bg-white rounded-xl border border-amber-200 shadow-2xs">50</span>
+                        <button type="button" id="att-thresh-m-down" class="w-8 h-7 text-stone-500 hover:text-amber-800 transition-colors flex items-center justify-center active:scale-95 cursor-pointer" title="減少分鐘">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 快速預設膠囊按鈕 -->
+                <div class="mt-4 flex flex-wrap justify-center gap-1.5">
+                    <button type="button" data-time="07:40" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-mono text-xs font-bold transition-all cursor-pointer">07:40</button>
+                    <button type="button" data-time="07:45" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-mono text-xs font-bold transition-all cursor-pointer">07:45</button>
+                    <button type="button" data-time="07:50" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-amber-500 text-white font-mono text-xs font-black transition-all cursor-pointer shadow-xs">07:50</button>
+                    <button type="button" data-time="08:00" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-mono text-xs font-bold transition-all cursor-pointer">08:00</button>
+                    <button type="button" data-time="08:10" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-mono text-xs font-bold transition-all cursor-pointer">08:10</button>
+                    <button type="button" data-time="08:30" class="att-preset-thresh-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-mono text-xs font-bold transition-all cursor-pointer">08:30</button>
+                </div>
+                
+                <p class="mt-3 text-[11px] text-stone-500 font-medium bg-amber-50/50 p-2.5 rounded-xl border border-amber-100 text-left leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
+                    變更後，系統將<strong>自動重新比對當日所有學生簽到時間</strong>並重新歸類為「準時」或「遲到」；<strong>請假與缺席曠課紀錄不受影響</strong>。
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" id="cancel-att-threshold-btn" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors cursor-pointer">取消</button>
+                <button type="button" id="save-att-threshold-btn" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-600/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-check"></i>
+                    <span>套用並重新檢查</span>
+                </button>
             </div>
         </div>
     </div>
@@ -4150,21 +4230,21 @@
         </div>
     </div>
 
-    <!-- 學生 6 位數成績專屬驗證碼 (PIN) 管理與開通 Modal -->
+    <!-- 學生親師專屬安全防偽連結與令牌管理 (徹底取代 PIN 碼) Modal -->
     <div id="student-pins-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-4 hidden modal z-[160]">
-        <div class="modal-content glass-card rounded-3xl shadow-2xl p-6 sm:p-8 md:p-9 w-full max-w-3xl lg:max-w-4xl transform scale-95 border border-slate-100 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden">
+        <div class="modal-content glass-card rounded-3xl shadow-2xl p-6 sm:p-8 md:p-9 w-full max-w-4xl lg:max-w-5xl transform scale-95 border border-slate-100 max-h-[92vh] flex flex-col custom-scrollbar overflow-hidden">
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
                 <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl border border-amber-200/80 shadow-xs">
-                        <i class="fa-solid fa-key"></i>
+                    <span class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl border border-emerald-200/80 shadow-xs">
+                        <i class="fa-solid fa-shield-halved"></i>
                     </span>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h2 class="text-xl sm:text-2xl font-black text-slate-900">學生個人 6 位數成績專屬密碼管理</h2>
+                            <h2 class="text-xl sm:text-2xl font-black text-slate-900">學生親師專屬安全防偽連結與令牌管理</h2>
                             <span id="pin-modal-class-badge" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">班級</span>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">必須由導師設定開通 PIN 碼後，學生與家長方能進入成績系統；若學生忘記密碼可在此一鍵重設。</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">全面啟用親師專屬防偽安全令牌，三端徹底取代 PIN 碼！每位學生擁有專屬家長端與學生端免密直開短網址。</p>
                     </div>
                 </div>
                 <button type="button" id="close-student-pins-modal-btn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer">
@@ -4175,38 +4255,43 @@
             <!-- Toolbar & Batch Actions -->
             <div class="py-3.5 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0 border-b border-slate-100">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <button type="button" id="btn-batch-random-pins" class="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-dice"></i>
-                        <span>隨機產生全班專屬 PIN 碼</span>
+                    <button type="button" id="btn-batch-random-pins" class="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>隨機換發全班防偽安全令牌</span>
                     </button>
-                    <button type="button" id="btn-batch-clear-pins" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <button type="button" id="btn-batch-clear-pins" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95">
                         <i class="fa-solid fa-ban"></i>
-                        <span>全部清除</span>
+                        <span>全部重設清除</span>
                     </button>
                 </div>
-                <button type="button" id="btn-copy-pins-roster" class="py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer" title="複製全班密碼清單，方便發給家長與學生">
-                    <i class="fa-solid fa-copy"></i>
-                    <span>複製全班密碼對照表</span>
+                <button type="button" id="btn-copy-pins-roster" class="py-2 px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95" title="複製全班學生與家長兩端專屬安全連結總表，方便一次發給全體家長">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>複製全班親師連結總表</span>
                 </button>
             </div>
 
             <!-- Scrollable Seat Table -->
             <div class="flex-grow overflow-y-auto custom-scrollbar py-3 pr-1">
-                <div id="student-pins-list-container" class="space-y-2">
-                    <!-- Dynamically populated via JS -->
+                <div id="student-pins-list-container" class="space-y-2.5">
+                    <!-- 由 JS 動態生成：座號、學生姓名、專屬令牌徽章、複製家長端、複製學生端、一次複製該學生兩端連結、換發令牌 -->
                 </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between flex-shrink-0">
-                <div class="text-xs text-slate-400">
-                    <span>已設定開通：<strong id="pins-enabled-count" class="text-emerald-600 font-black">0</strong> / <span id="pins-total-count">0</span> 位學生</span>
+                <div class="text-xs text-slate-500 font-bold">
+                    <span>已配發安全防偽令牌：<strong id="pins-enabled-count" class="text-emerald-600 font-black">0</strong> / <span id="pins-total-count">0</span> 位學生</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" id="cancel-student-pins-btn" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs sm:text-sm transition-colors cursor-pointer">關閉</button>
-                    <button type="button" id="save-student-pins-btn" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5">
+                    <button type="button" id="save-student-pins-btn" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <span>儲存並同步至雲端</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
                     </button>
                 </div>
             </div>
@@ -4688,6 +4773,43 @@
 
                 <!-- 版本歷程時間軸 -->
                 <div class="space-y-6">
+                    <!-- v5.8.0 全新親師防偽安全令牌・全站零原生控件・出勤智慧重歸類・右上角常駐音效・AI 柔和雙端背景 -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/95 via-teal-50/80 to-amber-50/60 border-2 border-emerald-600 shadow-xl relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600 text-white text-xs font-black uppercase tracking-wider shadow-xs animate-pulse">v5.8.0 親師防偽安全令牌與極致無原生優化版</span>
+                                <span class="text-xs font-bold text-emerald-950">親師專屬防偽安全令牌・三端徹底取代 PIN 碼・一次複製兩端連結・全站零原生控件・遲到門檻動態重歸類・右上角常駐靜音・AI 柔和背景層</span>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-emerald-800">2026-10-24</span>
+                        </div>
+                        <ul class="space-y-2 text-xs sm:text-sm text-stone-700 font-medium">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>親師專屬安全防偽令牌（徹底取代 PIN 碼）</b>：三端徹底廢除傳統 PIN 碼密碼框，每位學生配置獨立防偽安全令牌與專屬免密短網址；教師端後台提供「複製家長端連結」、「複製學生端連結」以及【一次複製該學生兩端連結】專屬醒目按鈕與全班對照總表。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>家長端與學生端專屬防偽鎖定卡片</b>：家長與學生點選專屬安全連結即可免密直達個人空間並自動記憶裝置憑證；未帶令牌或跨座號防窺時展示優雅防偽安全鎖定卡片，不再需要手動敲密碼。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>全站徹底杜絕瀏覽器原生控件 (Zero Native Controls)</b>：全面替換全站原生 <code>&lt;input type="date"&gt;</code>、<code>&lt;input type="time"&gt;</code>、<code>alert()</code>、<code>confirm()</code> 與 <code>prompt()</code>，全面採用系統毛玻璃自訂日曆、24hr 滾輪時鐘、自訂遲到門檻彈窗與專屬 Toast/Confirm 互動對話框。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>遲到基準動態重新檢查與歸類</b>：若修改遲到門檻時間（如 07:50 調整至 08:00），系統自動遍歷當日所有已簽到學生時間並即時重新歸類為「出席」或「遲到」；請假與缺席曠課紀錄嚴格保留、絕對不受影響。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>網站右上角常駐音效/靜音按鈕</b>：畫面右上角頂層固定常駐音效切換圓角按鈕，圖標與 Web Audio API 合成音效引擎即時同步，操作便捷順手。</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-check text-emerald-600 shrink-0 mt-0.5"></i>
+                                <span><b>家長端與學生端 AI 柔和氛圍背景層</b>：採用低對比、高留白、不花俏的柔和木質晨光與清爽粉彩晴空背景圖層，搭配 backdrop-blur 毛玻璃磨砂，文字對比與閱讀清晰度達到最高標準。</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     <!-- v5.7.0 全方位選單功能導覽・沉浸雙背景・負分支援與管理排序 -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/95 via-purple-50/80 to-emerald-50/60 border-2 border-indigo-600 shadow-xl relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -6336,7 +6458,7 @@
                 <!-- 3. 測驗時間 -->
                 <div>
                     <label for="exam-date-input" class="block text-xs font-bold text-slate-600 mb-1.5">測驗時間（預設今日）</label>
-                    <input type="date" id="exam-date-input" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                    <input type="text" id="exam-date-input" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer" placeholder="點擊開啟自訂日曆選擇測驗日期" required>
                 </div>
 
                 <!-- 4. 缺考座號 -->
@@ -6476,9 +6598,9 @@
                         <button type="button" data-range="month" class="time-range-btn px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold cursor-pointer">本月 (30天)</button>
                     </div>
                     <div class="flex items-center gap-2 text-xs">
-                        <input type="date" id="export-date-start" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold">
+                        <input type="text" id="export-date-start" readonly placeholder="起始日期" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold cursor-pointer text-center" title="點擊選擇起始日期">
                         <span class="text-slate-400">至</span>
-                        <input type="date" id="export-date-end" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold">
+                        <input type="text" id="export-date-end" readonly placeholder="結束日期" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 font-bold cursor-pointer text-center" title="點擊選擇結束日期">
                     </div>
                 </div>
 

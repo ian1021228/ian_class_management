@@ -15,6 +15,7 @@ import {
 import {
     generateId,
     formatDate,
+    escapeHtml,
     safeClone,
     safeStringify,
     generateRandomAccessCode,
@@ -121,7 +122,7 @@ import {
     checkInitialMaxSeatSetup
 } from './examScores.js';
 
-import { getRosterDataFromAddForm } from './modules/classWizard.js';
+import { getRosterDataFromAddForm, getStudentDisplayName, getStudentNameOnly } from './modules/classWizard.js';
 import { toggleSound, updateSoundToggleUI, isSoundEnabled } from './modules/audioFx.js';
 
 export function setupButtonEvents() {
@@ -3232,9 +3233,37 @@ export function setupButtonEvents() {
     }
 
     // ==========================================
-    // MODULE: 學生個人 6 位數成績專屬密碼 (PIN) 管理與開通後台
+    // MODULE: 學生親師專屬安全防偽連結與令牌 (Token) 管理後台 (徹底取代 PIN 碼)
     // ==========================================
     let currentEditingPinsClassId = null;
+
+    function generateStudentToken() {
+        const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+        let rand = '';
+        for (let i = 0; i < 8; i++) {
+            rand += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return `tk_${rand}`;
+    }
+
+    function getStudentPortalUrls(cls, seat) {
+        const code = String(cls.accessCode || '').trim();
+        cls.studentTokens = cls.studentTokens || {};
+        if (!cls.studentTokens[seat]) {
+            cls.studentTokens[seat] = generateStudentToken();
+        }
+        const token = cls.studentTokens[seat];
+        const origin = window.location.origin;
+        let basePath = window.location.pathname;
+        if (basePath.endsWith('index.html')) {
+            basePath = basePath.substring(0, basePath.lastIndexOf('/'));
+        } else if (basePath.endsWith('/')) {
+            basePath = basePath.slice(0, -1);
+        }
+        const parentUrl = `${origin}${basePath}/parent.html?code=${encodeURIComponent(code)}&seat=${seat}&token=${encodeURIComponent(token)}`;
+        const studentUrl = `${origin}${basePath}/student.html?code=${encodeURIComponent(code)}&seat=${seat}&token=${encodeURIComponent(token)}`;
+        return { parentUrl, studentUrl, token, code };
+    }
 
     function renderStudentPinsList(cls) {
         const container = document.getElementById('student-pins-list-container');
@@ -3242,56 +3271,68 @@ export function setupButtonEvents() {
         container.innerHTML = '';
 
         const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
+        cls.studentTokens = cls.studentTokens || {};
         cls.studentPins = cls.studentPins || {};
 
         let enabledCount = 0;
-        const baseCode = String(cls.accessCode || '').trim();
 
         for (let seat = 1; seat <= maxSeat; seat++) {
-            const pin = cls.studentPins[seat] || '';
-            const isEnabled = Boolean(pin && String(pin).trim().length > 0);
+            const urls = getStudentPortalUrls(cls, seat);
+            const token = urls.token;
+            const isEnabled = Boolean(token && token.trim().length > 0);
             if (isEnabled) enabledCount++;
 
+            const sName = getStudentDisplayName(cls, seat, false);
+
             const row = document.createElement('div');
-            row.className = `p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+            row.className = `p-3.5 rounded-2xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                 isEnabled ? 'bg-white border-slate-200/90 shadow-2xs hover:border-amber-300' : 'bg-slate-50/70 border-slate-200/60'
             }`;
 
             row.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <span class="w-8 h-8 rounded-xl ${isEnabled ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-600'} font-black text-xs flex items-center justify-center shrink-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-9 h-9 rounded-xl ${isEnabled ? 'bg-amber-100 text-amber-900' : 'bg-slate-200 text-slate-600'} font-black text-xs flex items-center justify-center shrink-0">
                         ${seat}號
                     </span>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-slate-800">${seat} 號學生</span>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
-                            }">
-                                ${isEnabled ? '已開通成績' : '未開通 (無法查閱成績)'}
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-black text-slate-800 truncate">${sName ? escapeHtml(sName) : `${seat} 號學生`}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold ${
+                                isEnabled ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-200 text-slate-600'
+                            } flex items-center gap-1">
+                                <i class="fa-solid fa-shield-halved text-[9px]"></i>
+                                <span>${token}</span>
                             </span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-0.5 font-medium truncate">
+                            專屬防偽令牌保護中 · 家長與學生端免密直開
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 shadow-2xs">
-                        <span class="text-[10px] font-bold text-slate-400">PIN:</span>
-                        <input type="text" maxlength="32" data-seat="${seat}" class="student-pin-input font-mono font-black text-xs text-amber-900 tracking-wider w-28 bg-transparent focus:outline-none uppercase" placeholder="未設定" value="${pin}">
-                    </div>
-                    <button type="button" data-seat="${seat}" class="btn-reset-seat-pin px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer" title="一鍵重設此座號預設密碼（班級代碼+座號）">
-                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-                        <span>預設重設</span>
+                <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
+                    <!-- 複製家長端連結 -->
+                    <button type="button" data-seat="${seat}" class="btn-copy-parent-link px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center gap-1" title="複製此學生之專屬家長端安全連結">
+                        <i class="fa-solid fa-house-chimney-user text-[11px]"></i>
+                        <span>家長連結</span>
                     </button>
-                    ${isEnabled ? `
-                        <button type="button" data-seat="${seat}" class="btn-disable-seat-pin px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors cursor-pointer" title="關閉開通">
-                            關閉
-                        </button>
-                    ` : `
-                        <button type="button" data-seat="${seat}" class="btn-enable-seat-pin px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer" title="啟用開通">
-                            開通
-                        </button>
-                    `}
+
+                    <!-- 複製學生端連結 -->
+                    <button type="button" data-seat="${seat}" class="btn-copy-student-link px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center gap-1" title="複製此學生之專屬學生端安全連結">
+                        <i class="fa-solid fa-graduation-cap text-[11px]"></i>
+                        <span>學生連結</span>
+                    </button>
+
+                    <!-- 【一次複製該學生兩端連結】(專屬醒目按鈕) -->
+                    <button type="button" data-seat="${seat}" class="btn-copy-both-links px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black shadow-xs hover:shadow-sm transition-all cursor-pointer active:scale-95 flex items-center gap-1.5" title="一次複製此學生兩端專屬安全防偽連結與完整親師說明">
+                        <i class="fa-solid fa-share-nodes text-[11px]"></i>
+                        <span>一次複製兩端連結</span>
+                    </button>
+
+                    <!-- 換發新令牌 -->
+                    <button type="button" data-seat="${seat}" class="btn-reset-seat-token px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-stone-200 text-stone-600 text-xs font-bold transition-all cursor-pointer active:scale-95" title="為此座號重新換發一組新防偽令牌">
+                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                    </button>
                 </div>
             `;
 
@@ -3322,7 +3363,7 @@ export function setupButtonEvents() {
 
     const studentPinsModal = document.getElementById('student-pins-modal');
     if (studentPinsModal) {
-        // Close modal buttons
+        // 關閉彈窗
         document.getElementById('close-student-pins-modal-btn')?.addEventListener('click', () => {
             closeModal(studentPinsModal);
         });
@@ -3330,121 +3371,108 @@ export function setupButtonEvents() {
             closeModal(studentPinsModal);
         });
 
-        // Batch action: Random pins for all
+        // 批次隨機換發全班防偽安全令牌
         document.getElementById('btn-batch-random-pins')?.addEventListener('click', () => {
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
             const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
-            cls.studentPins = cls.studentPins || {};
+            cls.studentTokens = cls.studentTokens || {};
             for (let s = 1; s <= maxSeat; s++) {
-                cls.studentPins[s] = String(Math.floor(100000 + Math.random() * 900000));
+                cls.studentTokens[s] = generateStudentToken();
             }
             renderStudentPinsList(cls);
-            showToast("已隨機生成全班 PIN 碼，請點擊「儲存並同步至雲端」！", "info");
+            showToast("已為全班換發全新安全防偽令牌！請點擊「儲存並同步至雲端」。", "info");
         });
 
-        // Batch action: Clear all
-        document.getElementById('btn-batch-clear-pins')?.addEventListener('click', () => {
+        // 批次清除重設全部令牌
+        document.getElementById('btn-batch-clear-pins')?.addEventListener('click', async () => {
+            const ok = await showConfirmModal(
+                '重設防偽令牌',
+                '確定要重設全班的防偽令牌嗎？重設後將重新生成新令牌，既有的舊連結將失效。'
+            );
+            if (!ok) return;
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
-            cls.studentPins = {};
+            cls.studentTokens = {};
             renderStudentPinsList(cls);
-            showToast("已清除全班 PIN 碼（成績系統將全面鎖定），請點擊「儲存並同步至雲端」！", "info");
+            showToast("已重設全班防偽令牌，請點擊「儲存並同步至雲端」！", "info");
         });
 
-        // Copy roster
+        // 複製全班親師連結總表
         document.getElementById('btn-copy-pins-roster')?.addEventListener('click', async () => {
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
             const maxSeat = typeof cls.lastMaxSeat === 'number' && cls.lastMaxSeat > 0 ? cls.lastMaxSeat : 30;
-            const code = String(cls.accessCode || '').trim();
-            cls.studentPins = cls.studentPins || {};
-            let rosterText = `【${cls.name}】學生個人專屬成績 PIN 碼表：\n班級代碼：${code || '未設定'}\n------------------------------------\n`;
+            let rosterText = `【${cls.name}】全班親師專屬安全防偽連結總表：\n班級代碼：${cls.accessCode || '未設定'}\n==================================================\n`;
             for (let s = 1; s <= maxSeat; s++) {
-                const p = cls.studentPins[s] || `${code}${s}`;
-                rosterText += `座號 ${String(s).padStart(2, ' ')} 號：${p}\n`;
+                const urls = getStudentPortalUrls(cls, s);
+                const sName = getStudentDisplayName(cls, s, false) || `學生 ${s} 號`;
+                rosterText += `\n【${String(s).padStart(2, ' ')} 號 ${sName}】(令牌: ${urls.token})\n👨‍👩‍👧‍👦 家長端：${urls.parentUrl}\n🎒 學生端：${urls.studentUrl}\n--------------------------------------------------\n`;
             }
-            rosterText += `------------------------------------\n※ 預設密碼為【班級代碼 + 座號】（學生與家長共用相同 PIN 碼解鎖成績系統）。\n※ 學生手機在首次輸入驗證成功後將自動記憶憑證，日後免密直開！`;
-            await safeCopyToClipboard(rosterText, "已複製全班密碼對照表至剪貼簿！");
+            rosterText += `==================================================\n※ 系統已全面啟用親師防偽安全令牌，點擊各自專屬連結即可免密直達個人專屬空間！請家長與同學妥善保存。`;
+            await safeCopyToClipboard(rosterText, "已複製全班親師專屬安全防偽連結總表至剪貼簿！");
         });
 
-        // Seat row click delegation (Reset, Disable, Enable)
+        // 委派點擊處理：複製家長端、複製學生端、【一次複製該學生兩端連結】、換發個別令牌
         const pinsListContainer = document.getElementById('student-pins-list-container');
         if (pinsListContainer) {
-            pinsListContainer.addEventListener('click', (e) => {
+            pinsListContainer.addEventListener('click', async (e) => {
                 const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
                 if (!cls) return;
-                const code = String(cls.accessCode || '').trim();
-                cls.studentPins = cls.studentPins || {};
 
-                const resetBtn = e.target.closest('.btn-reset-seat-pin');
+                // 複製家長端連結
+                const parentBtn = e.target.closest('.btn-copy-parent-link');
+                if (parentBtn) {
+                    const seat = parentBtn.dataset.seat;
+                    const urls = getStudentPortalUrls(cls, seat);
+                    const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
+                    await safeCopyToClipboard(urls.parentUrl, `已複製 ${seat} 號 ${sName} 的家長端專屬安全連結！`);
+                    return;
+                }
+
+                // 複製學生端連結
+                const studentBtn = e.target.closest('.btn-copy-student-link');
+                if (studentBtn) {
+                    const seat = studentBtn.dataset.seat;
+                    const urls = getStudentPortalUrls(cls, seat);
+                    const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
+                    await safeCopyToClipboard(urls.studentUrl, `已複製 ${seat} 號 ${sName} 的學生端專屬安全連結！`);
+                    return;
+                }
+
+                // 【一次複製該學生兩端連結】
+                const bothBtn = e.target.closest('.btn-copy-both-links');
+                if (bothBtn) {
+                    const seat = bothBtn.dataset.seat;
+                    const urls = getStudentPortalUrls(cls, seat);
+                    const sName = getStudentDisplayName(cls, seat, false) || `${seat} 號學生`;
+                    const copyMsg = `【${cls.name} - ${seat}號 ${sName}】親師專屬安全防偽連結\n--------------------------------------------------\n👨‍👩‍👧‍👦 家長端連結：\n${urls.parentUrl}\n\n🎒 學生端連結：\n${urls.studentUrl}\n--------------------------------------------------\n※ 安全說明：此連結包含 ${sName} 專屬防偽安全令牌 (${urls.token})，點擊即可直達個人專屬空間，免輸入密碼！請妥善保存，請勿外流轉發他人。`;
+                    await safeCopyToClipboard(copyMsg, `已一次複製 ${seat} 號 ${sName} 的兩端專屬安全防偽連結！`);
+                    return;
+                }
+
+                // 換發個別防偽令牌
+                const resetBtn = e.target.closest('.btn-reset-seat-token');
                 if (resetBtn) {
                     const seat = resetBtn.dataset.seat;
-                    const newPin = `${code}${seat}`;
-                    cls.studentPins[seat] = newPin;
+                    cls.studentTokens = cls.studentTokens || {};
+                    cls.studentTokens[seat] = generateStudentToken();
                     renderStudentPinsList(cls);
-                    showToast(`已重設 ${seat} 號密碼為：${newPin}（請點擊儲存並同步）`, "info");
+                    showToast(`已為 ${seat} 號換發新防偽令牌：${cls.studentTokens[seat]}（請點擊儲存並同步）`, "info");
                     return;
-                }
-
-                const disableBtn = e.target.closest('.btn-disable-seat-pin');
-                if (disableBtn) {
-                    const seat = disableBtn.dataset.seat;
-                    delete cls.studentPins[seat];
-                    renderStudentPinsList(cls);
-                    showToast(`已關閉 ${seat} 號開通狀態`, "info");
-                    return;
-                }
-
-                const enableBtn = e.target.closest('.btn-enable-seat-pin');
-                if (enableBtn) {
-                    const seat = enableBtn.dataset.seat;
-                    cls.studentPins[seat] = `${code}${seat}`;
-                    renderStudentPinsList(cls);
-                    showToast(`已為 ${seat} 號開通專屬密碼：${cls.studentPins[seat]}`, "info");
-                    return;
-                }
-            });
-
-            pinsListContainer.addEventListener('input', (e) => {
-                if (e.target.classList.contains('student-pin-input')) {
-                    const seat = e.target.dataset.seat;
-                    const val = e.target.value.trim().toUpperCase();
-                    const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
-                    if (cls) {
-                        cls.studentPins = cls.studentPins || {};
-                        if (val) {
-                            cls.studentPins[seat] = val;
-                        } else {
-                            delete cls.studentPins[seat];
-                        }
-                    }
                 }
             });
         }
 
-        // Save & Sync button
+        // 儲存並同步防偽令牌至雲端
         document.getElementById('save-student-pins-btn')?.addEventListener('click', async () => {
             const cls = state.appData.classes.find(c => c.id === currentEditingPinsClassId);
             if (!cls) return;
 
-            // Collect inputs
-            const inputs = studentPinsModal.querySelectorAll('.student-pin-input');
-            cls.studentPins = cls.studentPins || {};
-            inputs.forEach(inp => {
-                const seat = inp.dataset.seat;
-                const val = inp.value.trim().toUpperCase();
-                if (val) {
-                    cls.studentPins[seat] = val;
-                } else {
-                    delete cls.studentPins[seat];
-                }
-            });
-
             await saveData();
             await syncClassStudentPinsToCloud(cls);
 
-            showToast("已成功儲存並同步學生 PIN 碼至雲端！學生與家長端即刻生效。", "success");
+            showToast("已成功儲存並同步親師防偽安全令牌至雲端！三端即刻生效。", "success");
             closeModal(studentPinsModal);
             renderClassList();
         });
@@ -3815,13 +3843,81 @@ export function setupButtonEvents() {
         }); 
     });
 
+    // 通用自訂日曆彈窗 (零原生瀏覽器日曆)
+    function openCustomDatePickerModal(onSelect, initialDateStr = null) {
+        window.customDatePickerCallback = onSelect;
+        const base = initialDateStr ? new Date(initialDateStr) : new Date(state.selectedDate);
+        state.calendarDate = isNaN(base.getTime()) ? new Date() : base;
+        renderCalendar();
+        openModal(document.getElementById('date-picker-modal'));
+    }
+    window.openCustomDatePickerModal = openCustomDatePickerModal;
+
     // 日期選擇彈窗
     bindClick('open-date-picker-btn', () => { 
-        state.calendarDate = new Date(state.selectedDate); 
-        renderCalendar(); 
-        openModal(document.getElementById('date-picker-modal')); 
+        openCustomDatePickerModal((dStr, d) => {
+            state.selectedDate = d;
+            renderContactBookItems();
+        });
     });
-    bindClick('close-date-picker-btn', () => closeModal(document.getElementById('date-picker-modal')));
+
+    bindClick('bb-open-calendar-btn', () => {
+        openCustomDatePickerModal((dStr, d) => {
+            state.selectedDate = d;
+            renderContactBookItems();
+            const dateText = document.getElementById('bb-current-date-text');
+            if (dateText) dateText.textContent = dStr.replace(/-/g, '/');
+        });
+    });
+
+    // 作業篩選自訂日曆
+    document.getElementById('filter-date-start')?.addEventListener('click', () => {
+        openCustomDatePickerModal((dStr) => {
+            const el = document.getElementById('filter-date-start');
+            if (el) {
+                el.value = dStr;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, document.getElementById('filter-date-start')?.value);
+    });
+
+    document.getElementById('filter-date-end')?.addEventListener('click', () => {
+        openCustomDatePickerModal((dStr) => {
+            const el = document.getElementById('filter-date-end');
+            if (el) {
+                el.value = dStr;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, document.getElementById('filter-date-end')?.value);
+    });
+
+    // 測驗登記自訂日曆
+    document.getElementById('exam-date-input')?.addEventListener('click', () => {
+        openCustomDatePickerModal((dStr) => {
+            const el = document.getElementById('exam-date-input');
+            if (el) el.value = dStr;
+        }, document.getElementById('exam-date-input')?.value);
+    });
+
+    // 測驗成績匯出自訂日曆
+    document.getElementById('export-date-start')?.addEventListener('click', () => {
+        openCustomDatePickerModal((dStr) => {
+            const el = document.getElementById('export-date-start');
+            if (el) el.value = dStr;
+        }, document.getElementById('export-date-start')?.value);
+    });
+
+    document.getElementById('export-date-end')?.addEventListener('click', () => {
+        openCustomDatePickerModal((dStr) => {
+            const el = document.getElementById('export-date-end');
+            if (el) el.value = dStr;
+        }, document.getElementById('export-date-end')?.value);
+    });
+
+    bindClick('close-date-picker-btn', () => {
+        window.customDatePickerCallback = null;
+        closeModal(document.getElementById('date-picker-modal'));
+    });
     bindClick('prev-month-btn', () => { 
         state.calendarDate.setMonth(state.calendarDate.getMonth() - 1); 
         renderCalendar(); 
@@ -3836,8 +3932,16 @@ export function setupButtonEvents() {
         calGrid.addEventListener('click', (e) => { 
             const dayBtn = e.target.closest('.calendar-day'); 
             if (dayBtn) { 
-                state.selectedDate = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth(), parseInt(dayBtn.dataset.day)); 
-                renderContactBookItems(); 
+                const picked = new Date(state.calendarDate.getFullYear(), state.calendarDate.getMonth(), parseInt(dayBtn.dataset.day));
+                const dStr = formatDate(picked);
+                if (typeof window.customDatePickerCallback === 'function') {
+                    const cb = window.customDatePickerCallback;
+                    window.customDatePickerCallback = null;
+                    cb(dStr, picked);
+                } else {
+                    state.selectedDate = picked; 
+                    renderContactBookItems(); 
+                }
                 closeModal(document.getElementById('date-picker-modal')); 
             } 
         });

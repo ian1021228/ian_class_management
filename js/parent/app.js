@@ -827,6 +827,9 @@ const ENABLE_SCORES_FEATURE = true;
       }
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = (urlParams.get('token') || urlParams.get('t') || '').trim();
+
     function getTeacherConfiguredPin(seat) {
       const s = String(seat || state.studentSeat || "");
       if (!s) return null;
@@ -845,31 +848,96 @@ const ENABLE_SCORES_FEATURE = true;
 
     function isSeatUnlocked(seat) {
       if (!seat || !state.accessCode) return false;
-      const key = `parent_unlocked_${state.accessCode}_seat${seat}`;
-      const pinKey = `parent_unlocked_pin_${state.accessCode}_seat${seat}`;
-      const isUnlocked = localStorage.getItem(key) === "true";
-      if (!isUnlocked) return false;
-      const teacherPin = getTeacherConfiguredPin(seat);
-      if (teacherPin) {
-        return (localStorage.getItem(pinKey) || '').trim().toUpperCase() === teacherPin;
+      const s = String(seat);
+      const configuredToken = state.classData?.studentTokens?.[s];
+      const tokenKey = `parent_token_${state.accessCode}_seat${s}`;
+      const legacyKey = `parent_unlocked_${state.accessCode}_seat${s}`;
+
+      // Case 1: 網址中帶有專屬防偽安全令牌 (URL Token)
+      if (configuredToken) {
+        if (urlToken && urlToken === configuredToken) {
+          localStorage.setItem(tokenKey, urlToken);
+          localStorage.setItem(legacyKey, "true");
+          return true;
+        }
+        // Case 2: 檢查本機先前已驗證過的防偽令牌 (LocalStorage Token)
+        const storedToken = localStorage.getItem(tokenKey);
+        if (storedToken && storedToken === configuredToken) {
+          return true;
+        }
       }
+
+      // 相容舊模式 (若班級尚未換發 Token，且先前本機已驗證)
+      const isLegacyUnlocked = localStorage.getItem(legacyKey) === "true";
+      const teacherPin = getTeacherConfiguredPin(seat);
+      const storedPin = localStorage.getItem(`parent_unlocked_pin_${state.accessCode}_seat${s}`);
+      if (!configuredToken && isLegacyUnlocked && storedPin && storedPin === teacherPin) {
+        return true;
+      }
+
       return false;
     }
 
     function unlockSeat(seat, pin) {
       if (!seat || !state.accessCode) return;
-      const key = `parent_unlocked_${state.accessCode}_seat${seat}`;
-      const pinKey = `parent_unlocked_pin_${state.accessCode}_seat${seat}`;
+      const s = String(seat);
+      const key = `parent_unlocked_${state.accessCode}_seat${s}`;
       localStorage.setItem(key, "true");
-      if (pin) localStorage.setItem(pinKey, String(pin).trim().toUpperCase());
+      if (pin) {
+        localStorage.setItem(`parent_unlocked_pin_${state.accessCode}_seat${s}`, String(pin).trim().toUpperCase());
+      }
+      if (urlToken) {
+        localStorage.setItem(`parent_token_${state.accessCode}_seat${s}`, urlToken);
+      }
     }
 
     function relockSeat(seat) {
       if (!seat || !state.accessCode) return;
-      const key = `parent_unlocked_${state.accessCode}_seat${seat}`;
-      const pinKey = `parent_unlocked_pin_${state.accessCode}_seat${seat}`;
-      localStorage.removeItem(key);
-      localStorage.removeItem(pinKey);
+      const s = String(seat);
+      localStorage.removeItem(`parent_unlocked_${state.accessCode}_seat${s}`);
+      localStorage.removeItem(`parent_unlocked_pin_${state.accessCode}_seat${s}`);
+      localStorage.removeItem(`parent_token_${state.accessCode}_seat${s}`);
+    }
+
+    function showInAppConfirm({ title, message, confirmText = "確定", cancelText = "取消", isDanger = false, onConfirm }) {
+      const modal = document.getElementById("inapp-confirm-modal");
+      const titleEl = document.getElementById("confirm-modal-title");
+      const msgEl = document.getElementById("confirm-modal-message");
+      const okBtn = document.getElementById("confirm-modal-ok-btn");
+      const cancelBtn = document.getElementById("confirm-modal-cancel-btn");
+      if (!modal) {
+        if (typeof onConfirm === "function") onConfirm();
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (msgEl) msgEl.textContent = message;
+      if (okBtn) {
+        okBtn.textContent = confirmText;
+        okBtn.className = isDanger
+          ? "flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+          : "flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer";
+      }
+      if (cancelBtn) cancelBtn.textContent = cancelText;
+
+      modal.classList.remove("hidden");
+
+      const cleanup = () => {
+        modal.classList.add("hidden");
+        okBtn?.removeEventListener("click", onOk);
+        cancelBtn?.removeEventListener("click", onCancel);
+      };
+
+      const onOk = () => {
+        cleanup();
+        if (typeof onConfirm === "function") onConfirm();
+      };
+      const onCancel = () => {
+        cleanup();
+      };
+
+      okBtn?.addEventListener("click", onOk);
+      cancelBtn?.addEventListener("click", onCancel);
     }
 
     function setStudentSeat(seatNumber) {
@@ -2398,33 +2466,40 @@ const ENABLE_SCORES_FEATURE = true;
     }
 
     async function deleteParentScore(scoreId) {
-      if (!confirm("確定要刪除這筆小考成績紀錄嗎？")) return;
-      const seat = state.studentSeat;
-      if (!seat) return;
+      showInAppConfirm({
+        title: "刪除小考成績",
+        message: "確定要刪除這筆小考成績紀錄嗎？此動作將清除該筆小考成績與分析紀錄。",
+        confirmText: "確定刪除",
+        isDanger: true,
+        onConfirm: async () => {
+          const seat = state.studentSeat;
+          if (!seat) return;
 
-      if (state.cloudStudentData && Array.isArray(state.cloudStudentData.scores)) {
-        state.cloudStudentData.scores = state.cloudStudentData.scores.filter(s => s.id !== scoreId && s.examId !== scoreId);
-      }
-
-      const curClass = state.classData;
-      const exam = curClass?.exams?.find(e => e.id === scoreId);
-      if (exam && exam.submissions) {
-        delete exam.submissions[String(seat)];
-        try {
-          if (state.accessCode) {
-            const parentDocRef = doc(db, 'artifacts', APP_COLLECTION_ID, 'public', 'data', 'parentClasses', state.accessCode);
-            await setDoc(parentDocRef, {
-              exams: curClass.exams,
-              updatedAt: new Date().toISOString()
-            }, { merge: true });
+          if (state.cloudStudentData && Array.isArray(state.cloudStudentData.scores)) {
+            state.cloudStudentData.scores = state.cloudStudentData.scores.filter(s => s.id !== scoreId && s.examId !== scoreId);
           }
-        } catch (e) {}
-      }
 
-      await syncParentScoresToCloud();
-      renderParentScoresSection();
-      renderDailyBulletin(state.classData);
-      showToast("小考成績已刪除並同步！", "info");
+          const curClass = state.classData;
+          const exam = curClass?.exams?.find(e => e.id === scoreId);
+          if (exam && exam.submissions) {
+            delete exam.submissions[String(seat)];
+            try {
+              if (state.accessCode) {
+                const parentDocRef = doc(db, 'artifacts', APP_COLLECTION_ID, 'public', 'data', 'parentClasses', state.accessCode);
+                await setDoc(parentDocRef, {
+                  exams: curClass.exams,
+                  updatedAt: new Date().toISOString()
+                }, { merge: true });
+              }
+            } catch (e) {}
+          }
+
+          await syncParentScoresToCloud();
+          renderParentScoresSection();
+          renderDailyBulletin(state.classData);
+          showToast("小考成績已刪除並同步！", "info");
+        }
+      });
     }
 
     async function syncParentScoresToCloud() {
